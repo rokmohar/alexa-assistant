@@ -283,7 +283,7 @@ var handlers = {
             console.log(conversation_State);
             
 
-            
+            var audioSetupConfig;
 
             
             if (conversation_State.length < 1){
