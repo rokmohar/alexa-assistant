@@ -108,8 +108,8 @@ Choose the option "There are no inline policies to show. To create one, click he
 
 1. Select S3 from the AWS Services menu at the top left
 2. Click on "Create Bucket"
-3. Give your bucket a unique name - Amazon will tell you if it isn't. As the responses form the Google Assistant will be stored here and need to be public I suggest using a random string generator. This link will generate one for you: - https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
-4. Make a note of this name - you will need it later
+3. Give your bucket a unique name - Amazon will tell you if it isn't. As the responses from the Google Assistant will be stored here and need to be public. I suggest using a random string generator. This link will generate one for you: - https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
+4. Make a note of this name (Hint - notepad is good for this) - you will need it later.
 5. Use the same region as you will be running your Alexa skill (EU (Ireland) or North Virginia)
 6. Ignore the copy Settings option
 7. Click "Create"
