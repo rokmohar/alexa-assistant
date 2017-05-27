@@ -103,9 +103,7 @@ var handlers = {
         // hopefully it will exist by the time the user has authenticated
             
             
-            if (!searchFunction.attributes['currentConversationState']){
-                searchFunction.attributes['currentConversationState'] = Buffer.alloc(0);
-            }
+      
             
                         
             this.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.");
@@ -217,16 +215,7 @@ var handlers = {
         var ACCESS_TOKEN = this.event.session.user.accessToken;
         
 
-        
-        
-        // This tracks the coversation state from the Google API
-        // We get this from the session attributes
-        // This will generate a non-fatal errror the first time the skill is run for a user as dynamoDB table will not exist
-        // however it will automatically generate table (although this may take a few minutes)
-        if (!searchFunction.attributes['currentConversationState']){
-            searchFunction.attributes['currentConversationState'] = Buffer.alloc(0);
-        }
-        
+   
         
         
         // Check whether we have a valid authentication token
@@ -255,18 +244,6 @@ var handlers = {
             
             // Create new GRPC stub to communicate with Assistant API
             const conversation = assistant.converse(callCreds, options);
-            
-            
-           // if (conversation_State.length < 0) {
-           // ('no current conversation state held - taking from dynamoDB')
-           // var conversationState = Buffer.from(searchFunction.attributes['currentConversationState'],'utf8');
-                
-           // }
-            
-            
-            
-                  
-
             
             //Deal with errors from Google API
             // These aren't necessarily all bad unless they are fatal
@@ -315,13 +292,9 @@ var handlers = {
             console.log('Current ConversationState is');
             console.log(conversation_State);
             
-            console.log('Current DynamoDB ConversationState is');
-            console.log(Buffer.from(searchFunction.attributes['currentConversationState'],'utf8'));
-            var audioSetupConfig;
+
             
-            // searchFunction.attributes['currentConversationState'] contains data that we recieve from the API, which is used by Google to track a conversation.
-            // If no previous state data is held then we start this as a new conversation
-            // TODO - move this from being a global variable to a user based one read from DynamoDB
+
             
             if (conversation_State.length < 1){
                 console.log('No prior ConverseResponse')
@@ -481,13 +454,9 @@ var handlers = {
                             if (ConverseResponse.result.conversation_state.length > 0 ){
                                 conversation_State = ConverseResponse.result.conversation_state;
                                 
-                                searchFunction.attributes['currentConversationState'] = conversation_State.toString('utf8');
-                                //searchFunction.emit(':saveState', true);
                                 console.log('Conversation state changed');
                                 console.log('Conversation state var is:')
-                                console.log(conversation_State);
-                                console.log('Conversation state DB is:');
-                                console.log(searchFunction.attributes['currentConversationState']);
+
                                 
                             
                                 
