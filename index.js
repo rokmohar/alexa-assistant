@@ -95,16 +95,7 @@ var handlers = {
         
         if (!this.event.session.user.accessToken) {
             
-        // This tracks the coversation state from the Google API
-        // We get this from the session attributes
-        // This will generate a errror the first time the skill is run for a user as dynamoDB tabel will not exist
-        // however it will automatically generate table (although this may take a few minutes). So lets stick it here so 
-        // hopefully it will exist by the time the user has authenticated
-            
-            
-      
-            
-                        
+                      
             this.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.");
         
         } else {
@@ -733,7 +724,7 @@ exports.handler = function(event, context, callback){
     var alexa = Alexa.handler(event, context);
     alexa.registerHandlers(handlers);
     // Create DynamoDB Table
-    alexa.dynamoDBTableName = 'AlexaAssistantSettings';
+    //alexa.dynamoDBTableName = 'AlexaAssistantSettings';
     alexa.execute();
 };
 
