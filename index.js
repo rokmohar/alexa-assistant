@@ -2,7 +2,6 @@
 
 
 var Alexa = require('alexa-sdk');
-//const client_config = require("./client-config");
 var google = require('./node_modules/googleapis');
 const AWS = require('aws-sdk');
 var fs = require('fs');
