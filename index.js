@@ -231,6 +231,15 @@ var handlers = {
             assistant = new EmbeddedAssistantClient(API_ENDPOINT, combinedCreds);  
 
             const options = {};
+            // create a timed event incase something causes the skill to stall
+            // This will stop the skill from timing out
+            wait(8, 'seconds', function() { 
+                if (audioPresent == false){
+                  searchFunction.emit(':tell',"I wasn't able to talk to Google - please try again") 
+                }
+                            
+                        
+            })
             
             // Create new GRPC stub to communicate with Assistant API
             const conversation = assistant.converse(callCreds, options);
