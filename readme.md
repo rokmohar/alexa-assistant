@@ -12,9 +12,9 @@ This BETA version contains the following:-
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
-This skill is an implimentation of the official Google Assistant API wrapped as an Alexa skill. It supports all the functions that the API offers (which is different fromt he Google Home). It is limited to 500 requests a day and only supports US English (although it is usable in the UK)
+This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports all the functions that the API offers (which is slightly different from the Google Home). It is limited to 500 requests a day and only supports US English (although it is usable in the UK)
 
-The following features are **NOT** supported:-
+The following features are **NOT** supported: -
 
 1. Alarms and timers.
 2. Device location. If you have a Home address set in your google account then it will use that as a default
@@ -24,7 +24,7 @@ The following features are **NOT** supported:-
 
 ## Setup
 
-To run the skill you need to do a number of things:-
+To run the skill you need to do a number of things: -
 
 1. download the file from github 
 2. setup a role in AWS with the correct permissions
@@ -43,7 +43,7 @@ To run the skill you need to do a number of things:-
 ### AWS Setup
 
 1. Go to http://aws.amazon.com/lambda/ . You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. If you are just using this skill then you are highly unlikely to be charged unless you are making at least a million requests a month!
-2.  Go to the drop down "Location" menu at the top right and ensure you select US-East(N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
+2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
 
 ### AIM role Setup
 
@@ -108,7 +108,7 @@ Choose the option "There are no inline policies to show. To create one, click he
 
 1. Select S3 from the AWS Services menu at the top left
 2. Click on "Create Bucket"
-3. Give your bucket a unique name - Amazon will tell you if it isn't. As the responses form the Google Assistant will be stored here and need to be public I suggest using a random string generator. This link will generate one for you:- https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
+3. Give your bucket a unique name - Amazon will tell you if it isn't. As the responses form the Google Assistant will be stored here and need to be public I suggest using a random string generator. This link will generate one for you: - https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
 4. Make a note of this name - you will need it later
 5. Use the same region as you will be running your Alexa skill (EU (Ireland) or North Virginia)
 6. Ignore the copy Settings option
@@ -129,9 +129,9 @@ Choose the option "There are no inline policies to show. To create one, click he
 4. On the Cofigure Triggers tab Click the dotted box and select "Alexa Skills Kit". Click Next
 5. Name the Lambda Function "google".
 6. Select the default runtime node.js 6.10.
-7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github. Open the src folder, Select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
+7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github. Open the src folder, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
 
-8. Enter the following into the Environment Variables Section:-
+8. Enter the following into the Environment Variables Section: -
 
 |Key           | Value|
 |--------------| -----|
@@ -210,15 +210,15 @@ At this point we will pause the setup of the skill and setup the google API. Cop
 
 **Leave this page open**
 
-### Enable Gogle Assistant API:-
+### Enable Google Assistant API:-
 To enable access to the Google Assistant API, do the following:
 
-1. In a new browser window, goto the Cloud Platform Console here https://console.cloud.google.com/project
+1. In a new browser window, go to the Cloud Platform Console here https://console.cloud.google.com/project
 and then to the Projects page.
 2. Click on "Create Project"
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so google will add a series of numbers to the end of the name if somebody has alreday used it. Press create.
 4. Click on the name of the project that you just created. This will take you to an IAM & ADMIN page. Do nothing with this page.
-5. Click on this link:- https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview
+5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview
 This will take you to a page entitled API manager.
 6. Click on the blue text near the top that says "ENABLE".
 7. Once the next page had loaded - do nothing with this page.
@@ -235,8 +235,8 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
 
 ### Alexa Skill Setup (Part 2)
 
-1. Return to the Alexa skill page that we paused at ealier
-2. In the Authorization URL paste the following:-
+1. Return to the Alexa skill page that we paused at earlier
+2. In the Authorization URL paste the following: -
 
     ```
     https://accounts.google.com/o/oauth2/auth?access_type=offline
@@ -267,7 +267,7 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
     ```
 
 8. Under Authorisation Grant Type make sure "Auth Code Grant" is selected.
-9. The Access Token URI should be set to:-
+9. The Access Token URI should be set to: -
     
     ```
     https://accounts.google.com/o/oauth2/token
@@ -276,7 +276,7 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
 10. Paste in the Client Secret that you were given by Google previously
 11. Leave Client Authentication Scheme as "HTTP Basic"
 12. Leave eveytthing under Permission unslected.
-13. Paste into the Privacy Policy URL box:-
+13. Paste into the Privacy Policy URL box: -
 
     ```
     https://www.google.com/policies/privacy/
@@ -284,7 +284,7 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
     
 
 14. Click Next.
-15. There is no need to go anyfurther through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot athenticate against the Google API.
+15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot athenticate against the Google API.
 
 
 ### AWS Lambda Setup (Part 1)
@@ -310,17 +310,5 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
     
 3. Launch the Google skill by asking "Alexa, open Google"
 4. You will then be prompted to link your account through the Alexa app.
-
-
-
-
-
-
-
-
-
-
-
-
 
 
