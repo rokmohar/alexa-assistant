@@ -32,6 +32,7 @@ To run the skill you need to do a number of things:-
 4. deploy the example code in lambda
 5. configure the Alexa skill to use Lambda.
 6. get an API key from Google
+7. link skill to your Google Account
 
 ### Download code from github
 
@@ -120,7 +121,7 @@ Choose the option "There are no inline policies to show. To create one, click he
 13. Select the checkbox next to chime.mp3. Then click on the "More" dropdown and click on "Make public". Click "Make public" on the blue pop-up box.
 
 
-### AWS Lambda Setup
+### AWS Lambda Setup (Part 1)
 
 1. Select Lambda from the AWS Services menu at the top left
 2. Click on the Create a Lambda Function or Get Started Now button.
@@ -147,150 +148,168 @@ Choose the option "There are no inline policies to show. To create one, click he
 12. Under Advanced settings set Memory (MB) to 1536 and change the Timeout to 10 seconds
 13. Click "Next" and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google). Hint - Paste it into notepad or similar.
+15. Leave this window **open** as we will need to return to it to set some further environment variable values.
 
-Leave this window open as we will need to return to it to set some further environment variable values.
+### Alexa Skill Setup (Part 1)
 
-Alexa Skill Setup
+1. In a new browser window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
+2. Click "Get Started" under Alexa Skills Kit
+3. Click the "Add a New Skill" yellow box.
+4. You will now be on the "Skill Information" page.
+5. Set "Custom Interaction Model" as the Skill type
+6. Select the language as English (US), English (UK), or German depending on your location
+7. Set "google" as the skill name and "google" as the invocation name, this is what is used to activate your skill. For example you would say: "Alexa, Ask google who is the queen of england." (NOTE - if you have already used the Google name for the previous google skill then you will need to rename the old one or delete it)
+8. Leave the "Audio Player" setting to "No"
+9. Click Next.
+10. You will now be on the "Inovation Model" page.
+11. Copy the text below into the "Intent Schema" box.
 
-In a new browser window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
-
-Click "Get Started" under Alexa Skills Kit
-
-Click the "Add a New Skill" yellow box.
-
-You will now be on the "Skill Information" page.
-
-Set "Custom Interaction Model" as the Skill type
-
-Select the language as English (US), English (UK), or German depending on your location
-
-Set "google" as the skill name and "google" as the invocation name, this is what is used to activate your skill. For example you would say: "Alexa, Ask google who is the queen of england."
-
-Leave the "Audio Player" setting to "No"
-
-Click Next.
-
-You will now be on the "Inovation Model" page.
-
-Copy the text below into the "Intent Schema" box.
-
-{
-  "intents": [
+    ```
     {
-      "intent": "AMAZON.StopIntent"
-    },
-    {
-      "intent": "AMAZON.CancelIntent"
-    },
-    {
-      "slots": [
+      "intents": [
         {
-          "name": "search",
-          "type": "SEARCH"
+          "intent": "AMAZON.StopIntent"
+        },
+        {
+          "intent": "AMAZON.CancelIntent"
+        },
+        {
+          "slots": [
+            {
+              "name": "search",
+              "type": "SEARCH"
+            }
+          ],
+          "intent": "SearchIntent"
         }
-      ],
-      "intent": "SearchIntent"
+      ]
     }
-  ]
-}
+    ```
 
-Under Custom Slot Types:-
+12. Under Custom Slot Types:-
+13. Type "SEARCH" into the "Enter Type" field
+14. Paste the text below into the "Enter Values" box
 
-Type "SEARCH" into the "Enter Type" field
+    ```
+    who is the queen
+    why is the sky blue
+    ```
 
-Paste the text below into the "Enter Values" box
+15. Copy the text below amd paste them into the Sample Uterances box.
 
-who is the queen
-why is the sky blue
+    ```
+    SearchIntent {search}
+    ```
+16. Click Next.
+17. You will now be on the "Configuration" page.
+18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
+19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied in step 13 from the AWS Lambda setup.
+20. Select Yes for Account Linking
 
-Click "Add"
+At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link). We will need these during the setup of the Google API.
 
-Copy the text below and paste them into the Sample Uterances box.
+**Leave this page open**
 
-SearchIntent {search}
-
-Click Next.
-
-You will now be on the "Configuration" page.
-
-Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
-
-Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied in step 13 from the AWS Lambda setup.
-
-Select Yes for Account Linking
-
-At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link). We will need these during the setup of the Google API.
-
-Leave this page open.
-
-ENABLE GOOGLE API:-
+### Enable Gogle Assistant API:-
 To enable access to the Google Assistant API, do the following:
 
 1. In a new browser window, goto the Cloud Platform Console here https://console.cloud.google.com/project
 and then to the Projects page.
-
 2. Click on "Create Project"
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so google will add a series of numbers to the end of the name if somebody has alreday used it. Press create.
-
 4. Click on the name of the project that you just created. This will take you to an IAM & ADMIN page. Do nothing with this page.
-
 5. Click on this link:- https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview
 This will take you to a page entitled API manager.
-
 6. Click on the blue text near the top that says "ENABLE".
 7. Once the next page had loaded - do nothing with this page.
 8. Click on this link:- 
-
 https://console.developers.google.com/apis/credentials/oauthclient
 
-You may need to set a product name for the product consent screen. On the OAuth consent screen tab, give the product a name (pick anything you want) and click Save.
-Click Web application and set the name to "google_assistant"
+9. You may need to set a product name for the product consent screen. On the OAuth consent screen tab, give the product a name (pick anything you want) and click Save.
+10. Click Web application and set the name to "google_assistant"
 Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
-A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
-Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar) as we'll need to enter these into our skill and Lambda function later.
-Hit OK. You can now close this page.
-
-Return to the Alexa skill page that we paused at ealier
+11. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
+12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar) as we'll need to enter these into our skill and Lambda function later.
+13. Hit OK. You can now close this page.
 
 
-In the Authorization URL paste the following:-
-https://accounts.google.com/o/oauth2/auth?access_type=offline
+### Alexa Skill Setup (Part 2)
 
-Into the Client Id box, paste the client ID that we got from google in the previous step.
+1. Return to the Alexa skill page that we paused at ealier
+2. In the Authorization URL paste the following:-
 
-Under Domain List : Press "Add domain" and Enter "google.com" and press "add domain" again for a second box into which enter "googleapis.com"
+    ```
+    https://accounts.google.com/o/oauth2/auth?access_type=offline
+    ```
+    
+3. Into the Client ID box, paste the Client ID that we got from google in the previous step.
+4. Under Domain List : Press "Add domain" and enter:-
 
-Under Scope: Press "Add Scope" and enter "https://www.googleapis.com/auth/assistant-sdk-prototype" and press "add scope" again for a second box into which enter "https://www.googleapis.com/auth/script.external_request"
+    ```
+    google.com
+    ```
 
-Under Authorisation Grant Type make sure "Auth Code Grant" is selected.
+5. Press "add domain" again for a second box into which enter:-
 
-The Access Token URI should be set to "https://accounts.google.com/o/oauth2/token"
+    ```
+    googleapis.com
+    ```
 
-Paste in the Client Secret that you were given by Google previously
+6. Under Scope: Press "Add Scope" and enter:-
 
-Leave Client Authentication Scheme as "HTTP Basic"
+    ```
+    https://www.googleapis.com/auth/assistant-sdk-prototype
+    ```
+    
+7. Press "add scope" again for a second box into which enter:-
+    ```
+    https://www.googleapis.com/auth/script.external_request
+    ```
 
-Leave eveytthing under Permission unslected.
+8. Under Authorisation Grant Type make sure "Auth Code Grant" is selected.
+9. The Access Token URI should be set to:-
+    
+    ```
+    https://accounts.google.com/o/oauth2/token
+    ```
 
-Paste "https://www.google.com/policies/privacy/" into the Privacy Policy URL box.
+10. Paste in the Client Secret that you were given by Google previously
+11. Leave Client Authentication Scheme as "HTTP Basic"
+12. Leave eveytthing under Permission unslected.
+13. Paste into the Privacy Policy URL box:-
 
-Click Next.
+    ```
+    https://www.google.com/policies/privacy/
+    ```
+    
 
-There is no need to go anyfurther through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot athenticate against the Google API.
+14. Click Next.
+15. There is no need to go anyfurther through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot athenticate against the Google API.
 
 
-SETUP ENVIRONMENT VARIABLES
+### AWS Lambda Setup (Part 1)
 
-Return to the Lambda Function page we left open earlier.
-Click on the lambda function "Code" tab (it will probably be alreday open on the Triggers tab)
+1. Return to the Lambda Function page we left open earlier.
+2. Click on the lambda function "Code" tab (it will probably be alreday open on the Triggers tab)
+3. Paste the google Client Secret into the value field for the CLIENT_SECRET variable.
+4. Paste the google Client ID into the value field for the CLIENT_ID variable.
+5. Paste the first of the "Redirect URLS" from the skill setup page into the REDIRECT_URL variable.
+6. Hit "Save" at the top (Not "Save and Test")
 
-Paste the google Client Secret into the value field for the CLIENT_SECRET variable.
 
-Paste the google Client ID into the value field for the CLIENT_ID variable.
+### Linking the skill to your Google Account
 
-Paste the first of the "Redirect URLS" from the skill setup page into the REDIRECT_URL variable.
+1. In order to use the Google Assistant, you must share certain activity data with Google. The Google Assistant needs this data to function properly; this is not specific to the SDK.
 
-Hit "Save" at the top (Not "Save and Test")
+2. Open the Activity Controls page https://myaccount.google.com/activitycontrols for the Google account that you want to use with the Assistant. Ensure the following toggle switches are enabled (blue):
+
+    Web & App Activity
+    Location History
+    Device Information
+    Voice & Audio Activity
+    
+3. Launch the Google skill by asking "Alexa, open Google"
+4. You will then be prompted to link your account through the Alexa app.
 
 
 
