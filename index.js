@@ -278,7 +278,8 @@ var handlers = {
                     encode();
                 } else {
                     // Save setting and exit
-                    searchFunction.emit(':saveState', true);
+                    //searchFunction.emit(':saveState', true);
+                    searchFunction.emit(':tell'," ")
                 }
                 
             });
