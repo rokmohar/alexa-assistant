@@ -33,7 +33,7 @@ The following features are **NOT** supported: -
     
 3. Unless you already have a Google Home, you will not be able to use the Google Home app which is required for some apps and functions.
 
-4. Shopping list are supported - you will need to use the Google Express to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
+4. Shopping lists are supported - you will need to use the Google Express app to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
 
 5. Recognition accuracy and response time. The Google Assistant API only supports voice input and Alexa only makes the text of a spoken enquiry available to a skill. Therefore the skill has to take the text recognised by Alexa, convert it to speech and then send this to Google. This takes time and can potentially reduce accuracy - there isn't much that can be done about this unless Google opens up a text interface or Amazon allow access to the raw audio from the Alexa request.
     
