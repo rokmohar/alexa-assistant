@@ -145,7 +145,7 @@ Choose the option "There are no inline policies to show. To create one, click he
 2. Click on the Create a Lambda Function or Get Started Now button.
 3. Skip the Select Blueprint Tab and just click on the "Configure Triggers" Option on the left hand side
 4. On the Cofigure Triggers tab Click the dotted box and select "Alexa Skills Kit". Click Next
-5. Name the Lambda Function "google".
+5. Name the Lambda Function "google-assistant".
 6. Select the default runtime node.js 6.10.
 7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github. Open the src folder, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
 
@@ -170,13 +170,15 @@ Choose the option "There are no inline policies to show. To create one, click he
 
 ### Alexa Skill Setup (Part 1)
 
+NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different name for this skill or rename/delete the older Google skill.
+
 1. In a new browser window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
 2. Click "Get Started" under Alexa Skills Kit
 3. Click the "Add a New Skill" yellow box.
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
 6. Select the language as English (US), English (UK), or German depending on your location
-7. Set "google" as the skill name and "google" as the invocation name, this is what is used to activate your skill. For example you would say: "Alexa, Ask google who is the queen of england." (NOTE - if you have already used the Google name for the previous google skill then you will need to rename the old one or delete it)
+7. You can set the skill name and invocation name to whatever you want but for these insructions we will set "google" as the skill name and "google" as the invocation name, this is what is used to activate your skill. For example you would say: "Alexa, Ask google who is the queen of england." 
 8. Leave the "Audio Player" setting to "No"
 9. Click Next.
 10. You will now be on the "Inovation Model" page.
