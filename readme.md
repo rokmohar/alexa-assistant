@@ -22,7 +22,7 @@ The following features are **NOT** supported: -
 
 **Known issues:-**
 
-1. If you link the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alex Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
+1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alex Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
 2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work (This is a Google policy not mine). If you are concerned then you could use a new google account just for this skill and not login using this account elesewhere
 
@@ -46,7 +46,7 @@ To run the skill you need to do a number of things: -
 
 1. download the file from github 
 2. setup a role in AWS with the correct permissions
-3. setup an S3 bucket to store the responses from Google
+3. setup an AWS S3 bucket to store the responses from Google
 4. deploy the example code in lambda
 5. configure the Alexa skill to use Lambda.
 6. get an API key from Google
