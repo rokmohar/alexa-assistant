@@ -8,7 +8,8 @@ Google Assistant for Alexa
 
 This BETA version contains the following:-
 
-1. First release
+1. First release against beta API
+2. First draft of installation instructions
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
@@ -39,6 +40,14 @@ The following features are **NOT** supported: -
     
 
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS RECOMMENDED THAT THIS BUCKET IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!!
+
+## Credits
+
+Richard Vowles for his node.js Google Assistant client which gave me some pointers
+https://github.com/rvowles/node-assistant
+
+John JDuo for proof reading these installation instructions
+
 
 ## Setup
 
