@@ -20,7 +20,22 @@ The following features are **NOT** supported: -
 2. Device location. If you have a Home address set in your google account then it will use that as a default
 4. Playing music, news, or podcasts is not yet supported.
 
-### PRVIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS RECOMMENDED THAT THIS BUCKET IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!!
+**Known issues:-**
+
+1. If you link the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alex Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
+
+2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work (This is a Google policy not mine). If you are concerned then you could use a new google account just for this skill and not login using this account elesewhere
+
+    1. Web & App Activity
+    2. Location History
+    3. Device Information
+    4. Voice & Audio Activity
+    
+3. Unless you already have a Google Home, you will not be able to use the Google Home app which is required for some apps and functions.
+4. Shopping list are supported - you will need to use the Google Express to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
+    
+
+### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS RECOMMENDED THAT THIS BUCKET IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!!
 
 ## Setup
 
@@ -200,6 +215,7 @@ Choose the option "There are no inline policies to show. To create one, click he
     ```
     SearchIntent {search}
     ```
+    
 16. Click Next.
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
@@ -213,23 +229,18 @@ At this point we will pause the setup of the skill and setup the google API. Cop
 ### Enable Google Assistant API:-
 To enable access to the Google Assistant API, do the following:
 
-1. In a new browser window, go to the Cloud Platform Console here https://console.cloud.google.com/project
-and then to the Projects page.
+1. In a **new** browser window, go to the Cloud Platform Console here https://console.cloud.google.com/project and then to the Projects page.
 2. Click on "Create Project"
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so google will add a series of numbers to the end of the name if somebody has alreday used it. Press create.
 4. Click on the name of the project that you just created. This will take you to an IAM & ADMIN page. Do nothing with this page.
-5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview
-This will take you to a page entitled API manager.
+5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled API manager.
 6. Click on the blue text near the top that says "ENABLE".
 7. Once the next page had loaded - do nothing with this page.
-8. Click on this link:- 
-https://console.developers.google.com/apis/credentials/oauthclient
-
+8. Click on this link:- https://console.developers.google.com/apis/credentials/oauthclient
 9. You may need to set a product name for the product consent screen. On the OAuth consent screen tab, give the product a name (pick anything you want) and click Save.
-10. Click Web application and set the name to "google_assistant"
-Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
+10. Click Web application and set the name to "google_assistant". Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
 11. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
-12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar) as we'll need to enter these into our skill and Lambda function later.
+12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar - there is a little copy button to the right of each of these values to help you) as we'll need to enter these into our skill and Lambda function later.
 13. Hit OK. You can now close this page.
 
 
@@ -303,10 +314,10 @@ Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the 
 
 2. Open the Activity Controls page https://myaccount.google.com/activitycontrols for the Google account that you want to use with the Assistant. Ensure the following toggle switches are enabled (blue):
 
-    Web & App Activity
-    Location History
-    Device Information
-    Voice & Audio Activity
+    1. Web & App Activity
+    2. Location History
+    3. Device Information
+    4. Voice & Audio Activity
     
 3. Launch the Google skill by asking "Alexa, open Google"
 4. You will then be prompted to link your account through the Alexa app.
