@@ -204,7 +204,6 @@ To run the skill you need to do a number of things: -
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google-assistant). Hint - Paste it into notepad or similar.
 
 ![alt text](screenshots/ARN.jpeg)
-
 **Leave this tab/window OPEN as we will need to return to it to set some further environment variable values**
 
 ### Alexa Skill Setup (Part 1)
@@ -214,7 +213,7 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 1. In a new browser tab/window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
 1. If you have not registered as an Amazon Developer then you will need to do so. Fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?
 
-![alt text](screenshots/payments.jpeg)
+![alt text](screenshots/payment.jpeg)
 
 1. Once you are logged into your account goto to the Alexa tab at the top of the page
 2. Click on the yellow "Get Started" button under Alexa Skills Kit
@@ -228,9 +227,21 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
 6. Select the language as English (US), English (UK), or German depending on your location
-7. You can set the skill name and invocation name to whatever you want although some names work better than others, I have found that "Google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "Google" as the skill name and "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". For best results the invocation name should be lowercase.
+6. Set the "Name" to 
+
+    ```
+    Google Assistant for Alexa
+    ```
+    
+8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". **For best results the invocation name should be lowercase**
+
+**NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different name for this skill or rename/delete the older Google skill.**
+
 8. Leave the "Audio Player" setting to "No"
-9. Click Next.
+9. Click "Save".
+
+![alt text](screenshots/skill_information.jpeg)
+
 10. You will now be on the "Inovation Model" page.
 11. Copy the text below into the "Intent Schema" box.
 
