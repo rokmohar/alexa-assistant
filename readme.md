@@ -37,16 +37,17 @@ The following features are **NOT** supported: -
 4. Shopping lists are supported - you will need to use the Google Express app to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
 
 5. Recognition accuracy and response time. The Google Assistant API only supports voice input and Alexa only makes the text of a spoken enquiry available to a skill. Therefore the skill has to take the text recognised by Alexa, convert it to speech and then send this to Google. This takes time and can potentially reduce accuracy - there isn't much that can be done about this unless Google opens up a text interface or Amazon allow access to the raw audio from the Alexa request.
+
+6. The Google API only supports the US version of the Google Assistant and is US English only, however it will still work in other countries. Local services *should* work if you set a home/work addresses in your google account as per the instructions here:- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
     
 
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS RECOMMENDED THAT THIS BUCKET IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!!
 
 ## Credits
 
-Richard Vowles for his node.js Google Assistant client which gave me some pointers
-https://github.com/rvowles/node-assistant
+Richard Vowles for his TypeScript Google Assistant client which gave me some pointers on getting the API running in pure node.js https://github.com/rvowles/node-assistant
 
-John JDuo for proof reading these installation instructions
+John JDuo and Pete Bready for proof reading these installation instructions
 
 
 ## Setup
@@ -72,11 +73,22 @@ To run the skill you need to do a number of things: -
 1. Go to http://aws.amazon.com/lambda/ . You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. If you are just using this skill then you are highly unlikely to be charged unless you are making at least a million requests a month!
 2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
 
+![alt text](screenshots/lambda_region.jpg)
+
 ### IAM role Setup
 
 1. Select IAM from the Services dropdown menu at the top left.
+
+![alt text](screenshots/iam_select.jpg)
+
 2. Select Roles from the left hand side.
+
+![alt text](screenshots/role_select.jpg)
+
 3. Select "Create a new role".
+
+![alt text](screenshots/new_role.jpg)
+
 4. Ensure AWS Service Role is selected and then select AWS Lambda in the drop down. This should automatically take you to the next page.
 5. Do not select anything on this page and just Click "Next Step".
 6. Give the role the name:-
