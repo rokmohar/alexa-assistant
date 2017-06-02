@@ -11,6 +11,7 @@ This BETA 2 version contains the following changes:-
 1. Automatic set-up of S3 bucket and upload of chime mp3
 2. changed response and chime mp3 file names to use random string from bucket name
 3. Applied a 50% increase in gain on responses
+4. Simplified installation process
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
@@ -107,18 +108,23 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/lambda_1.jpeg)
 
-Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
+7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it.
+
+7. Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
+
+![alt text](screenshots/random.jpeg)
 
 8. Enter the following into the Environment Variables Section: -
 
 |Key           | Value|
 |--------------| -----|
-|S3_BUCKET|(put the name of the S3 bucket you created in here)|
+|S3_BUCKET|(paste in the random string from the previous step in here)|
 |CLIENT_SECRET|(leave blank for the momment)|
 |CLIENT_ID |(leave blank for the momment)|
 |API_ENDPOINT|embeddedassistant.googleapis.com|
 |REDIRECT_URL|(leave blank for the momment)|
 
+![alt text](screenshots/environment_variables.jpeg) 
 
 9. Keep the Handler as index.handler (this refers to the main js file in the zip).
 10. Role should be "Choose an existing role"
