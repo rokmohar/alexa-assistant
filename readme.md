@@ -90,6 +90,9 @@ To run the skill you need to do a number of things: -
 ![alt text](screenshots/new_role.jpg)
 
 4. Ensure AWS Service Role is selected and then select AWS Lambda in the drop down. This should automatically take you to the next page.
+
+![alt text](screenshots/role_type.jpg)
+
 5. Do not select anything on this page and just Click "Next Step".
 6. Give the role the name:-
 
