@@ -89,20 +89,29 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/new_role.jpg)
 
-4. Ensure AWS Service Role is selected and then select AWS Lambda in the drop down. This should automatically take you to the next page.
+4. Ensure AWS Service Role is selected and then click the "Select" button next to AWS Lambda in the section below. This should automatically take you to the next page.
 
 ![alt text](screenshots/role_type.jpg)
 
 5. Do not select anything on this page and just Click "Next Step".
+
+![alt text](screenshots/attach_policy.jpg)
+
 6. Give the role the name:-
 
     ```
     google_assistant
     ```
     
-7. Give it an optional Role Description if you want to.
+7. Ignore the Role Description box.
 8. Click "Create role".
+
+![alt text](screenshots/role_name.jpg)
+
 9. Now click on the name of the role you just created.
+
+![alt text](screenshots/list_role.jpg)
+
 10. On the next page click on the arrow next to Inline Policies.
 Choose the option "There are no inline policies to show. To create one, click here." 
 11. On the next page click on "Custom policy" and press "Select".
