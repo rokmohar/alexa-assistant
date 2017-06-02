@@ -201,16 +201,30 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/review_function.jpeg)
 
-14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google). Hint - Paste it into notepad or similar.
-15. Leave this window **open** as we will need to return to it to set some further environment variable values.
+14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google-assistant). Hint - Paste it into notepad or similar.
+
+![alt text](screenshots/ARN.jpeg)
+
+**Leave this tab/window OPEN as we will need to return to it to set some further environment variable values**
 
 ### Alexa Skill Setup (Part 1)
 
 NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different name for this skill or rename/delete the older Google skill.
 
-1. In a new browser window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
-2. Click "Get Started" under Alexa Skills Kit
-3. Click the "Add a New Skill" yellow box.
+1. In a new browser tab/window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
+1. If you have not registered as an Amazon Developer then you will need to do so. Fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?
+
+![alt text](screenshots/payments.jpeg)
+
+1. Once you are logged into your account goto to the Alexa tab at the top of the page
+2. Click on the yellow "Get Started" button under Alexa Skills Kit
+
+![alt text](screenshots/getting_started.jpeg)
+
+3. Click the "Add a New Skill" yellow box towards the top right
+
+![alt text](screenshots/add_new_skill.jpeg)
+
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
 6. Select the language as English (US), English (UK), or German depending on your location
