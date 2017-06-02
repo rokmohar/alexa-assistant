@@ -258,9 +258,14 @@ At this point we will pause the setup of the skill and setup the google API. Cop
 To enable access to the Google Assistant API, do the following:
 
 1. In a **new** browser tab or window, go to the Cloud Platform Console here https://console.cloud.google.com/project (If this is the first time you have use the google developer console then you will need to agree to the the Terms on service on the pop-up box.)
+![alt text](screenshots/google_terms.jpg)
+
 2. Click on "Select a project" and then the "+" button to create a new project
+![alt text](screenshots/new_google_project.jpg)
+
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so Google will add a series of numbers to the end of the name if somebody has already used it. Press create.
-4. You will be taken to a new page. Look for a notification within the blue bar at the top of the page. Once the project is created click on the the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project 
+4. You will be taken to a new page. It will take about 15 seconds for the project to be created. Look for a notification within the blue bar at the top of the page. Once the project is created click on the the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project.
+![alt text](screenshots/google_notification.jpg)
 5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled "API manager".
 6. Click on the blue text near the top that says "ENABLE".
 7. Once the next page had loaded - do nothing with this page.
