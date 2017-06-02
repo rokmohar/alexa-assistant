@@ -201,7 +201,7 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
 6. Select the language as English (US), English (UK), or German depending on your location
-7. You can set the skill name and invocation name to whatever you want although some names work better than others, I have found that "Google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask Jarvis xxx xxx xxx". For these instructions we will set "Google" as the skill name and "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". For best results the invocation name should be lowercase.
+7. You can set the skill name and invocation name to whatever you want although some names work better than others, I have found that "Google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "Google" as the skill name and "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". For best results the invocation name should be lowercase.
 8. Leave the "Audio Player" setting to "No"
 9. Click Next.
 10. You will now be on the "Inovation Model" page.
