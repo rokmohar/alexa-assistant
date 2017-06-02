@@ -235,10 +235,10 @@ NOTE - if you have already installed my previous Google Skill and have used the 
     
 8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". **For best results the invocation name should be lowercase**
 
-**NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different name for this skill or rename/delete the older Google skill.**
+**NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill.**
 
 8. Leave the "Audio Player" setting to "No"
-9. Click "Save".
+9. Click "Save" and then click "Next".
 
 ![alt text](screenshots/skill_information.jpeg)
 
@@ -266,6 +266,7 @@ NOTE - if you have already installed my previous Google Skill and have used the 
       ]
     }
     ```
+![alt text](screenshots/intent_schema.jpeg)
 
 12. Under Custom Slot Types:-
 13. Type "SEARCH" into the "Enter Type" field
@@ -275,14 +276,16 @@ NOTE - if you have already installed my previous Google Skill and have used the 
     who is the queen
     why is the sky blue
     ```
+![alt text](screenshots/slot_types.jpeg)
 
-15. Copy the text below and paste them into the Sample Uterances box.
+15. Copy the text below and paste them into the Sample Utterances box.
 
     ```
     SearchIntent {search}
     ```
-    
-16. Click Next.
+![alt text](screenshots/utterances.jpeg) 
+
+16. Click "Save" and then "Next".
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
 19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied in step 13 from the AWS Lambda setup.
