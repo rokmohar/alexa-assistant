@@ -8,10 +8,11 @@ var fs = require('fs');
 var every = require('every-moment');
 var wait = require('wait-one-moment');
 const Stream = require("stream");
-var Speech = require('ssml-builder');
 var lame = require('lame');
 var grpc = require('grpc')
 var resolve = require('path').resolve;
+var volume = require('pcm-volume');
+
 
 
 var OAuth2 = google.auth.OAuth2;
@@ -26,7 +27,7 @@ var sendingAudio = false;
 var config = {};
 
 // Load AWS credentials
-const Polly = new AWS.Polly({apiVersion: '2016-06-10'});
+const Polly = new AWS.Polly();
 var s3 = new AWS.S3();
 
                 
@@ -66,20 +67,96 @@ const RESULT = 'result';
 const AUDIO_OUT = 'audio_out';
 
 var conversation_State = Buffer.alloc(0);
+var error_text;
 
 
 var APP_ID = undefined; //replace with 'amzn1.echo-sdk-ams.app.[your-unique-value-here]'; NOTE THIS IS A COMPLETELY OPTIONAL STEP WHICH MAY CAUSE MORE ISSUES THAN IT SOLVES IF YOU DON'T KNOW WHAT YOU ARE DOING
 
 
+// check whether the S3 bucket exisits
+
+if (S3_BUCKET){
+    
+    var bucket_params = {
+      Bucket: S3_BUCKET
+     };
+     s3.headBucket(bucket_params, function(err, data) {
+       if (err) {
+           console.log ('S3 Bucket does not exist - lets try and create it')
+           s3.createBucket(bucket_params, function(err, data) {
+               if (err) {
+                   console.log('Could not create bucket', err.stack);
+                   error_text = 'The S3 Bucket could not be created - make sure you have set up the IAM role properly or alternatively try a different random bucket name'
+               }
+               
+               else     {
+                   console.log('Bucket Created');
+                   // Create read stream from chime MP3 file
+                    var readChimemp3 = fs.createReadStream('./chime.mp3');
+                    // Pipe to S3 upload function
+
+                    function uploadChime(s3) {
+                                    var chime_stream = new Stream.PassThrough();
+                                    var chime_params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '0.mp3'), Body: chime_stream, ACL:'public-read'};
+                                    s3.upload(chime_params, function(err, data) {
+                                        if (err){
+                                        console.log('S3 upload error: ' + err) 
+
+                                        } else{
+                                         console.log(data);   
+
+                                      }
+                                    });
+                                    return chime_stream;
+                                }
+                    // stream file to S3 upload function
+                    readChimemp3.pipe(uploadChime(s3));
+               }
+               
+         });
+           
+       }
+       else {
+           console.log('Bucket already exists - uploading chime');
+           // Create read stream from chime MP3 file
+            var readChimemp3 = fs.createReadStream('./chime.mp3');
+            // Pipe to S3 upload function
+
+            function uploadChime(s3) {
+                            var chime_stream = new Stream.PassThrough();
+                            var chime_params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '0.mp3'), Body: chime_stream, ACL:'public-read'};
+                            s3.upload(chime_params, function(err, data) {
+                                if (err){
+                                console.log('S3 upload error: ' + err) 
+
+                                } else{
+                                 console.log(data);   
+
+                              }
+                            });
+                            return chime_stream;
+                        }
+            // stream file to S3 upload function
+            readChimemp3.pipe(uploadChime(s3));
+       }
+     });
+    
+    
+    
+    
+    
+}
+
+
 var handlers = {
     
     'LaunchRequest': function () {
+
+        // Check for required environment variables and throw spoken error if not present
         
-        
-        
-        
-        
-        
+        if (error_text){
+            this.emit(':tell', error_text);   
+        }
         if (!CLIENT_ID){
             this.emit(':tell','ERROR! Client ID is not set in Lambda Environment Variables','ERROR! Client ID is not set in Lambda Environment Variables')
         }
@@ -91,6 +168,9 @@ var handlers = {
         }
         if (!API_ENDPOINT){
             this.emit(':tell','ERROR! API endpoint is not set in Lambda Environment Variables','ERROR! API Endpoint is not set in Lambda Environment Variables')
+        }
+        if (!S3_BUCKET){
+            this.emit(':tell','ERROR! S3 Bucket is not set in Lambda Environment Variables','ERROR! S3 Bucket is not set in Lambda Environment Variables')
         }
         
         if (!this.event.session.user.accessToken) {
@@ -177,10 +257,17 @@ var handlers = {
         
         var CHUNK_SIZE = process.env.CHUNK_SIZE;
         if (!CHUNK_SIZE){
-            CHUNK_SIZE = 6000;
+            CHUNK_SIZE = 16000;
         }
         
         console.log('CHUNK_SIZE: ' + CHUNK_SIZE);
+        
+        var SEND_SPEED = process.env.SEND_SPEED;
+        if (!SEND_SPEED){
+            SEND_SPEED = 0.1;
+        }
+        
+        console.log('SEND_SPEED: ' + SEND_SPEED);
         
         
         // Over-ride text value recieved from Alexa with value in environment variable
@@ -203,10 +290,7 @@ var handlers = {
         
         console.log('Input text from Alexa is "' + alexaUtteranceText +'"');
         var ACCESS_TOKEN = this.event.session.user.accessToken;
-        
 
-   
-        
         
         // Check whether we have a valid authentication token
         if (!ACCESS_TOKEN) { 
@@ -216,12 +300,8 @@ var handlers = {
         } else {
                  
             console.log('Starting Google Assistant')
-            console.log(ACCESS_TOKEN);
-            
-            
-                      
-            
- 
+            // console.log(ACCESS_TOKEN);
+
             // authenticate against OAuth using session accessToken
             
             oauth2Client.setCredentials({access_token: ACCESS_TOKEN });
@@ -341,20 +421,21 @@ var handlers = {
                             console.log('ignoring');
                             return;
                         }
-
+                        
+                        
                         const parts = Math.ceil(chunk.length / CHUNK_SIZE);
                         console.log('chunk length is ' + chunk.length)
                         console.log("Parts = " + parts);
-                        const partLength = CHUNK_SIZE/1600;    
+                        const partLength = CHUNK_SIZE/16000;    
 
                         audio_chunk++;
                         // Delay sending of all chunk data for this part until all previous chuncks have been sent
                         // as all chucks are a maximum of 100ms long we calculate the delay : number of chunks x previous parts x 0.1 seconds
-                        wait(0.1*parts*audio_chunk, 'seconds', function() {    
+                        wait(partLength*parts*audio_chunk*SEND_SPEED, 'seconds', function() {    
                             for (let count = 0; count < parts; count++) {
                                 //console.log('part: ' + count)
-                                wait(0.1*count, 'seconds', function() {
-                                    //console.log('sending timed data');
+                                wait(partLength*count*SEND_SPEED, 'seconds', function() {
+                                    //console.log('Sending Part: ' + count );
                                     sendTimedData (chunk, CHUNK_SIZE, count, converseStream);
                                 });
                             }
@@ -456,9 +537,6 @@ var handlers = {
                                 
                                 console.log('Conversation state changed');
                                 console.log('Conversation state var is:')
-
-                                
-                            
                                 
                             }
                         }
@@ -487,7 +565,7 @@ var handlers = {
                         // Total length of MP3's in alexa skills must be less than 90 seconds.
                         // The chime at the end of a microphone open response is 1 second
                         // so we must ensure total response less then 89 seconds 
-                        if ( audioLength <= (16000*89*2)){
+                        if ( audioLength <= (4272*1024)){
                             responseFile.write(audio_chunk);
                             //console.log("chunk length " + audio_chunk.length)
                             // Store time that audio was recieved - this is used to check whther this is the last audio packet of response
@@ -577,19 +655,28 @@ var handlers = {
                       mode: lame.STEREO // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
                     }); 
                 
+                // The output from the google assistant is much lower than Alexa so we need to apply a gain
+                var vol = new volume();
+                
+                // Set volume gain on google output to be +50%
+                vol.setVolume(1.5);
+                
                 var decoder = new lame.Decoder();
                 decoder.on('format', onFormat);
                 
                 function onFormat (format) {
-                  console.error('MP3 format: %j', format);
+                  //console.error('MP3 format: %j', format);
+                    
+                    // pipe MP3 decoder to the gain processer                     
+                    decoder.pipe(vol);
 
-                  decoder.pipe(encoder);
+                  
                 }
 
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {
                     var pass = new Stream.PassThrough();
-                    var params = {Bucket: S3_BUCKET, Key: 'mp3/response.mp3', Body: pass, ACL:'public-read'};
+                    var params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '.mp3'), Body: pass, ACL:'public-read'};
                     s3.upload(params, function(err, data) {
                         if (err){
                         console.log('S3 upload error: ' + err) 
@@ -603,12 +690,13 @@ var handlers = {
                                 '*********************************************************************************\n' +
                                 'DEBUG INFORMATION - Delete "DEBUG_MODE" environment variable to disable this card\n' +
                                 '*********************************************************************************\n' +
-                                'Skill Version:         ' + VERSION_NUMBER + '\n\n' +
-                                'Alexa heard:           ' + alexaUtteranceText_original + '\n' +
-                                'Google assisant heard: ' + googleUtternaceText + '\n' +
-                                'Polly voice was:       ' + POLLY_VOICE + '\n' +
-                                'Polly Speed was:       ' + POLLY_SPEED + '\n' +
-                                'Audio chunk size was:  ' + CHUNK_SIZE + '\n' +
+                                'Skill Version:               ' + VERSION_NUMBER + '\n\n' +
+                                'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
+                                'Google assisant heard:       ' + googleUtternaceText + '\n' +
+                                'Polly voice was:             ' + POLLY_VOICE + '\n' +
+                                'Polly Speed was:             ' + POLLY_SPEED + '\n' +
+                                'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
+                                'Audio send speed multiplyer: ' + SEND_SPEED + '\n' +
                                 '*******************************PROCESSING TIMES**********************************\n' +
                                 'Setup Total time was:           ' + setupTotal + 'ms\n' + 
                                 'Polly Total time was:           ' + pollyTotal + 'ms\n' +
@@ -619,14 +707,13 @@ var handlers = {
                             
                             console.log(cardContent);
                             var cardTitle = 'Google Assistant Debug'
-                            var speech = new Speech();
-                            speech.audio('https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/mp3/response.mp3'); 
+                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '.mp3"/>'; 
                             // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                             if (microphoneOpen == true){
                                 console.log('Microphone is open so keeping session open')
-                                speech.pause('500ms');
-                                speech.audio('https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/mp3/chime.mp3');
-                                var speechOutput = speech.ssml(true);
+                                
+                                speechOutput = speechOutput + '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '0.mp3"/>';
+                                
                                 console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
                                 cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) + 
                                 '\nMore detailed debug information can be found in the Cloud Watch logs' );
@@ -641,7 +728,7 @@ var handlers = {
                             // Otherwise we create an Alexa 'Tell' command which will close the session
                             } else{
                                 console.log('Microphone is closed so closing session')
-                                var speechOutput = speech.ssml(true);
+                                
                                 console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
                                 cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) +
                                 '\nMore detailed debug information can be found in the Cloud Watch logs' );
@@ -674,8 +761,12 @@ var handlers = {
                     readmp3.pipe(uploadFromStream(s3));
                 });        
 
-                // Pipe output of PCM file reader to LAME encoder
+                // Pipe output of PCM file reader to MP3 decoder
                 readpcm.pipe(decoder);
+                
+                
+                // pipe the pcm output of the gain process to the LAME encoder
+                vol.pipe(encoder);
 
                 // Pipe output of LAME encoder into MP3 file writer
                 encoder.pipe(writemp3);
@@ -717,7 +808,7 @@ var handlers = {
     'SessionEndedRequest': function () {
         console.log('session ended!');
         
-        var params = {Bucket: S3_BUCKET, Key: 'mp3/response.mp3'};
+        var params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '.mp3')};
         s3.deleteObject(params, function(err, data) {
           if (err) console.log('S3 deletion error ', err.stack);  // error
           else     console.log('Response mp3 deleted');                 // deleted

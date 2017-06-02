@@ -2,14 +2,15 @@
 
 Google Assistant for Alexa
 
-# Beta 1
+# Beta 2
 
 # THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS You HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
 
-This BETA version contains the following:-
+This BETA 2 version contains the following changes:-
 
-1. First release against beta API
-2. First draft of installation instructions
+1. Automatic set-up of S3 bucket and upload of chime mp3
+2. changed response and chime mp3 file names to use random string from bucket name
+3. Applied a 50% increase in gain on responses
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
@@ -68,140 +69,45 @@ To run the skill you need to do a number of things: -
 2. Click download ZIP
 3. Unzip the file to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames)
 
-### AWS Setup
+### AWS Lambda Setup
 
-1. Go to http://aws.amazon.com/lambda/ . You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. If you are just using this skill then you are highly unlikely to be charged unless you are making at least a million requests a month!
+1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. If you are just using this skill then you are highly unlikely to be charged unless you are making at least a million requests a month!
 2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
 
 ![alt text](screenshots/lambda_region.jpg)
 
-### IAM role Setup
-
-1. Select IAM from the Services dropdown menu at the top left.
-
-![alt text](screenshots/iam_select.jpg)
-
-2. Select Roles from the left hand side.
-
-![alt text](screenshots/role_select.jpg)
-
-3. Select "Create a new role".
-
-![alt text](screenshots/new_role.jpg)
-
-4. Ensure AWS Service Role is selected and then click the "Select" button next to AWS Lambda in the section below. This should automatically take you to the next page.
-
-![alt text](screenshots/role_type.jpg)
-
-5. Do not select anything on this page and just Click "Next Step".
-
-![alt text](screenshots/attach_policy.jpg)
-
-6. Give the role the name:-
-
-    ```
-    google_assistant
-    ```
-    
-7. Ignore the Role Description box.
-8. Click "Create role".
-
-![alt text](screenshots/role_name.jpg)
-
-9. Now click on the name of the role you just created.
-
-![alt text](screenshots/list_role.jpg)
-
-10. On the next page click on the arrow next to Inline Policies. Choose the option "There are no inline policies to show. To create one, click here." 
-
-![alt text](screenshots/attach_policy_2.jpg)
-
-11. On the next page click on "Custom policy" and press "Select".
-
-![alt text](screenshots/set_permissions.jpg)
-
-12. Give the policy this name:-
-
-    ```
-    googleskill
-    ```
-    
-13. Paste the following into the "Policy Document" box:
-
-    ```
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents"
-                ],
-                "Resource": [
-                    "arn:aws:logs:*:*:*",
-                    "arn:aws:lambda:*:*:*"
-                ]
-            },
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "polly:SynthesizeSpeech"
-                ],
-                "Resource": [
-                    "*"
-                ]
-            },
-            {
-                "Effect": "Allow",
-                "Action": "s3:*",
-                "Resource": "*"
-            },
-            {
-                "Effect": "Allow",
-                "Action": "dynamodb:*",
-                "Resource": "*"
-            }
-        ]
-    }
-    ```
-
-14. Click on "Apply Policy"
-
-![alt text](screenshots/review_policy.jpg)
-
-
-### Create a new S3 bucket
-
-1. Select S3 from the AWS Services menu at the top left
-2. Click on "Create Bucket"
-3. Give your bucket a unique name - Amazon will tell you if it isn't. As the responses from the Google Assistant will be stored here and need to be public. I suggest using a random string generator. This link will generate one for you: - https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
-4. Make a note of this name (Hint - notepad is good for this) - you will need it later.
-5. Use the same region as you will be running your Alexa skill (EU (Ireland) or U.S. North Virginia)
-6. Ignore the copy Settings option
-7. Click "Create"
-8. Select the bucket that you just created.
-9. Click on "Create folder" - call it "mp3" and then hit "Save"
-10. Click on the mp3 folder to open it.
-11. Press "Upload", select "Add files" and select "chime.mp3" from the github zip
-12. Click "Upload" at the bottom left (ignore the next option)
-13. Select the checkbox next to chime.mp3. Then click on the "More" dropdown and click on "Make public". Click "Make public" on the blue pop-up box.
-
-
-### AWS Lambda Setup (Part 1)
-
 1. Select Lambda from the AWS Services menu at the top left
 2. Click on the Create a Lambda Function or Get Started Now button.
 3. Select "Blank Function" - this will automatically take you to the "Configure triggers" page.
-4. Click the dotted box and select "Alexa Skills Kit". Click Next (NOTE - if you do not see Alexa Skill Kit as an option then you are in the wrong AWS region)
+
+![alt text](screenshots/blueprint.jpeg)
+
+4. Click the dotted box and select "Alexa Skills Kit" (NOTE - if you do not see Alexa Skill Kit as an option then you are in the wrong AWS region). 
+
+![alt text](screenshots/triggers.jpeg)
+
+5. Click Next 
+
+![alt text](screenshots/trigger_ASK.jpeg)
+
 5. Name the Lambda Function :-
+
     ```
     google-assistant
     ```
     
+5. Set the decription as :-
+
+    ```
+    Google Assistant
+    ```
+    
 6. Select the default runtime which is currently "node.js 6.10".
-7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
+7. Select Code entry type as "Upload a .ZIP file". 
+
+![alt text](screenshots/lambda_1.jpeg)
+
+Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
 
 8. Enter the following into the Environment Variables Section: -
 
