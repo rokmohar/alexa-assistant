@@ -79,14 +79,24 @@ To run the skill you need to do a number of things: -
 3. Select "Create a new role".
 4. Ensure AWS Service Role is selected and then select AWS Lambda in the drop down. This should automatically take you to the next page.
 5. Do not select anything on this page and just Click "Next Step".
-6. Give the role the name "google_assistant".
+6. Give the role the name:-
+
+    ```
+    google_assistant
+    ```
+    
 7. Give it an optional Role Description if you want to.
 8. Click "Create role".
 9. Now click on the name of the role you just created.
 10. On the next page click on the arrow next to Inline Policies.
 Choose the option "There are no inline policies to show. To create one, click here." 
-11. On the next page click on "custom policy" and press "Select".
-12. Give the policy this name ("googleskill")
+11. On the next page click on "Custom policy" and press "Select".
+12. Give the policy this name:-
+
+    ```
+    googleskill
+    ```
+    
 13. Paste the following into the "Policy Document" box:
 
     ```
@@ -152,11 +162,15 @@ Choose the option "There are no inline policies to show. To create one, click he
 
 1. Select Lambda from the AWS Services menu at the top left
 2. Click on the Create a Lambda Function or Get Started Now button.
-3. Skip the Select Blueprint Tab and just click on the "Configure Triggers" Option on the left hand side
-4. On the Configure Triggers tab Click the dotted box and select "Alexa Skills Kit". Click Next
-5. Name the Lambda Function "google-assistant".
-6. Select the default runtime node.js 6.10.
-7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github. Open the src folder, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
+3. Select "Blank Function" - this will automatically take you to the "Configure triggers" page.
+4. Click the dotted box and select "Alexa Skills Kit". Click Next (NOTE - if you do not see Alexa Skill Kit as an option then you are in the wrong AWS region)
+5. Name the Lambda Function :-
+    ```
+    google-assistant
+    ```
+    
+6. Select the default runtime which is currently "node.js 6.10".
+7. Select Code entry type as "Upload a .ZIP file". Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it
 
 8. Enter the following into the Environment Variables Section: -
 
@@ -171,7 +185,7 @@ Choose the option "There are no inline policies to show. To create one, click he
 
 9. Keep the Handler as index.handler (this refers to the main js file in the zip).
 10. Role should be "Choose an existing role"
-11. Under Existing Role - pick the IAM role you created earlier
+11. Under Existing Role - pick "google_assistant"
 12. Under Advanced settings set Memory (MB) to 1536 and change the Timeout to 10 seconds
 13. Click "Next" and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google). Hint - Paste it into notepad or similar.
@@ -187,7 +201,7 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
 6. Select the language as English (US), English (UK), or German depending on your location
-7. You can set the skill name and invocation name to whatever you want e.g.  "jarvis" or "hal". The name you choose will be the activation name e.g. "Alexa, ask Jarvis xxx xxx xxx". For these instructions we will set "Google" as the skill name and "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". For best results the invocation name should be lowercase.
+7. You can set the skill name and invocation name to whatever you want although some names work better than others, I have found that "Google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask Jarvis xxx xxx xxx". For these instructions we will set "Google" as the skill name and "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". For best results the invocation name should be lowercase.
 8. Leave the "Audio Player" setting to "No"
 9. Click Next.
 10. You will now be on the "Inovation Model" page.
@@ -217,7 +231,7 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 
 12. Under Custom Slot Types:-
 13. Type "SEARCH" into the "Enter Type" field
-14. Copy the text below and paste into the "Enter Values" box
+14. Copy the text below and paste into the "Enter Values" box and then click "Add"
 
     ```
     who is the queen
@@ -243,10 +257,10 @@ At this point we will pause the setup of the skill and setup the google API. Cop
 ### Enable Google Assistant API:-
 To enable access to the Google Assistant API, do the following:
 
-1. In a **new** browser tab or window, go to the Cloud Platform Console here https://console.cloud.google.com/project and then to the Projects page.
-2. Click on "Create Project"
-3. Give the project a name, it doesn't really matter what it is but it needs to be unique so google will add a series of numbers to the end of the name if somebody has already used it. Press create.
-4. Click on the name of the project that you just created. This will take you to an IAM & ADMIN page. Do nothing with this page.
+1. In a **new** browser tab or window, go to the Cloud Platform Console here https://console.cloud.google.com/project (If this is the first time you have use the google developer console then you will need to agree to the the Terms on service on the pop-up box.)
+2. Click on "Select a project" and then the "+" button to create a new project
+3. Give the project a name, it doesn't really matter what it is but it needs to be unique so Google will add a series of numbers to the end of the name if somebody has already used it. Press create.
+4. You will be taken to a new page. Look for a notification within the blue bar at the top of the page. Once the project is created click on the the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project 
 5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled "API manager".
 6. Click on the blue text near the top that says "ENABLE".
 7. Once the next page had loaded - do nothing with this page.
@@ -254,7 +268,7 @@ To enable access to the Google Assistant API, do the following:
 9. You may need to set a product name for the product consent screen. On the OAuth consent screen tab, give the product a name (pick anything you want) and click Save.
 10. Click Web application and set the name to "google_assistant". Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
 11. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
-12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar - there is a little copy button to the right of each of these values to help you) as we'll need to enter these into our skill and Lambda function later.
+12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar - there is a little copy button to the right of each of these values to help you) as we'll need to enter these into our skill and Lambda function later. (Note - if you forget to copy these then you can acess them from the "Credentials" tab with-in the Google API manager)
 13. Hit OK. You can now close this page.
 
 
