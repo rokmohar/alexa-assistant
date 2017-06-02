@@ -148,7 +148,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/edit_warning.jpeg)
 
-11. Delete all the text in the box and paste in the following:-
+11. Delete **ALL** the text in the box and paste in the following:-
 
     ```
     {
@@ -188,10 +188,19 @@ To run the skill you need to do a number of things: -
         ]
     }
     ```
-11. Then press the blue "Allow" box at the bottom right hand corner
+11. Then press the blue "Allow" box at the bottom right hand corner. The tab/window will automatically close.
+11. You should now be back on the Lambda Management page. The Role box will have automatically changed to "Choose an existing role" and Role we just created will be selected under the "Existing role" box.
 
-12. Under Advanced settings set Memory (MB) to 1536 and change the Timeout to 10 seconds
-13. Click "Next" and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed
+![alt text](screenshots/existing_role.jpeg)
+
+12. Under Advanced Settings set Memory (MB) to 1536 and change the Timeout to 12 seconds
+
+![alt text](screenshots/advanced_settings.jpeg)
+
+13. Click on the blue "Next" at the bottom of the page and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed
+
+![alt text](screenshots/review_function.jpeg)
+
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google). Hint - Paste it into notepad or similar.
 15. Leave this window **open** as we will need to return to it to set some further environment variable values.
 
