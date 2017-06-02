@@ -112,9 +112,14 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/list_role.jpg)
 
-10. On the next page click on the arrow next to Inline Policies.
-Choose the option "There are no inline policies to show. To create one, click here." 
+10. On the next page click on the arrow next to Inline Policies. Choose the option "There are no inline policies to show. To create one, click here." 
+
+![alt text](screenshots/attach_policy_2.jpg)
+
 11. On the next page click on "Custom policy" and press "Select".
+
+![alt text](screenshots/set_permissions.jpg)
+
 12. Give the policy this name:-
 
     ```
@@ -163,6 +168,8 @@ Choose the option "There are no inline policies to show. To create one, click he
     ```
 
 14. Click on "Apply Policy"
+
+![alt text](screenshots/review_policy.jpg)
 
 
 ### Create a new S3 bucket
