@@ -127,8 +127,69 @@ To run the skill you need to do a number of things: -
 ![alt text](screenshots/environment_variables.jpeg) 
 
 9. Keep the Handler as index.handler (this refers to the main js file in the zip).
-10. Role should be "Choose an existing role"
-11. Under Existing Role - pick "google_assistant"
+10. Under Role - select "Create a custom role". This will automatically open a new browser tab or window
+
+![alt text](screenshots/new_role.jpeg)
+
+11. Switch to this new tab or window. 
+11. Under IAM Role select "Create a new IAM Role"
+11. Call the Role Name:-
+
+    ```
+    google_assistant
+    ```
+
+11. Click on "Hide Policy Document" - a grey box will appear
+
+![alt text](screenshots/role_summary_1.jpeg)
+
+11. Click on "Edit" to the right hand side of the grey box
+11. A warning message will appear - click "Ok"
+
+![alt text](screenshots/edit_warning.jpeg)
+
+11. Delete all the text in the box and paste in the following:-
+
+    ```
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                ],
+                "Resource": [
+                    "arn:aws:logs:*:*:*",
+                    "arn:aws:lambda:*:*:*"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "polly:SynthesizeSpeech"
+                ],
+                "Resource": [
+                    "*"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": "s3:*",
+                "Resource": "*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": "dynamodb:*",
+                "Resource": "*"
+            }
+        ]
+    }
+    ```
+11. Then press the blue "Allow" box at the bottom right hand corner
+
 12. Under Advanced settings set Memory (MB) to 1536 and change the Timeout to 10 seconds
 13. Click "Next" and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google). Hint - Paste it into notepad or similar.
