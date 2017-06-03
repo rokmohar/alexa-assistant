@@ -21,7 +21,8 @@ The following features are **NOT** supported: -
 
 1. Alarms and timers.
 2. Device location. If you have a Home address set in your google account then it will use that as a default
-4. Playing music, news, or podcasts is not yet supported.
+3. Playing music, news, or podcasts is not yet supported.
+4. Account linking for third party services requires owning a Google Home and installing the Google Home application. This affects using services like Uber, or connecting to home automation devices like Hue.
 
 **Known issues:-**
 
@@ -34,8 +35,6 @@ The following features are **NOT** supported: -
     3. Device Information
     4. Voice & Audio Activity
     
-3. Unless you already have a Google Home, you will not be able to use the Google Home app which is required for some apps and functions.
-
 4. Shopping lists are supported - you will need to use the Google Express app to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
 
 5. Recognition accuracy and response time. The Google Assistant API only supports voice input and Alexa only makes the text of a spoken enquiry available to a skill. Therefore the skill has to take the text recognised by Alexa, convert it to speech and then send this to Google. This takes time and can potentially reduce accuracy - there isn't much that can be done about this unless Google opens up a text interface or Amazon allow access to the raw audio from the Alexa request.
@@ -291,10 +290,15 @@ To run the skill you need to do a number of things: -
 16. Click "Save" and then "Next".
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
-19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied earlier from the AWS Lambda setup.
+19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste into the box (highlighted in red in the screenshot) the ARN you copied earlier from the AWS Lambda setup.
+
+![alt text](screenshots/endpoint.jpeg) 
+
 20. Select "Yes" for Account Linking
 
-At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page you are currently on (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link). We will need these during the setup of the Google API.
+At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page you are currently on (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link - see screenshot below). We will need these during the setup of the Google API.
+
+![alt text](screenshots/redirect.jpeg)
 
 **Leave this page open as we will come back to it after we have setup the Google Assistant API**
 
