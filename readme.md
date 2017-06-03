@@ -491,8 +491,8 @@ The S3 bucket can be accessed from your AWS account at any time from AWS https:/
 
 There are a number of optional environment variables that can be set
 
-|Key           |Description|Possible Values| Default Value (if variable is not set)|
-|--------------| ----------|---------------|----------------------------|
+|Key           |Description            |Possible Values| Default Value (if variable is not set)|
+|--------------| ----------------------|---------------|----------------------------|
 |DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of precessing time.|true|no effect unless set| 
 |POLLY_SPEED|Rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
 |POLLY_VOICE|Voice used for Polly text to speech|http://docs.aws.amazon.com/polly/latest/dg/voicelist.html|Joey|
