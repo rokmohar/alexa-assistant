@@ -78,7 +78,7 @@ To run the skill you need to do a number of things: -
 ![alt text](screenshots/lambda_region.jpg)
 
 1. Select Lambda from the AWS Services menu at the top left
-2. Click on the Create a Lambda Function or Get Started Now button.
+2. Click on the "Create a Lambda Function" or "Get Started Now" button.
 3. Select "Blank Function" - this will automatically take you to the "Configure triggers" page.
 
 ![alt text](screenshots/blueprint.jpeg)
@@ -126,7 +126,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/environment_variables.jpeg) 
 
-9. Keep the Handler as index.handler (this refers to the main js file in the zip).
+9. Keep the Handler as "index.handler" (this refers to the main js file in the zip).
 10. Under Role - select "Create a custom role". This will automatically open a new browser tab or window
 
 ![alt text](screenshots/new_role.jpeg)
@@ -204,11 +204,12 @@ To run the skill you need to do a number of things: -
 14. Copy the ARN from the top right to be used later in the Alexa Skill Setup (it's the text after ARN - it won't be in bold and will look a bit like this arn:aws:lambda:eu-west-1:XXXXXXX:function:google-assistant). Hint - Paste it into notepad or similar.
 
 ![alt text](screenshots/ARN.jpeg)
+
 **Leave this tab/window OPEN as we will need to return to it to set some further environment variable values**
 
 ### Alexa Skill Setup (Part 1)
 
-NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different name for this skill or rename/delete the older Google skill.
+**NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill**
 
 1. In a new browser tab/window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
 1. If you have not registered as an Amazon Developer then you will need to do so. Fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?
@@ -233,16 +234,14 @@ NOTE - if you have already installed my previous Google Skill and have used the 
     Google Assistant for Alexa
     ```
     
-8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england.". **For best results the invocation name should be lowercase**
-
-**NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill.**
+8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england". For best results the invocation name should be lowercase **NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill.**
 
 8. Leave the "Audio Player" setting to "No"
 9. Click "Save" and then click "Next".
 
 ![alt text](screenshots/skill_information.jpeg)
 
-10. You will now be on the "Inovation Model" page.
+10. You will now be on the "Invocation Model" page.
 11. Copy the text below into the "Intent Schema" box.
 
     ```
@@ -269,7 +268,11 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 ![alt text](screenshots/intent_schema.jpeg)
 
 12. Under Custom Slot Types:-
-13. Type "SEARCH" into the "Enter Type" field
+13. Type into the "Enter Type" field (NOTE - this is captialised) :-
+    ```
+    SEARCH
+    ```
+    
 14. Copy the text below and paste into the "Enter Values" box and then click "Add"
 
     ```
@@ -288,8 +291,8 @@ NOTE - if you have already installed my previous Google Skill and have used the 
 16. Click "Save" and then "Next".
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
-19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied in step 13 from the AWS Lambda setup.
-20. Select Yes for Account Linking
+19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste the ARN you copied earlier from the AWS Lambda setup.
+20. Select "Yes" for Account Linking
 
 At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page you are currently on (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link). We will need these during the setup of the Google API.
 
