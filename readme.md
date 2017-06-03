@@ -361,7 +361,7 @@ To enable access to the Google Assistant API, do the following:
 
 17. A new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
 
-![alt text](screenshots/credentials_4.jpeg)
+![alt text](screenshots/credentials_5.jpeg)
 
 18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a Notepad document on windows or TextEdit on mac
 
@@ -382,15 +382,18 @@ You can now close this tab/window
     ```
     https://accounts.google.com/o/oauth2/auth?access_type=offline
     ```
-    
-3. Into the Client ID box, paste the Client ID that we got from google in the previous step.
+2. Delete the existing text from the "Client ID" field (it will probably say "alexa-skill")  
+3. Copy the Client ID from your Notepad/TextEdit document (HINT - it's the longer of the two) and paste it into the Client ID box
+
+![alt text](screenshots/linking_1.jpeg)
+
 4. Under Domain List : Press "Add domain" and enter:-
 
     ```
     google.com
     ```
 
-5. Press "add domain" again for a second box into which enter:-
+5. Press "Add domain" again for a second box into which enter:-
 
     ```
     googleapis.com
@@ -403,9 +406,12 @@ You can now close this tab/window
     ```
     
 7. Press "add scope" again for a second box into which enter:-
+
     ```
     https://www.googleapis.com/auth/script.external_request
     ```
+    
+![alt text](screenshots/linking_2.jpeg)
 
 8. Under Authorisation Grant Type make sure "Auth Code Grant" is selected.
 9. The Access Token URI should be set to: -
@@ -414,7 +420,7 @@ You can now close this tab/window
     https://accounts.google.com/o/oauth2/token
     ```
 
-10. Paste in the Client Secret that you were given by Google previously
+10. Copy the Client Secret from your Notepad/TextEdit document (HINT - it's the shorter of the two) and paste it into the Client Secret box
 11. Leave Client Authentication Scheme as "HTTP Basic"
 12. Leave eveything under Permission unselected.
 13. Paste into the Privacy Policy URL box: -
@@ -422,9 +428,9 @@ You can now close this tab/window
     ```
     https://www.google.com/policies/privacy/
     ```
-    
+![alt text](screenshots/linking_2.jpeg)    
 
-14. Click Next.
+14. Click "Save" and then "Next".
 15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot authenticate against the Google API.
 
 
