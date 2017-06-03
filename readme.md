@@ -319,11 +319,11 @@ To enable access to the Google Assistant API, do the following:
 5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled "API manager".
 6. Click on the blue text near the top that says "ENABLE".
 
-![alt text](screenshots/new_google_project.jpeg)
+![alt text](screenshots/new_google_project.jpg)
 
 7. Once the next page had loaded - click on "Create Credentials"
 
-![alt text](screenshots/new_google_project.jpeg)
+![alt text](screenshots/new_google_project.jpg)
 
 8. Make sure "Google Assistant API" is selected under "Which API are you using?"
 9. Under "Where will you be calling the API from?" select "Web server (e.g. node.js, Tomcat)
@@ -332,7 +332,13 @@ To enable access to the Google Assistant API, do the following:
 
 ![alt text](screenshots/credentials_1.jpeg)
 
-10. On the next page set the name to "google_assistant". Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
+10. On the next page set the Name to :-
+
+    ```
+    google_assistant
+    ```
+    
+10. Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
 11. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
 12. Click the blue "Create client ID" button.
 
@@ -352,6 +358,20 @@ To enable access to the Google Assistant API, do the following:
 16. On the next page click on the blue text that says "I'll do this later"
 
 ![alt text](screenshots/credentials_4.jpeg)
+
+17. A new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
+
+![alt text](screenshots/credentials_4.jpeg)
+
+18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a Notepad document on windows or TextEdit on mac
+
+![alt text](screenshots/client_id.jpeg)
+
+19. Copy the text in the Client Secret box (excluding the Client Secret text) and paste it into a new line in your Notepad/TextEdit document 
+
+![alt text](screenshots/client_secret.jpeg)
+
+You can now close this tab/window
 
 
 ### Alexa Skill Setup (Part 2)
