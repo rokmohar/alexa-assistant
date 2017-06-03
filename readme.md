@@ -1,12 +1,12 @@
 # alexa-assistant
 
-Google Assistant for Alexa
+Implementation of the Google Assistant API for Alexa
 
 # Beta 2
 
 # THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS YOU HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
 
-This BETA 2 version contains the following changes:-
+This BETA 2 version contains the following changes: -
 
 1. Automatic set-up of S3 bucket and upload of chime mp3
 2. changed response and chime mp3 file names to use random string from bucket name
@@ -29,14 +29,14 @@ The following features are **NOT** supported: -
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
-2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work (This is a Google policy not mine). If you are concerned then you could use a new google account just for this skill and not login using this account elsewhere
+2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work (This is a Google policy not mine). If you are concerned, then you could use a new google account just for this skill and not login using this account elsewhere
 
     1. Web & App Activity
     2. Location History
     3. Device Information
     4. Voice & Audio Activity
     
-4. Shopping lists are supported - you will need to use the Google Express app to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here:- https://www.google.com/express/shoppinglist/
+4. Shopping lists are supported - you will need to use the Google Express app to see them, or if you are not in the US or don't want to use the app then you can access the shopping list here: - https://www.google.com/express/shoppinglist/
 
 5. Recognition accuracy and response time. The Google Assistant API only supports voice input and Alexa only makes the text of a spoken enquiry available to a skill. Therefore the skill has to take the text recognised by Alexa, convert it to speech and then send this to Google. This takes time and can potentially reduce accuracy - there isn't much that can be done about this unless Google opens up a text interface or Amazon allow access to the raw audio from the Alexa request.
 
@@ -57,8 +57,6 @@ John JDuo and Pete Bready for proof reading these installation instructions
 To run the skill you need to do a number of things: -
 
 1. download the file from github 
-2. setup a role in AWS with the correct permissions
-3. setup an AWS S3 bucket to store the responses from Google
 4. deploy the example code in lambda
 5. configure the Alexa skill to use Lambda.
 6. get an API key from Google
@@ -108,9 +106,9 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/lambda_1.jpeg)
 
-7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it.
+7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from Github - only the index.zip contained within it.
 
-7. You will need to create a random string to act as the name of the Amazon S3 bucket that will be used to store the MP3 response from the Google Assistant (see security note at the start of this readme. Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
+7. You will need to create a random string to act as the name of the Amazon S3 bucket that will be used to store the MP3 response from the Google Assistant (see security note at the start of this readme). Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
 
 ![alt text](screenshots/random.jpeg)
 
@@ -119,10 +117,10 @@ To run the skill you need to do a number of things: -
 |Key           | Value|
 |--------------| -----|
 |S3_BUCKET|(paste in the random string from the previous step in here)|
-|CLIENT_SECRET|(leave blank for the momment)|
-|CLIENT_ID |(leave blank for the momment)|
+|CLIENT_SECRET|(leave blank for the moment)|
+|CLIENT_ID |(leave blank for the moment)|
 |API_ENDPOINT|embeddedassistant.googleapis.com|
-|REDIRECT_URL|(leave blank for the momment)|
+|REDIRECT_URL|(leave blank for the moment)|
 
 ![alt text](screenshots/environment_variables.jpeg) 
 
@@ -148,7 +146,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/edit_warning.jpeg)
 
-11. Delete **ALL** the text in the box and paste in the following:-
+11. Delete **ALL** the text in the box and paste in the following: -
 
     ```
     {
@@ -216,7 +214,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/payment.jpeg)
 
-1. Once you are logged into your account goto to the Alexa tab at the top of the page
+1. Once you are logged into your account go to to the Alexa tab at the top of the page
 2. Click on the yellow "Get Started" button under Alexa Skills Kit
 
 ![alt text](screenshots/getting_started.jpeg)
@@ -488,3 +486,4 @@ As these files must be public inorder for Alexa to play them, it is recommended 
 Once the Alexa skill session ends - the response mp3 is automatically deleted from the S3 bucket although this can take a couple of hours
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
+
