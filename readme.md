@@ -4,7 +4,7 @@ Google Assistant for Alexa
 
 # Beta 2
 
-# THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS You HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
+# THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS YOU HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
 
 This BETA 2 version contains the following changes:-
 
@@ -24,6 +24,7 @@ The following features are **NOT** supported: -
 3. Playing music, news, or podcasts is not yet supported.
 4. Account linking for third party services requires owning a Google Home and installing the Google Home application. This affects using services like Uber, or connecting to home automation devices like Hue.
 
+
 **Known issues:-**
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
@@ -42,7 +43,7 @@ The following features are **NOT** supported: -
 6. The Google API only supports the US version of the Google Assistant and is US English only, however it will still work in other countries. Local services *should* work if you set a home/work addresses in your google account as per the instructions here:- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
     
 
-### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS RECOMMENDED THAT THIS BUCKET IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!!
+### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!! SEE S3
 
 ## Credits
 
@@ -109,7 +110,7 @@ To run the skill you need to do a number of things: -
 
 7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from github - only the index.zip contained within it.
 
-7. Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
+7. You will need to create a random string to act as the name of the Amazon S3 bucket that will be used to store the MP3 response from the Google Assistant (see security note at the start of this readme. Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
 
 ![alt text](screenshots/random.jpeg)
 
@@ -296,7 +297,7 @@ To run the skill you need to do a number of things: -
 
 20. Select "Yes" for Account Linking
 
-At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page you are currently on (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link - see screenshot below). We will need these during the setup of the Google API.
+At this point we will pause the setup of the skill and setup the google API. Copy the two Redirect URLs lower down the page you are currently on (one will start with https://layla.amazon.com/api/skill/link the other https://pitangui.amazon.com/api/skill/link - see screenshot below) and paste them into a Notepad document on windows or TextEdit on mac. We will need these during the setup of the Google API and later on in the setup of the Lambda function
 
 ![alt text](screenshots/redirect.jpeg)
 
@@ -363,7 +364,7 @@ To enable access to the Google Assistant API, do the following:
 
 ![alt text](screenshots/credentials_5.jpeg)
 
-18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a Notepad document on windows or TextEdit on mac
+18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a new line in your Notepad/TextEdit document 
 
 ![alt text](screenshots/client_id.jpeg)
 
@@ -428,20 +429,31 @@ You can now close this tab/window
     ```
     https://www.google.com/policies/privacy/
     ```
-![alt text](screenshots/linking_2.jpeg)    
+![alt text](screenshots/linking_3.jpeg)    
 
 14. Click "Save" and then "Next".
-15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot authenticate against the Google API.
+
+15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot authenticate against the Google API. 
+
+**You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe incase you need these details again**
 
 
 ### AWS Lambda Setup (Part 1)
 
 1. Return to the Lambda Function page we left open earlier.
-2. Click on the lambda function "Code" tab (it will probably be already open on the Triggers tab)
-3. Paste the google Client Secret into the value field for the CLIENT_SECRET variable.
-4. Paste the google Client ID into the value field for the CLIENT_ID variable.
-5. Paste the first of the "Redirect URLS" from the skill setup page into the REDIRECT_URL variable.
-6. Hit "Save" at the top (Not "Save and Test")
+2. Click on the lambda function "Code" tab.
+
+![alt text](screenshots/code_tab.jpeg) 
+
+4. Go the the Environment Variables that you created earlier
+
+3. Paste the google Client Secret from your Notepad/TextEdit doc into the value field for the CLIENT_SECRET variable.
+4. Paste the google Client ID from your Notepad/TextEdit doc into the value field for the CLIENT_ID variable.
+5. Paste the *first* of the "Redirect URLS" from the skill setup page into the REDIRECT_URL variable. (it will either start with https://layla.amazon.com/api/skill/link/ or https://pitangui.amazon.com/api/skill/link  - it will depend on whether you are US or EU based as to which one will be first)
+
+![alt text](screenshots/environment_variables_2.jpeg)
+
+6. Hit "Save" at the top (**Not "Save and Test"** If you do press this then just ignore the error that appears)
 
 
 ### Linking the skill to your Google Account
@@ -455,7 +467,24 @@ You can now close this tab/window
     3. Device Information
     4. Voice & Audio Activity
     
-3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g "Jarvis" or "Hal"
+3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g "my assistant"
+4. The skill will tell you if you have forgotten to set any environment variables or if there any other set-up issues
 4. You will then be prompted to link your account through the Alexa app.
+5. Select the Google account you want to use (it does not have to be the one you authorised the API with) and then make sure you click "Allow" on the Google authorisation page. 
+
+![alt text](screenshots/authorise.jpeg)
+
+6. NOTE - you can deauthorise the app at any time by removing it from your google account by going here https://myaccount.google.com/permissions?pli=1 and removing the app called "Assistant"
+
+![alt text](screenshots/app_remove.jpeg)
+
+7. If you want local searches to work then you will need to set a home and work address as per these instructions :- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
 
 
+## S3 BUCKET BUCKET INFORMATION
+
+The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain two publicly accessible mp3 files, with file names based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. The second file (s3_bucket_name)0.mp3 is a chime sound which is added to the response when a follow-on query is expected by the API.
+As these files must be public inorder for Alexa to play them, it is recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
+Once the Alexa skill session ends - the response mp3 is automatically deleted from the S3 bucket although this can take a couple of hours
+
+The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
