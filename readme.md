@@ -493,5 +493,9 @@ There are a number of optional environment variables that can be set
 
 |Key           |Description|Possible Values| Default Value (if variable is not set)|
 |--------------| ----------|---------------|----------------------------|
-|POLLY_SPEED|Sets the rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
-|POLLY_VOICE|voice used for Polly text to speech|http://docs.aws.amazon.com/polly/latest/dg/voicelist.html|Joey|
+|DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of precessing time.|true|no effect unless set| 
+|POLLY_SPEED|Rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
+|POLLY_VOICE|Voice used for Polly text to speech|http://docs.aws.amazon.com/polly/latest/dg/voicelist.html|Joey|
+|CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API|integer|16000 (1 second of PCM)|
+|SEND_SPEED|The skill will try and send chucks in real time. This vaiable will act as a mutliplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunksizes|0.1 (once every 100ms)|
+|UTTERANCE_TEXT|Overide the Alexa speech to text and send a specifc phrase to Polly|string|no effect unless set|
