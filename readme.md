@@ -313,16 +313,45 @@ To enable access to the Google Assistant API, do the following:
 
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so Google will add a series of numbers to the end of the name if somebody has already used it. Press create.
 4. You will be taken to a new page. It will take about 15 seconds for the project to be created. Look for a notification within the blue bar at the top of the page. Once the project is created click on the the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project.
+
 ![alt text](screenshots/google_notification.jpg)
+
 5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled "API manager".
 6. Click on the blue text near the top that says "ENABLE".
-7. Once the next page had loaded - do nothing with this page.
-8. Click on this link:- https://console.developers.google.com/apis/credentials/oauthclient This will take you to a page entitled "Create Client ID".
-9. You may need to set a product name for the product consent screen. On the OAuth consent screen tab, give the product a name (pick anything you want) and click Save.
-10. Click Web application and set the name to "google_assistant". Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
+
+![alt text](screenshots/new_google_project.jpeg)
+
+7. Once the next page had loaded - click on "Create Credentials"
+
+![alt text](screenshots/new_google_project.jpeg)
+
+8. Make sure "Google Assistant API" is selected under "Which API are you using?"
+9. Under "Where will you be calling the API from?" select "Web server (e.g. node.js, Tomcat)
+9. Under "What data will you be accessing?" select "User data".
+9. Click on the blue "What credentials do I need?" button.
+
+![alt text](screenshots/credentials_1.jpeg)
+
+10. On the next page set the name to "google_assistant". Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
 11. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
-12. Click Create. A dialog box appears that shows you a client ID and secret. Make a note of these (Copy these into a notepad document or similar - there is a little copy button to the right of each of these values to help you) as we'll need to enter these into our skill and Lambda function later. (Note - if you forget to copy these then you can acess them from the "Credentials" tab with-in the Google API manager)
-13. Hit OK. You can now close this page.
+12. Click the blue "Create client ID" button.
+
+![alt text](screenshots/credentials_2.jpeg)
+
+13. On the next page the Email address field should auto populate with your Gogole accoutn email address
+14. In the "Product name shown to users" enter:-
+
+    ```
+    Assistant
+    ```
+
+15. Click on the blue "Continue" button.
+
+![alt text](screenshots/credentials_3.jpeg)
+
+16. On the next page click on the blue text that says "I'll do this later"
+
+![alt text](screenshots/credentials_4.jpeg)
 
 
 ### Alexa Skill Setup (Part 2)
