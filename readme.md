@@ -489,13 +489,13 @@ The S3 bucket can be accessed from your AWS account at any time from AWS https:/
 
 ## OPTIONAL ENVIRONMENT VARIABLES
 
-There are a number of optional environment variables that can be set
+There are a number of optional environment variables that can be set. These are for debugging purposes and may break things!
 
 |Key           |Description            |Possible Values| Default Value (if variable is not set)|
 |--------------| ----------------------|---------------|----------------------------|
-|DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of precessing time.|true|no effect unless set| 
+|DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of processing time.|true|(No effect unless set)| 
 |POLLY_SPEED|Rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
 |POLLY_VOICE|Voice used for Polly text to speech|http://docs.aws.amazon.com/polly/latest/dg/voicelist.html|Joey|
-|CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API|integer|16000 (1 second of PCM)|
-|SEND_SPEED|The skill will try and send chucks in real time. This vaiable will act as a mutliplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunksizes|0.1 (once every 100ms)|
-|UTTERANCE_TEXT|Overide the Alexa speech to text and send a specifc phrase to Polly|string|no effect unless set|
+|CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API. The aPI will send an error if this is too big|integer|16000 (1 second of PCM)|
+|SEND_SPEED|The skill will try and send chucks in real time. This vaiable will act as a mutliplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunksizes. The API will send an error if the chunks are sent too fast|Float |0.1 (once every 100ms)|
+|UTTERANCE_TEXT|Overide the Alexa speech to text and send a specifc phrase to Polly|string|(No effect unless set)|
