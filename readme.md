@@ -487,3 +487,11 @@ Once the Alexa skill session ends - the response mp3 is automatically deleted fr
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
 
+## OPTIONAL ENVIRONMENT VARIABLES
+
+There are a number of optional environment variables that can be set
+
+|Key           |Description|Possible Values| Default Value (if variable is not set)|
+|--------------| ----------|---------------|----------------------------|
+|POLLY_SPEED|Sets the rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
+|POLLY_VOICE|voice used for Polly text to speech|http://docs.aws.amazon.com/polly/latest/dg/voicelist.html|Joey|
