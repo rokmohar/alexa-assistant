@@ -44,8 +44,9 @@ The following features are **NOT** supported: -
 6. The Google API only supports the US version of the Google Assistant and is US English only, however it will still work in other countries. Local services *should* work if you set a home/work addresses in your google account as per the instructions here:- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
 
 7. Alexa is limited to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
-    
 
+8. Audio quality. The skill uses the low bitrate 32kb/s MP3 encoded response from Google which then has to be re-encoded into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. Whilst it would be possible to utilise the un-compressed PCM response from the API for better fidelity (although it would still need to be converted to a 48kb/s MP3), it would significantly increase response times so I have traded quality for usability.
+    
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS.
 
 ## Credits
