@@ -55,13 +55,13 @@ The following features are **NOT** supported: -
 
 
 ### AWS CHARGES
-This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. **AGAIN - IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
+This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. **IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
 A breakdown of estimated charges based upon 1000 uses per month are below. These figures are taken from https://aws.amazon.com/s3/pricing/ and https://aws.amazon.com/polly/pricing/ as of 4th June 2017.
 
 Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fees based upon 1000 requestes to the skill are calculated as follows:
 
-|Monthly Usage|Calculation|Cost|
+|Monthly Usage|Calculation|Monthly Cost|
 |-------------|-----------|--------|
 |2000 PUT requests|2000 x $0.005/1000|$ 0.01|
 |2000 GET requests per month|2000 x $0.005/1000|$ 0.01|
@@ -70,9 +70,9 @@ Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fee
 **Annual cost = $0.36**
 
 
-|Monthly Usage|Calculation|Cost|
+|Monthly Usage|Calculation|Monthly Cost|
 |-------------|-----------|--------|
-|1000 requests of 100 characters(100,000 characters)|0.1 x $4.00|$ 0.40|
+|1000 requests of 100 characters(100,000 characters)|100000 x $0.000004|$ 0.40|
 
 **Annual cost = $4.80 per year**
                                         
@@ -105,7 +105,8 @@ To run the skill you need to do a number of things: -
 
 ### AWS Lambda Setup
 
-1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. Please see the AWS Charges section above
+1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already. Make sure you use the same Amazon account that your Echo device is registered to. **Note - you will need a credit or debit card to set up an AWS account - there is no way around this. Please see the AWS Charges section above**
+
 2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
 
 ![alt text](screenshots/lambda_region.jpg)
