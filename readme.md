@@ -322,7 +322,7 @@ To enable access to the Google Assistant API, do the following:
 5. Click on this link: - https://console.developers.google.com/apis/api/embeddedassistant.googleapis.com/overview This will take you to a page entitled "API manager".
 6. Click on the blue text near the top that says "ENABLE".
 
-![alt text](screenshots/new_google_project.jpg)
+![alt text](screenshots/enable.jpeg)
 
 7. Once the next page had loaded - click on "Create Credentials"
 
