@@ -326,7 +326,7 @@ To enable access to the Google Assistant API, do the following:
 
 7. Once the next page had loaded - click on "Create Credentials"
 
-![alt text](screenshots/create_credentials.jpg)
+![alt text](screenshots/create_credentials.jpeg)
 
 8. Make sure "Google Assistant API" is selected under "Which API are you using?"
 9. Under "Where will you be calling the API from?" select "Web server (e.g. node.js, Tomcat)
