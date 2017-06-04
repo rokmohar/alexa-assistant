@@ -91,53 +91,16 @@ if (S3_BUCKET){
                
                else     {
                    console.log('Bucket Created');
-                   // Create read stream from chime MP3 file
-                    var readChimemp3 = fs.createReadStream('./chime.mp3');
-                    // Pipe to S3 upload function
 
-                    function uploadChime(s3) {
-                                    var chime_stream = new Stream.PassThrough();
-                                    var chime_params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '0.mp3'), Body: chime_stream, ACL:'public-read'};
-                                    s3.upload(chime_params, function(err, data) {
-                                        if (err){
-                                        console.log('S3 upload error: ' + err) 
 
-                                        } else{
-                                         console.log(data);   
-
-                                      }
-                                    });
-                                    return chime_stream;
-                                }
-                    // stream file to S3 upload function
-                    readChimemp3.pipe(uploadChime(s3));
                }
                
          });
            
        }
        else {
-           console.log('Bucket already exists - uploading chime');
-           // Create read stream from chime MP3 file
-            var readChimemp3 = fs.createReadStream('./chime.mp3');
-            // Pipe to S3 upload function
+           console.log('Bucket already exists');
 
-            function uploadChime(s3) {
-                            var chime_stream = new Stream.PassThrough();
-                            var chime_params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '0.mp3'), Body: chime_stream, ACL:'public-read'};
-                            s3.upload(chime_params, function(err, data) {
-                                if (err){
-                                console.log('S3 upload error: ' + err) 
-
-                                } else{
-                                 console.log(data);   
-
-                              }
-                            });
-                            return chime_stream;
-                        }
-            // stream file to S3 upload function
-            readChimemp3.pipe(uploadChime(s3));
        }
      });
     
@@ -206,7 +169,6 @@ var handlers = {
         var setupTotal;
         var audioLength = 0;
         var searchFunction = this;
-        var lastAudioTime;
         var googleUtternaceText;
         var audioPresent = false;
         
@@ -257,7 +219,7 @@ var handlers = {
         
         var CHUNK_SIZE = process.env.CHUNK_SIZE;
         if (!CHUNK_SIZE){
-            CHUNK_SIZE = 16000;
+            CHUNK_SIZE = 32000;
         }
         
         console.log('CHUNK_SIZE: ' + CHUNK_SIZE);
@@ -381,7 +343,7 @@ var handlers = {
                 audioSetupConfig = {config: 
                         { 
                             audio_in_config: { encoding: 1, sample_rate_hertz: 16000 },
-                            audio_out_config: { encoding: 2, sample_rate_hertz: 16000, volume_percentage: 100 } 
+                            audio_out_config: { encoding: 1, sample_rate_hertz: 16000, volume_percentage: 100 } 
                         }
                        }
             } else {
@@ -389,7 +351,7 @@ var handlers = {
                 audioSetupConfig = {config: 
                     { 
                         audio_in_config: { encoding: 1, sample_rate_hertz: 16000 },
-                        audio_out_config: { encoding: 2, sample_rate_hertz: 16000, volume_percentage: 100 }, 
+                        audio_out_config: { encoding: 1, sample_rate_hertz: 16000, volume_percentage: 100 }, 
                         converse_state: {conversation_state: conversation_State}
                     }
                    }
@@ -400,7 +362,7 @@ var handlers = {
             
             
             
-            // Function to Split up audio part into 100ms chunks for sending to Google API in real time to simulate spoken request
+            // Function to Split up audio part into chunks for sending to Google API in real time to simulate spoken request
             // This function is courtesy of Richard vowles https://github.com/rvowles/node-assistant
             
             
@@ -426,11 +388,12 @@ var handlers = {
                         const parts = Math.ceil(chunk.length / CHUNK_SIZE);
                         console.log('chunk length is ' + chunk.length)
                         console.log("Parts = " + parts);
-                        const partLength = CHUNK_SIZE/16000;    
+                        const partLength = CHUNK_SIZE/32000;    
 
                         audio_chunk++;
                         // Delay sending of all chunk data for this part until all previous chuncks have been sent
-                        // as all chucks are a maximum of 100ms long we calculate the delay : number of chunks x previous parts x 0.1 seconds
+                        
+                        
                         wait(partLength*parts*audio_chunk*SEND_SPEED, 'seconds', function() {    
                             for (let count = 0; count < parts; count++) {
                                 //console.log('part: ' + count)
@@ -551,31 +514,20 @@ var handlers = {
                     var audio_chunk = ConverseResponse.audio_out.audio_data;
                     if (audio_chunk instanceof Buffer) {
                         audioLength = audioLength + audio_chunk.length;
-                    
-                        //console.log("chunk length " + audio_chunk.length)
-                        // Store time that audio was recieved - this is used to check whther this is the last audio packet of response
-                        // Would be nice if Assistant API told us this 
-                        lastAudioTime = new Date().getTime();
-                        
+                      
                         if (audioPresent == false){
                             audioPresent = true;
-                            //conversation.end();
+                            
                         }
                         
                         // Total length of MP3's in alexa skills must be less than 90 seconds.
-                        // The chime at the end of a microphone open response is 1 second
-                        // so we must ensure total response less then 89 seconds 
-                        if ( audioLength <= (4272*1024)){
+                        
+                        if ( audioLength <= (90*16*16000/8)){  // Seconds x Bits per sample x samples per second / 8 to give bytes per second
                             responseFile.write(audio_chunk);
-                            //console.log("chunk length " + audio_chunk.length)
-                            // Store time that audio was recieved - this is used to check whther this is the last audio packet of response
-                            // Would be nice if Assistant API told us this 
-                            lastAudioTime = new Date().getTime();
-                            
 
                         } else {
                             // we won't write any more timestamps
-                            console.log ('Ignoring audio data as it is longer than 89 seconds')
+                            console.log ('Ignoring audio data as it is longer than 90 seconds')
                                                         
                         }
                        
@@ -645,34 +597,22 @@ var handlers = {
                 
                 var encoder = new lame.Encoder({
                       // input
-                      channels: 1,        // 2 channels (left and right)
+                      channels: 1,        // 1 channels (MONO)
                       bitDepth: 16,       // 16-bit samples
                       sampleRate: 16000,  // 16,000 Hz sample rate
 
                       // output
                       bitRate: 48,
                       outSampleRate: 16000,
-                      mode: lame.STEREO // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
+                      mode: lame.JOINTSTEREO // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
                     }); 
                 
                 // The output from the google assistant is much lower than Alexa so we need to apply a gain
                 var vol = new volume();
                 
-                // Set volume gain on google output to be +50%
+                // Set volume gain on google output to be +60%
                 vol.setVolume(1.5);
                 
-                var decoder = new lame.Decoder();
-                decoder.on('format', onFormat);
-                
-                function onFormat (format) {
-                  //console.error('MP3 format: %j', format);
-                    
-                    // pipe MP3 decoder to the gain processer                     
-                    decoder.pipe(vol);
-
-                  
-                }
-
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {
                     var pass = new Stream.PassThrough();
@@ -692,7 +632,7 @@ var handlers = {
                                 '*********************************************************************************\n' +
                                 'Skill Version:               ' + VERSION_NUMBER + '\n\n' +
                                 'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
-                                'Google assisant heard:       ' + googleUtternaceText + '\n' +
+                                'Google assistant heard:       ' + googleUtternaceText + '\n' +
                                 'Polly voice was:             ' + POLLY_VOICE + '\n' +
                                 'Polly Speed was:             ' + POLLY_SPEED + '\n' +
                                 'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
@@ -710,17 +650,14 @@ var handlers = {
                             var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '.mp3"/>'; 
                             // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                             if (microphoneOpen == true){
-                                console.log('Microphone is open so keeping session open')
-                                
-                                speechOutput = speechOutput + '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '0.mp3"/>';
-                                
+                                console.log('Microphone is open so keeping session open')                        
                                 console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
                                 cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) + 
                                 '\nMore detailed debug information can be found in the Cloud Watch logs' );
                                 //
                                 if (DEBUG_MODE){
-                                    
-                                    searchFunction.emit(':askWithCard', speechOutput, cardTitle, cardContent);
+                                    console.log
+                                    searchFunction.emit(':askWithCard', speechOutput, null, cardTitle, cardContent);
                                 } 
                                 else {
                                     searchFunction.emit(':ask', speechOutput);    
@@ -728,12 +665,10 @@ var handlers = {
                             // Otherwise we create an Alexa 'Tell' command which will close the session
                             } else{
                                 console.log('Microphone is closed so closing session')
-                                
                                 console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
                                 cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) +
                                 '\nMore detailed debug information can be found in the Cloud Watch logs' );
                                 if (DEBUG_MODE){
-                                    
                                     searchFunction.emit(':tellWithCard', speechOutput, cardTitle, cardContent);
                                 } 
                                 else {
@@ -761,13 +696,11 @@ var handlers = {
                     readmp3.pipe(uploadFromStream(s3));
                 });        
 
-                // Pipe output of PCM file reader to MP3 decoder
-                readpcm.pipe(decoder);
-                
-                
+
+                // Pipe output of PCM file reader to the gain process
+                readpcm.pipe(vol);
                 // pipe the pcm output of the gain process to the LAME encoder
                 vol.pipe(encoder);
-
                 // Pipe output of LAME encoder into MP3 file writer
                 encoder.pipe(writemp3);
 
@@ -785,8 +718,8 @@ var handlers = {
     },
     
     'Unhandled': function() {
+        console.log('Unhandled event');
         
-        var message = 'Unhandled';
         var message = 'stop';
         this.emit('SearchIntent', message);
     },
@@ -806,16 +739,13 @@ var handlers = {
         
     
     'SessionEndedRequest': function () {
-        console.log('session ended!');
+        console.log('Session ended request');
         
-        var params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '.mp3')};
-        s3.deleteObject(params, function(err, data) {
-          if (err) console.log('S3 deletion error ', err.stack);  // error
-          else     console.log('Response mp3 deleted');                 // deleted
-        });
-        
-        // save all settings
-        //this.emit(':saveState', true);
+        // Google Assistant will keep the conversation thread open even if we don't give a response to an ask.
+        // We need to close the conversation if an ask response is not given (which will end up here)
+        // The easiset way to do this is to just send a stop command
+        var message = 'stop';
+        this.emit('SearchIntent', message);
         
     }
 };

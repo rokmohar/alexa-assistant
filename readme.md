@@ -2,16 +2,18 @@
 
 Implementation of the Google Assistant API for Alexa
 
-# Beta 2
+# Beta 3
 
 # THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS YOU HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
 
-This BETA 2 version contains the following changes: -
+This BETA 3 version contains the following changes: -
 
-1. Automatic set-up of S3 bucket and upload of chime mp3
-2. changed response and chime mp3 file names to use random string from bucket name
-3. Applied a 50% increase in gain on responses
-4. Simplified installation process
+1. Moved over to using PCM rather than MP3 response from API as quality is better. Also encoding mp3 as joint stereo for better quality too
+2. Removed chime sound to simplify S3 setup
+3. Removed some redundant commenting
+4. Ensure that End Session handler closes the Assistant conversation
+5. Clarification of AWS charges
+
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
@@ -27,6 +29,8 @@ The following features are **NOT** supported: -
 
 
 **Known issues:-**
+
+1. **This skill uses chargable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month** See the AWS Charges section below for more details
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
@@ -45,9 +49,36 @@ The following features are **NOT** supported: -
 
 7. Alexa is limited to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
 
-8. Audio quality. The skill uses the low bitrate 32kb/s MP3 encoded response from Google which then has to be re-encoded into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. Whilst it would be possible to utilise the un-compressed PCM response from the API for better fidelity (although it would still need to be converted to a 48kb/s MP3), it would significantly increase response times so I have traded quality for usability.
+8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
     
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS.
+
+
+### AWS CHARGES
+This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. **AGAIN - IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
+
+A breakdown of estimated charges based upon 1000 uses per month are below. These figures are taken from https://aws.amazon.com/s3/pricing/ and https://aws.amazon.com/polly/pricing/ as of 4th June 2017.
+
+Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fees based upon 1000 requestes to the skill are calculated as follows:
+
+|Monthly Usage|Calculation|Cost|
+|-------------|-----------|--------|
+|2000 PUT requests|2000 x $0.005/1000|$ 0.01|
+|2000 GET requests per month|2000 x $0.005/1000|$ 0.01|
+|0.1GB of Storage per month|0.1 x $0.023|$ 0.01|
+
+**Annual cost = $0.36**
+
+
+|Monthly Usage|Calculation|Cost|
+|-------------|-----------|--------|
+|1000 requests of 100 characters(100,000 characters)|0.1 x $4.00|$ 0.40|
+
+**Annual cost = $4.80 per year**
+                                        
+You can view your charges for the current billing period at any time on the Amazon Web Services web site, by logging into your Amazon Web Services account, and clicking “Account Activity” under “Your Web Services Account”.
+
+**AGAIN - IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
 ## Credits
 
@@ -74,7 +105,7 @@ To run the skill you need to do a number of things: -
 
 ### AWS Lambda Setup
 
-1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. If you are just using this skill then you are highly unlikely to be charged unless you are making at least a million requests a month!
+1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already ** Make sure you use the same Amazon account that your Echo device is registered to** Note - you will need a credit or debit card to set up an AWS account - there is no way around this. Please see the AWS Charges section above
 2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany. This is important as only these two regions support Alexa. NOTE: the choice of either US or EU is important as it will affect the results that you get. The EU node will provide answers in metric and will be much more UK focused, whilst the US node will be imperial and more US focused.
 
 ![alt text](screenshots/lambda_region.jpg)
@@ -484,9 +515,9 @@ You can now close this tab/window
 
 ## S3 BUCKET BUCKET INFORMATION
 
-The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain two publicly accessible mp3 files, with file names based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. The second file (s3_bucket_name)0.mp3 is a chime sound which is added to the response when a follow-on query is expected by the API.
-As these files must be public inorder for Alexa to play them, it is recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
-Once the Alexa skill session ends - the response mp3 is automatically deleted from the S3 bucket although this can take a couple of hours
+The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 files, with file names based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. 
+As this file must be public inorder for Alexa to play it, it's recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
+
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
 
@@ -499,6 +530,6 @@ There are a number of optional environment variables that can be set. These are 
 |DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of processing time.|true|(No effect unless set)| 
 |POLLY_SPEED|Rate of Polly text to speech|x-slow, slow, medium, fast, x-fast|medium|
 |POLLY_VOICE|Voice used for Polly text to speech|[Polly Docs](http://docs.aws.amazon.com/polly/latest/dg/voicelist.html)|Joey|
-|CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API. The API will send an error if this is too big|integer|16000 (1 second of PCM)|
+|CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API. The API will send an error if this is too big|integer|32000 (1 second of PCM)|
 |SEND_SPEED|The skill will try and send chucks in real time. This variable will act as a mutliplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunksizes. The API will send an error if the chunks are sent too fast|Float |0.1 (once every 100ms to speed up responses. This is signifiantly faster than real time, but we are using a large chunk size and a small number of chunks so we can get away with it!)|
 |UTTERANCE_TEXT|Overide the Alexa speech to text and send a specifc phrase to Polly|string|(No effect unless set)|
