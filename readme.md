@@ -326,7 +326,7 @@ To enable access to the Google Assistant API, do the following:
 
 7. Once the next page had loaded - click on "Create Credentials"
 
-![alt text](screenshots/new_google_project.jpg)
+![alt text](screenshots/create_credentials.jpg)
 
 8. Make sure "Google Assistant API" is selected under "Which API are you using?"
 9. Under "Where will you be calling the API from?" select "Web server (e.g. node.js, Tomcat)
@@ -440,7 +440,7 @@ You can now close this tab/window
 **You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe incase you need these details again**
 
 
-### AWS Lambda Setup (Part 1)
+### AWS Lambda Setup (Part 2)
 
 1. Return to the Lambda Function page we left open earlier.
 2. Click on the lambda function "Code" tab.
