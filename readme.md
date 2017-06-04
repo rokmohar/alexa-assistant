@@ -21,8 +21,9 @@ The following features are **NOT** supported: -
 
 1. Alarms and timers.
 2. Device location. If you have a Home address set in your google account then it will use that as a default
-3. Playing music, news, or podcasts is not yet supported.
+3. Playing music, news, or podcasts are not supported.
 4. Account linking for third party services requires owning a Google Home and installing the Google Home application. This affects using services like Uber, or connecting to home automation devices like Hue.
+5. Multiple Users are not supported - it will only use the Google account linked through the Alexa app
 
 
 **Known issues:-**
@@ -41,6 +42,8 @@ The following features are **NOT** supported: -
 5. Recognition accuracy and response time. The Google Assistant API only supports voice input and Alexa only makes the text of a spoken enquiry available to a skill. Therefore the skill has to take the text recognised by Alexa, convert it to speech and then send this to Google. This takes time and can potentially reduce accuracy - there isn't much that can be done about this unless Google opens up a text interface or Amazon allow access to the raw audio from the Alexa request.
 
 6. The Google API only supports the US version of the Google Assistant and is US English only, however it will still work in other countries. Local services *should* work if you set a home/work addresses in your google account as per the instructions here:- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
+
+7. Alexa is limited to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
     
 
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS.
