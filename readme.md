@@ -17,9 +17,9 @@ The following features are **NOT** supported: -
 5. Multiple Users are not supported - it will only use the Google account linked through the Alexa app
 
 
-**Known issues:-**
+# KNOWN ISSUES
 
-1. **This skill uses chargable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month** See the AWS Charges section below for more details
+1. **This skill uses chargable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month. See the AWS Charges section below for more details**
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
@@ -40,10 +40,10 @@ The following features are **NOT** supported: -
 
 8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
     
-### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL!!! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS.
+### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE. THIS IS STORED IN AN AWS S3 BUCKET UNDER YOUR CONTROL AND IT IS GIVEN A RANDOMISED NAME TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS**
 
 
-### AWS CHARGES
+# AWS CHARGES
 This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. **IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
 A breakdown of estimated charges based upon 1000 uses per month are below. These figures are taken from https://aws.amazon.com/s3/pricing/ and https://aws.amazon.com/polly/pricing/ as of 4th June 2017.
@@ -69,14 +69,14 @@ You can view your charges for the current billing period at any time on the Amaz
 
 **AGAIN - IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
-## Credits
+# CREDITS
 
 Richard Vowles for his TypeScript Google Assistant client which gave me some pointers on getting the API running in pure node.js https://github.com/rvowles/node-assistant
 
 John JDuo and Pete Bready for proof reading these installation instructions
 
 
-## Setup
+# SETUP
 
 To run the skill you need to do a number of things: -
 
@@ -86,13 +86,13 @@ To run the skill you need to do a number of things: -
 6. get an API key from Google
 7. link skill to your Google Account
 
-### Download code from github
+## Download code from github
 
 1. Click on the green "Clone or download" button just under the yellow bar
 2. Click download ZIP
 3. Unzip the file to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames)
 
-### AWS Lambda Setup
+## AWS Lambda Setup (Part 1)
 
 1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already. Make sure you use the same Amazon account that your Echo device is registered to. **Note - you will need a credit or debit card to set up an AWS account - there is no way around this. Please see the AWS Charges section above**
 
@@ -150,7 +150,7 @@ To run the skill you need to do a number of things: -
 ![alt text](screenshots/environment_variables.jpeg) 
 
 9. Keep the Handler as "index.handler" (this refers to the main js file in the zip).
-10. Under Role - select "Create a custom role". This will automatically open a new browser tab or window
+10. Under Role - select "Create a custom role". This will automatically open a new browser tab or window.
 
 ![alt text](screenshots/new_role.jpeg)
 
@@ -162,11 +162,11 @@ To run the skill you need to do a number of things: -
     google_assistant
     ```
 
-11. Click on "Hide Policy Document" - a grey box will appear
+11. Click on "Hide Policy Document" - a grey box will appear.
 
 ![alt text](screenshots/role_summary_1.jpeg)
 
-11. Click on "Edit" to the right hand side of the grey box
+11. Click on "Edit" to the right hand side of the grey box.
 11. A warning message will appear - click "Ok"
 
 ![alt text](screenshots/edit_warning.jpeg)
@@ -230,27 +230,27 @@ To run the skill you need to do a number of things: -
 
 **Leave this tab/window OPEN as we will need to return to it to set some further environment variable values**
 
-### Alexa Skill Setup (Part 1)
+## Alexa Skill Setup (Part 1)
 
 **NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill**
 
 1. In a new browser tab/window go to the Alexa Console (https://developer.amazon.com/edw/home.html and select Alexa on the top menu)
-1. If you have not registered as an Amazon Developer then you will need to do so. Fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?
+1. If you have not registered as an Amazon Developer then you will need to do so. Fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?"
 
 ![alt text](screenshots/payment.jpeg)
 
-1. Once you are logged into your account go to to the Alexa tab at the top of the page
-2. Click on the yellow "Get Started" button under Alexa Skills Kit
+1. Once you are logged into your account go to to the Alexa tab at the top of the page.
+2. Click on the yellow "Get Started" button under Alexa Skills Kit.
 
 ![alt text](screenshots/getting_started.jpeg)
 
-3. Click the "Add a New Skill" yellow box towards the top right
+3. Click the "Add a New Skill" yellow box towards the top right.
 
 ![alt text](screenshots/add_new_skill.jpeg)
 
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
-6. Select the language as English (US), English (UK), or German depending on your location
+6. Select the language as English (US), English (UK) - **Note German is not currently supported**
 6. Set the "Name" to 
 
     ```
@@ -398,7 +398,7 @@ To enable access to the Google Assistant API, do the following:
 You can now close this tab/window
 
 
-### Alexa Skill Setup (Part 2)
+## Alexa Skill Setup (Part 2)
 
 1. Return to the Alexa skill page that we paused at earlier
 2. In the Authorization URL paste the following: -
@@ -461,7 +461,7 @@ You can now close this tab/window
 **You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe incase you need these details again**
 
 
-### AWS Lambda Setup (Part 2)
+## AWS Lambda Setup (Part 2)
 
 1. Return to the Lambda Function page we left open earlier.
 2. Click on the lambda function "Code" tab.
@@ -478,7 +478,7 @@ You can now close this tab/window
 6. Hit "Save" at the top (**Not "Save and Test"** If you do press this then just ignore the error that appears)
 
 
-### Linking the skill to your Google Account
+## Linking the skill to your Google Account
 
 1. In order to use the Google Assistant, you must share certain activity data with Google. The Google Assistant needs this data to function properly; this is not specific to the SDK.
 
@@ -503,7 +503,7 @@ You can now close this tab/window
 7. If you want local searches to work then you will need to set a home and work address as per these instructions :- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
 
 
-## S3 BUCKET BUCKET INFORMATION
+# S3 BUCKET BUCKET INFORMATION
 
 The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 files, with file names based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. 
 As this file must be public inorder for Alexa to play it, it's recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
@@ -511,7 +511,7 @@ As this file must be public inorder for Alexa to play it, it's recommended as pe
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
 
-## OPTIONAL ENVIRONMENT VARIABLES
+# OPTIONAL ENVIRONMENT VARIABLES
 
 There are a number of optional environment variables that can be set. These are for debugging purposes and may break things!
 
