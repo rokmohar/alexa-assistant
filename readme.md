@@ -4,7 +4,7 @@ Implementation of the Google Assistant API for Alexa
 
 # Release 1.0
 
-### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
+### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE RESPONSES BEING HELD IN A PUBLICLY ACCESSIBLE MP3 FILE.
 
 This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports all the functions that the API offers (which is slightly different from the Google Home). It is limited to 500 requests a day and only supports US English (although it is usable in the UK)
 
@@ -505,7 +505,7 @@ You can now close this tab/window
 
 # S3 BUCKET BUCKET INFORMATION
 
-The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 files, with file names based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. 
+The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with a file name based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. 
 As this file must be public inorder for Alexa to play it, it's recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
 
 
