@@ -94,7 +94,7 @@ To run the skill you need to do a number of things: -
 
 1. Click on the green "Clone or download" button just under the yellow bar
 2. Click download ZIP
-3. Unzip the file to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames)
+3. Unzip the file (it will be called alexa-assistant-master.zip) to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames)
 
 ## AWS Lambda Setup (Part 1)
 
@@ -135,7 +135,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/lambda_1.jpeg)
 
-7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the zip file you downloaded from Github - only the index.zip contained within it.
+7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the alexa-assistant-master.zip you downloaded from Github - only the index.zip contained within it.
 
 7. You will need to create a random string to act as the name of the Amazon S3 bucket that will be used to store the MP3 response from the Google Assistant (see security note at the start of this readme). Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
 
@@ -509,8 +509,8 @@ You can now close this tab/window
 
 # S3 BUCKET BUCKET INFORMATION
 
-The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with a file name based upon the bucket name. (s3_bucket_name).mp3 contains the response from the Google Assistant API which alexa plays as part of an SSML response. 
-As this file must be public inorder for Alexa to play it, it's recommended as per the setup instructions that the bucket is given a completely random name to provide limited security through obfuscation.
+The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with a file name based upon the bucket name i.e (s3_bucket_name).mp3. This file contains the response from the Google Assistant API which Alexa plays as part of an SSML response. 
+As this file must be public inorder for Alexa to play it, it's recommended, as per the setup instructions, that the bucket is given a completely random name to provide limited security through obfuscation.
 
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
