@@ -2,18 +2,7 @@
 
 Implementation of the Google Assistant API for Alexa
 
-# Beta 3
-
-# THIS IS AN UNSTABLE DEVELOPMENT BRANCH - PLEASE DO NOT INSTALL THIS VERSION UNLESS YOU HAVE BEEN ASKED TO AS IT IS WORK IN PROGRESS! 
-
-This BETA 3 version contains the following changes: -
-
-1. Moved over to using PCM rather than MP3 response from API as quality is better. Also encoding mp3 as joint stereo for better quality too
-2. Removed chime sound to simplify S3 setup
-3. Removed some redundant commenting
-4. Ensure that End Session handler closes the Assistant conversation
-5. Clarification of AWS charges
-
+### Release 1.0
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON - DO NOT SUBMIT THIS TO AMAZON FOR CERTIFICATION AS IT WON'T PASS!
 
