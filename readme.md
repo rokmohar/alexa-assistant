@@ -44,7 +44,9 @@ The following features are **NOT** supported: -
 
 
 # AWS CHARGES
-This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. **IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
+This Skill uses AWS Polly and S3 which are normally charged on a pay as you go basis (this is charged by Amazon not me). There is a free trial tier of these for one year from first use and the resource usage of this skill *should* fall within the limits of this free tier but this will depend on how often you personally use the skill. After 12 months, or beyond those free limits, usage will be chargable. 
+
+**IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
 A breakdown of estimated charges based upon 1000 uses per month are below. These figures are taken from https://aws.amazon.com/s3/pricing/ and https://aws.amazon.com/polly/pricing/ as of 4th June 2017.
 
@@ -71,9 +73,11 @@ You can view your charges for the current billing period at any time on the Amaz
 
 # CREDITS
 
-Richard Vowles for his TypeScript Google Assistant client which gave me some pointers on getting the API running in pure node.js https://github.com/rvowles/node-assistant
+Paul Hibbert for producing the installation video.
 
-John JDuo and Pete Bready for proof reading these installation instructions
+Richard Vowles for his Typescript based Google Assistant client which gave me some pointers on getting the API running in pure node.js https://github.com/rvowles/node-assistant
+
+John JDuo, Pete Bready and Mark Riley for proof reading these installation instructions and testing beta versions.
 
 
 # SETUP
