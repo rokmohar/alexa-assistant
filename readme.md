@@ -6,7 +6,9 @@ Implementation of the Google Assistant API for Alexa
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE RESPONSES BEING HELD IN A PUBLICLY ACCESSIBLE MP3 FILE.
 
-This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports all the functions that the API offers (which is slightly different from the Google Home). It is limited to 500 requests a day and only supports US English (although it is usable in the UK)
+This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK).
+
+NOTE - this skill is built against the beta version of the the Assistant API so it may stop working if an API update is released (which will happen eventually - an updated version of this skill will be released in that event)
 
 The following features are **NOT** supported: -
 
