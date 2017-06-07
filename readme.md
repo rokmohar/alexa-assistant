@@ -522,7 +522,7 @@ You can now close this tab/window
 
 # S3 BUCKET BUCKET INFORMATION
 
-The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with a file name based upon the bucket name i.e (s3_bucket_name).mp3. This file contains the response from the Google Assistant API which Alexa plays as part of an SSML response. 
+The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with an S3 object name which is the same as the bucket. This file contains the response from the Google Assistant API which Alexa plays as part of an SSML response. 
 As this file must be public inorder for Alexa to play it, it's recommended, as per the setup instructions, that the bucket is given a completely random name to provide limited security through obfuscation.
 
 
