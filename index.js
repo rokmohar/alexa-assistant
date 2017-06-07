@@ -91,8 +91,6 @@ if (S3_BUCKET){
                
                else     {
                    console.log('Bucket Created');
-
-
                }
                
          });
@@ -103,11 +101,7 @@ if (S3_BUCKET){
 
        }
      });
-    
-    
-    
-    
-    
+  
 }
 
 
@@ -207,16 +201,6 @@ var handlers = {
         }
         
         
-        // Set the speed of the polly voice
-        // x-slow, slow, medium, fast, x-fast
-        // default is medium
-        var POLLY_SPEED =  process.env.POLLY_SPEED;
-        
-        if (!POLLY_SPEED){
-            POLLY_SPEED = 'medium';
-        }
-        
-        
         var CHUNK_SIZE = process.env.CHUNK_SIZE;
         if (!CHUNK_SIZE){
             CHUNK_SIZE = 32000;
@@ -232,25 +216,30 @@ var handlers = {
         console.log('SEND_SPEED: ' + SEND_SPEED);
         
         
-        // Over-ride text value recieved from Alexa with value in environment variable
-        var UTTERANCE_TEXT =  process.env.UTTERANCE_TEXT
+        // See if text value recieved from Alexa is being over-ridden with value in environment variable
+        var UTTERANCE_TEXT =  process.env.UTTERANCE_TEXT;
+        var alexaUtteranceText;
         
+        // No environent variable set
         if (!UTTERANCE_TEXT){
+            // Have we recieved an direct utterance from another intent?
             if (overrideText){
-                UTTERANCE_TEXT = overrideText;
+                alexaUtteranceText = overrideText;
                 console.log("Utterance recieved from another intent: " + overrideText);
                 
             } else {
-            UTTERANCE_TEXT = this.event.request.intent.slots.search.value;
+            // use detected utterance  
+            alexaUtteranceText = this.event.request.intent.slots.search.value;
             var alexaUtteranceText_original = this.event.request.intent.slots.search.value;
             }
         } else {
+            // otherwise use value in environment variable
+            alexaUtteranceText = UTTERANCE_TEXT;
             console.log('Utternace text overidden in environment variables: ' + UTTERANCE_TEXT);
         }
-        // Create SSML string to send to Polly
-        var alexaUtteranceText = '<speak><prosody rate="' + POLLY_SPEED + '">' + UTTERANCE_TEXT + '</prosody></speak>'
+
         
-        console.log('Input text from Alexa is "' + alexaUtteranceText +'"');
+        console.log('Input text to be processed is "' + alexaUtteranceText +'"');
         var ACCESS_TOKEN = this.event.session.user.accessToken;
 
         
@@ -320,8 +309,22 @@ var handlers = {
                     encode();
                 } else {
                     // Save setting and exit
-                    //searchFunction.emit(':saveState', true);
-                    searchFunction.emit(':tell'," ")
+                    // Let's delete the previous response file
+                    console.log('Deleting S3 response file');
+                    var deleteParams = {Bucket: S3_BUCKET, Key: S3_BUCKET};
+                    s3.deleteObject(deleteParams, function(err, data) {
+                      if (err) {
+                          console.log('Error deleting S3 response file' + err);
+                      }
+                      else{
+                          console.log('S3 response file deleted');
+                          }
+                    });
+                    // have a short pause until
+                    wait(0.1, 'seconds', function() {
+                        console.log('Emiting blank sound')
+                        searchFunction.emit(':tell'," ")
+                    });
                 }
                 
             });
@@ -432,29 +435,52 @@ var handlers = {
                                 'OutputFormat': 'pcm',
                                 'VoiceId': POLLY_VOICE,
                                 'SampleRate': '16000',
-                                'TextType': 'ssml',
+                                'TextType': 'text',
                             }
-            var pollyAudio = Polly.synthesizeSpeech(params, (err, data) => {
-                if (err) {
-                    console.log('There was a polly error' + err.code)
-                } else if (data) {
-                    if (data.AudioStream instanceof Buffer) {
-                        // Initiate the source
-                        console.log('Recieved polly audio');
-                        
-                        // Add 5 seconds of silence to stream - this is needed so that Assistant API can detect end of utternace event
-                        var totalLength = blank_audio_long.length + data.AudioStream.length;
-                        var combinedAudio = Buffer.concat([data.AudioStream, blank_audio_long] , totalLength);    
-                        // convert AudioStream into a readable stream
-                        var bufferStream = new Stream.PassThrough();
-                        bufferStream.end(combinedAudio);
-                        // Pipe into chunker for sending to Google API
-                        bufferStream.pipe(audioRequestStream);
-                    }
-                } 
-            })
             
-                        // Deal with responses from API
+            // If utterance is 'stop' then we will send pre-recorded polly audio to reduce AWS charges
+            if (alexaUtteranceText == "STOP"){
+                console.log('Send stop command pcm');
+                var readStop = fs.createReadStream('./stop.pcm');
+                readStop.pipe(audioRequestStream);
+ 
+            // 'cancel' command
+            } else if (alexaUtteranceText == "CANCEL"){
+                console.log('Send cancel command pcm');
+                var readCancel = fs.createReadStream('./cancel.pcm');
+                readCancel.pipe(audioRequestStream);
+                
+            // 'exit' command
+            } else if (alexaUtteranceText == "exit"){
+                console.log('Send exit command pcm');
+                var readExit = fs.createReadStream('./exit.pcm');
+                readExit.pipe(audioRequestStream);
+ 
+            // Otherwise we send utterance text to Polly
+            } else {
+            
+                var pollyAudio = Polly.synthesizeSpeech(params, (err, data) => {
+                    if (err) {
+                        console.log('There was a polly error' + err.code)
+                    } else if (data) {
+                        if (data.AudioStream instanceof Buffer) {
+                            // Initiate the source
+                            console.log('Recieved polly audio');
+
+                            // Add 5 seconds of silence to stream - this is needed so that Assistant API can detect end of utterance event
+                            var totalLength = blank_audio_long.length + data.AudioStream.length;
+                            var combinedAudio = Buffer.concat([data.AudioStream, blank_audio_long] , totalLength);    
+                            // convert AudioStream into a readable stream
+                            var bufferStream = new Stream.PassThrough();
+                            bufferStream.end(combinedAudio);
+                            // Pipe into chunker for sending to Google API
+                            bufferStream.pipe(audioRequestStream);
+                        }
+                    } 
+                })
+            }
+            
+            // Deal with responses from API
             conversation.on('data', function(ConverseResponse) {
                 //console.log(ConverseResponse);
                 if (ConverseResponse.converse_response == EVENT_TYPE){
@@ -616,7 +642,7 @@ var handlers = {
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {
                     var pass = new Stream.PassThrough();
-                    var params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '.mp3'), Body: pass, ACL:'public-read'};
+                    var params = {Bucket: S3_BUCKET, Key: S3_BUCKET, Body: pass, ACL:'public-read'};
                     s3.upload(params, function(err, data) {
                         if (err){
                         console.log('S3 upload error: ' + err) 
@@ -634,7 +660,6 @@ var handlers = {
                                 'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
                                 'Google assistant heard:       ' + googleUtternaceText + '\n' +
                                 'Polly voice was:             ' + POLLY_VOICE + '\n' +
-                                'Polly Speed was:             ' + POLLY_SPEED + '\n' +
                                 'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
                                 'Audio send speed multiplyer: ' + SEND_SPEED + '\n' +
                                 '*******************************PROCESSING TIMES**********************************\n' +
@@ -647,7 +672,7 @@ var handlers = {
                             
                             console.log(cardContent);
                             var cardTitle = 'Google Assistant Debug'
-                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '.mp3"/>'; 
+                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '"/>'; 
                             // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                             if (microphoneOpen == true){
                                 console.log('Microphone is open so keeping session open')                        
@@ -720,20 +745,20 @@ var handlers = {
     'Unhandled': function() {
         console.log('Unhandled event');
         
-        var message = 'stop';
+        var message = 'STOP';
         this.emit('SearchIntent', message);
     },
     
     'AMAZON.StopIntent' : function () {
         console.log('Stop Intent')
-        var message = 'stop';
+        var message = 'STOP';
         this.emit('SearchIntent', message);
         
             
     },
     'AMAZON.CancelIntent' : function () {
         console.log('Cancel Intent')
-        var message = 'cancel';
+        var message = 'CANCEL';
         this.emit('SearchIntent', message);
     },
         
@@ -741,10 +766,13 @@ var handlers = {
     'SessionEndedRequest': function () {
         console.log('Session ended request');
         
+        console.log(`Session has ended with reason ${this.event.request.reason}`)
+        
         // Google Assistant will keep the conversation thread open even if we don't give a response to an ask.
         // We need to close the conversation if an ask response is not given (which will end up here)
-        // The easiset way to do this is to just send a stop command
-        var message = 'stop';
+        // The easiset way to do this is to just send a stop command and this will close the conversation for us
+        // (this is against Amazons guides but we're not submitting this!)
+        var message = 'STOP';
         this.emit('SearchIntent', message);
         
     }
