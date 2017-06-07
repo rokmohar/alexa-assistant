@@ -1,0 +1,19 @@
+{
+  "intents": [
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "slots": [
+        {
+          "name": "search",
+          "type": "SEARCH"
+        }
+      ],
+      "intent": "SearchIntent"
+    }
+  ]
+}

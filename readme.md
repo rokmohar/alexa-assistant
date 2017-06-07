@@ -6,7 +6,7 @@ Implementation of the Google Assistant API for Alexa
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE RESPONSES BEING HELD IN A PUBLICLY ACCESSIBLE MP3 FILE.
 
-This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK).
+This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK). It supports IFTTT and should support most Actions as long as the responses are less than 90 seconds
 
 NOTE - this skill is built against the beta version of the the Assistant API so it may stop working if an API update is released (which will happen eventually - an updated version of this skill will be released in that event)
 
@@ -48,9 +48,10 @@ The following features are **NOT** supported: -
 
 ### THE SKILL WILL TRY TO DELETE THIS MP3 FILE FOLLOWING A "CANCEL", "EXIT OR "STOP" COMMAND, OR WHEN THE USER DOES NOT GIVE AN ANSWER, HOWEVER THIS ISN'T ALWAYS POSSIBLE ESPECIALLY WITH ASSISTANT ACTIONS. THE FILE WILL ALWAYS REMAIN FOLLOWING ANY OTHER INTERACTION WITH THE SKILL AS IT IS IMPOSSIBLE TO TRIGGER A DELETE ONCE ALEXA STARTS READING A RESPONSE AS THE LAMBDA FUNCTION STOPS RUNNING. IF YOU WANT TO ENSURE THAT THE LAST RESPONSE IS DELETED THEN JUST SEND A "STOP" COMMAND WHEN AN ACTION ISN'T RUNNING E.G "ALEXA, ASK GOOGLE TO STOP"
 
-### AS A RESULT IT IS NOT RECOMMENDED TO USE BANKING ACTIONS OR ANY OTHERS ACTIVITIES THAT MIGHT EXPOSE PERSONAL INFORMATION AND DO NOT SHARE YOUR S3 BUCKET NAME WITH ANYONE
+### AS A RESULT IT IS NOT RECOMMENDED TO USE BANKING ACTIONS OR ANY OTHER ACTIVITIES THAT MIGHT EXPOSE PERSONAL INFORMATION AND DO NOT SHARE YOUR S3 BUCKET NAME WITH ANYONE
 
-### IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! SEE THE S3 BUCKET BUCKET INFORMATION SECTION FOR MORE DETAILS
+### IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! 
+
 
 
 # AWS CHARGES
@@ -79,6 +80,8 @@ Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fee
                                         
 You can view your charges for the current billing period at any time on the Amazon Web Services web site, by logging into your Amazon Web Services account, and clicking “Account Activity” under “Your Web Services Account”.
 
+The skill uses local PCM files for "STOP', "CANCEL" and "EXIT" commands to reduce the number of Polly calls.
+
 **AGAIN - IF PAYING AWS CHARGES IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL**
 
 # CREDITS
@@ -90,7 +93,7 @@ Richard Vowles for his Typescript based Google Assistant client which gave me so
 John JDuo, Pete Bready and Mark Riley for proof reading these installation instructions and testing beta versions.
 
 
-# SETUP
+# SETUP INSTRUCTIONS
 
 To run the skill you need to do a number of things: -
 
