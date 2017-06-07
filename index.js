@@ -91,8 +91,6 @@ if (S3_BUCKET){
                
                else     {
                    console.log('Bucket Created');
-
-
                }
                
          });
@@ -103,11 +101,7 @@ if (S3_BUCKET){
 
        }
      });
-    
-    
-    
-    
-    
+  
 }
 
 
@@ -245,7 +239,7 @@ var handlers = {
         }
 
         
-        console.log('Input text to be provessed is "' + alexaUtteranceText +'"');
+        console.log('Input text to be processed is "' + alexaUtteranceText +'"');
         var ACCESS_TOKEN = this.event.session.user.accessToken;
 
         
@@ -315,8 +309,22 @@ var handlers = {
                     encode();
                 } else {
                     // Save setting and exit
-                    //searchFunction.emit(':saveState', true);
-                    searchFunction.emit(':tell'," ")
+                    // Let's delete the previous response file
+                    console.log('Deleting S3 response file');
+                    var deleteParams = {Bucket: S3_BUCKET, Key: S3_BUCKET};
+                    s3.deleteObject(deleteParams, function(err, data) {
+                      if (err) {
+                          console.log('Error deleting S3 response file' + err);
+                      }
+                      else{
+                          console.log('S3 response file deleted');
+                          }
+                    });
+                    // have a short pause until
+                    wait(0.1, 'seconds', function() {
+                        console.log('Emiting blank sound')
+                        searchFunction.emit(':tell'," ")
+                    });
                 }
                 
             });
@@ -436,12 +444,18 @@ var handlers = {
                 var readStop = fs.createReadStream('./stop.pcm');
                 readStop.pipe(audioRequestStream);
  
-            // Same for 'cancel' command
+            // 'cancel' command
             } else if (alexaUtteranceText == "CANCEL"){
                 console.log('Send cancel command pcm');
                 var readCancel = fs.createReadStream('./cancel.pcm');
                 readCancel.pipe(audioRequestStream);
                 
+            // 'exit' command
+            } else if (alexaUtteranceText == "exit"){
+                console.log('Send exit command pcm');
+                var readExit = fs.createReadStream('./exit.pcm');
+                readExit.pipe(audioRequestStream);
+ 
             // Otherwise we send utterance text to Polly
             } else {
             
@@ -628,7 +642,7 @@ var handlers = {
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {
                     var pass = new Stream.PassThrough();
-                    var params = {Bucket: S3_BUCKET, Key: (S3_BUCKET + '.mp3'), Body: pass, ACL:'public-read'};
+                    var params = {Bucket: S3_BUCKET, Key: S3_BUCKET, Body: pass, ACL:'public-read'};
                     s3.upload(params, function(err, data) {
                         if (err){
                         console.log('S3 upload error: ' + err) 
@@ -658,7 +672,7 @@ var handlers = {
                             
                             console.log(cardContent);
                             var cardTitle = 'Google Assistant Debug'
-                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '.mp3"/>'; 
+                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '"/>'; 
                             // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                             if (microphoneOpen == true){
                                 console.log('Microphone is open so keeping session open')                        
@@ -752,11 +766,12 @@ var handlers = {
     'SessionEndedRequest': function () {
         console.log('Session ended request');
         
-        console.log(`Session ${this.event.session.sessionId} has ended with reason ${this.event.request.reason}`)
+        console.log(`Session has ended with reason ${this.event.request.reason}`)
         
         // Google Assistant will keep the conversation thread open even if we don't give a response to an ask.
         // We need to close the conversation if an ask response is not given (which will end up here)
-        // The easiset way to do this is to just send a stop command
+        // The easiset way to do this is to just send a stop command and this will close the conversation for us
+        // (this is against Amazons guides but we're not submitting this!)
         var message = 'STOP';
         this.emit('SearchIntent', message);
         
