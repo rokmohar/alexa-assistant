@@ -637,7 +637,8 @@ var handlers = {
                 var vol = new volume();
                 
                 // Set volume gain on google output to be +60%
-                vol.setVolume(1.5);
+                // Any more than this then we risk major clipping
+                vol.setVolume(1.6);
                 
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {

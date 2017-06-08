@@ -6,17 +6,18 @@ Implementation of the Google Assistant API for Alexa
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE RESPONSES BEING HELD IN A PUBLICLY ACCESSIBLE MP3 FILE.
 
-This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK). It supports IFTTT and should support most Actions as long as the responses are less than 90 seconds
+This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK). It supports local search, IFTTT and should support most Actions as long as the responses are less than 90 seconds and don't require use of the Home app.
 
 NOTE - this skill is built against the beta version of the the Assistant API so it may stop working if an API update is released (which will happen eventually - an updated version of this skill will be released in that event)
 
 The following features are **NOT** supported: -
 
-1. Alarms and timers.
+1. Alarms and timers. Use Alexa for these.
 2. Device location. If you have a Home address set in your google account then it will use that as a default
 3. Playing music, news, or podcasts is not supported.
 4. Account linking for third party services requires owning a Google Home and installing the Google Home application. This affects using services like Uber, or connecting to home automation devices like Hue.
 5. Multiple Users are not supported - it will only use the Google account linked through the Alexa app
+9. Asking Google Assistant to change volume. You will need to ask Alexa directly.
 
 
 # KNOWN ISSUES
@@ -41,6 +42,8 @@ The following features are **NOT** supported: -
 7. Alexa is limited to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
 
 8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
+
+
     
 ### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE AND AS SUCH IT WOULD BE POSSIBLE FOR SOMEONE TO EAVESDROP ON ONE SIDE OF THE CONVERSATION IF THEY KNEW WHERE TO LOOK.
 
