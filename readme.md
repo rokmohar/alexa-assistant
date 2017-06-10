@@ -44,19 +44,13 @@ The following features are **NOT** supported: -
 8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
 
 
-    
-### PRIVACY WARNING. IN ORDER FOR THIS SKILL TO WORK THE LAST RESPONSE FROM GOOGLE MUST BE MADE AVAILABLE AS A PUBLICLY ACCESSIBLE MP3 FILE AND AS SUCH IT WOULD BE POSSIBLE FOR SOMEONE TO EAVESDROP ON ONE SIDE OF THE CONVERSATION IF THEY KNEW WHERE TO LOOK.
+### SECURITY WARNING. In order for this skill to work the response from Google must be made available as a publicly accessible mp3 file. Rather than host this in an open AWS S3 bucket, the bucket and it’s content are kept private but a temporary publicly signed URL is created by AWS which expires after 5 seconds. These URLs are unique and typically over 600 characters long (see example below). 
 
-### TO MINIMISE THE CHANCES OF THIS HAPPENING, THE MP3 FILE IS STORED IN AN AMAZON S3 BUCKET UNDER YOUR CONTROL AND (PROVIDED YOU FOLLOW THESE INSTRUCTIONS) IT IS GIVEN A NAME CONSISTING OF 20 RANDOMISED CHARACTERS TO MINIMISE THE CHANCES OF SOMEONE STUMBLING ON IT. 
+https://XXXXXXXXXXXXXXX.s3-eu-west-1.amazonaws.com/XXXXXXXXXXXXXXX?AWSAccessKeyId=ASXXXXXXXXXX6AVQQ&amp;Expires=1497107703&amp;Signature=BoNNOAcm0VhEVy9jcQqCeP9gkWw%3D&amp;response-content-type=audio%2Fmpeg&amp;x-amz-security-token=FQoDYXdzEI3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDHC4OE%2BjSG18yTrmnyLpAfoDMxG%2BWPPphnXnkTjw6SmFP8AulH1woW5ZkmrQn5zafK1Sbbv1S8L1n0GzJlRuV8vcT4fijUjek3zJ%2F0NJEYI18enHwyiERD0SXXXXXXXXXXXX%2F9gwI98rw8cKeK9VM1iqhDpPZZxkCJ0Xy0dWfNCe8vuP4j9ZQHMeuSESBU8WrjzXsvZGDn2b8HuenlEVJp0WaH68qUWBuJpGvEDmeAooD7hA%2Fr4XCm8ZS%2FZqa4i05QvbmRX8mjn8eRwgb%2FRBPS190IswaGoxOa9vgSXASRewWJfMjftjM6XXXXXXXXXXKL%2B878kF
 
-### THE SKILL WILL *TRY* TO DELETE THIS MP3 FILE FOLLOWING A "CANCEL", "EXIT OR "STOP" COMMAND, OR WHEN THE USER DOES NOT GIVE AN ANSWER, HOWEVER THIS ISN'T ALWAYS POSSIBLE ESPECIALLY WITH ASSISTANT ACTIONS. THE FILE WILL ALWAYS REMAIN FOLLOWING ANY OTHER INTERACTION WITH THE SKILL AS IT IS IMPOSSIBLE TO TRIGGER A DELETE ONCE ALEXA STARTS READING A RESPONSE AS THE LAMBDA FUNCTION STOPS RUNNING. IF YOU WANT TO ENSURE THAT THE LAST RESPONSE IS DELETED THEN JUST SEND A "STOP" COMMAND WHEN AN ACTION ISN'T RUNNING E.G "ALEXA, ASK GOOGLE TO STOP"
-
-### AS A RESULT IT IS NOT RECOMMENDED TO USE BANKING ACTIONS OR ANY OTHER ACTIVITIES THAT MIGHT EXPOSE PERSONAL INFORMATION AND DO NOT SHARE YOUR S3 BUCKET NAME WITH ANYONE
-
-### ALL OTHER SENSITIVE INFORMATION (E.G. API KEYS) IS HELD WITHIN THE SECURE AWS ENVIRONMENT THAT YOU/AMAZON CONTROL AND IS NOT PUBLICLY ACCESSIBLE
+### In theory anyone who has the URL can access the response, however this URL never leaves the secure AWS skill environment so it cannot be hijacked/intercepted, and due to the very short 5 second period that the mp3 file is exposed via this single link, the chances of someone being able to undertake a brute force attack to find out the URL are statically close to zero. The S3 bucket can be securely accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
 
 ### IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! 
-
 
 
 # AWS CHARGES
@@ -98,7 +92,14 @@ Richard Vowles for his Typescript based Google Assistant client which gave me so
 John JDuo, Pete Bready and Mark Riley for proof reading these installation instructions and testing beta versions.
 
 
-# SETUP INSTRUCTIONS
+# SETUP INSTRUCTIONS (VIDEO)
+
+Paul Hibbert has created a rather fine set of installation intructions here:-
+
+https://www.youtube.com/watch?v=2KzbJyTQTZE
+
+
+# SETUP INSTRUCTIONS (TEXT)
 
 To run the skill you need to do a number of things: -
 
@@ -523,12 +524,6 @@ You can now close this tab/window
 ![alt text](screenshots/app_remove.jpeg)
 
 7. If you want local searches to work then you will need to set a home and work address as per these instructions :- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
-
-
-# S3 BUCKET BUCKET INFORMATION
-
-The skill will automatically create an S3 bucket using the name set in the S3_BUCKET environmental variable. This will contain a publicly accessible mp3 file, with an S3 object name which is the same as the bucket. This file contains the response from the Google Assistant API which Alexa plays as part of an SSML response. 
-As this file must be public inorder for Alexa to play it, it's recommended, as per the setup instructions, that the bucket is given a completely random name to provide limited security through obfuscation.
 
 
 The S3 bucket can be accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/

@@ -309,18 +309,8 @@ var handlers = {
                     encode();
                 } else {
                     // Save setting and exit
-                    // Let's delete the previous response file
-                    console.log('Deleting S3 response file');
-                    var deleteParams = {Bucket: S3_BUCKET, Key: S3_BUCKET};
-                    s3.deleteObject(deleteParams, function(err, data) {
-                      if (err) {
-                          console.log('Error deleting S3 response file' + err);
-                      }
-                      else{
-                          console.log('S3 response file deleted');
-                          }
-                    });
-                    // have a short pause until
+
+                    // have a short pause until exiting
                     wait(0.1, 'seconds', function() {
                         console.log('Emiting blank sound')
                         searchFunction.emit(':tell'," ")
@@ -636,71 +626,88 @@ var handlers = {
                 // The output from the google assistant is much lower than Alexa so we need to apply a gain
                 var vol = new volume();
                 
-                // Set volume gain on google output to be +60%
+                // Set volume gain on google output to be +75%
                 // Any more than this then we risk major clipping
-                vol.setVolume(1.6);
+                vol.setVolume(1.75);
                 
                 // Create function to upload MP3 file to S3 
                 function uploadFromStream(s3) {
                     var pass = new Stream.PassThrough();
-                    var params = {Bucket: S3_BUCKET, Key: S3_BUCKET, Body: pass, ACL:'public-read'};
+                    var params = {Bucket: S3_BUCKET, Key: S3_BUCKET, Body: pass};
                     s3.upload(params, function(err, data) {
                         if (err){
                         console.log('S3 upload error: ' + err) 
-                            searchFunction.emit(':tell', 'There was an error uploading to S3. Please ensure that the S3 Bucket name is correct in the environment variables');
+                            searchFunction.emit(':tell', 'There was an error uploading to S3. Please ensure that the S3 Bucket name is correct in the environment variables and IAM permissions are set correctly');
                             
                         } else{
                             // Upload has been sucessfull - we can know issue an alexa response based upon microphone state
                             uploadTotal = new Date().getTime() - uploadStart;
                             
-                            var cardContent = 
-                                '*********************************************************************************\n' +
-                                'DEBUG INFORMATION - Delete "DEBUG_MODE" environment variable to disable this card\n' +
-                                '*********************************************************************************\n' +
-                                'Skill Version:               ' + VERSION_NUMBER + '\n\n' +
-                                'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
-                                'Google assistant heard:       ' + googleUtternaceText + '\n' +
-                                'Polly voice was:             ' + POLLY_VOICE + '\n' +
-                                'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
-                                'Audio send speed multiplyer: ' + SEND_SPEED + '\n' +
-                                '*******************************PROCESSING TIMES**********************************\n' +
-                                'Setup Total time was:           ' + setupTotal + 'ms\n' + 
-                                'Polly Total time was:           ' + pollyTotal + 'ms\n' +
-                                'Audio Total Send Time was:      ' + audioSendTotal + 'ms\n' +
-                                'Response Wait time was:         ' + responseWaitTotal + 'ms\n' +
-                                'Encode Total time was:          ' + encodeTotal + 'ms\n' +
-                                'Total Upload time was:          ' + uploadTotal + 'ms\n\n\n' 
+                            var signedURL;
+                            // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
+                            var signedParams = {Bucket: S3_BUCKET, Key: S3_BUCKET, Expires: 5, ResponseContentType: 'audio/mpeg'};
+                            s3.getSignedUrl('getObject', signedParams, function (err, url) {
+                                
+                                if (url){
+                                    // ampersands are not valid in SSML so we need to escape these out with &amp;
+                                    url = url.replace(/&/g, '&amp;'); // replace ampersands    
+                                    signedURL = url;
+
+                                    var cardContent = 
+                                    '*********************************************************************************\n' +
+                                    'DEBUG INFORMATION - Delete "DEBUG_MODE" environment variable to disable this card\n' +
+                                    '*********************************************************************************\n' +
+                                    'Skill Version:               ' + VERSION_NUMBER + '\n\n' +
+                                    'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
+                                    'Google assistant heard:       ' + googleUtternaceText + '\n' +
+                                    'Polly voice was:             ' + POLLY_VOICE + '\n' +
+                                    'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
+                                    'Audio send speed multiplyer: ' + SEND_SPEED + '\n' +
+                                    '*******************************PROCESSING TIMES**********************************\n' +
+                                    'Setup Total time was:           ' + setupTotal + 'ms\n' + 
+                                    'Polly Total time was:           ' + pollyTotal + 'ms\n' +
+                                    'Audio Total Send Time was:      ' + audioSendTotal + 'ms\n' +
+                                    'Response Wait time was:         ' + responseWaitTotal + 'ms\n' +
+                                    'Encode Total time was:          ' + encodeTotal + 'ms\n' +
+                                    'Total Upload time was:          ' + uploadTotal + 'ms\n\n\n' 
+
+                                    console.log(cardContent);
+                                    var cardTitle = 'Google Assistant Debug'
+
+                                    var speechOutput = '<audio src="' + signedURL + '"/>'; 
+                                    // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
+                                    if (microphoneOpen == true){
+                                        console.log('Microphone is open so keeping session open')                        
+                                        console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
+                                        cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) + 
+                                        '\nMore detailed debug information can be found in the Cloud Watch logs' );
+                                        //
+                                        if (DEBUG_MODE){
+                                            console.log
+                                            searchFunction.emit(':askWithCard', speechOutput, null, cardTitle, cardContent);
+                                        } 
+                                        else {
+                                            searchFunction.emit(':ask', speechOutput);    
+                                        }
+                                    // Otherwise we create an Alexa 'Tell' command which will close the session
+                                    } else{
+                                        console.log('Microphone is closed so closing session')
+                                        console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
+                                        cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) +
+                                        '\nMore detailed debug information can be found in the Cloud Watch logs' );
+                                        if (DEBUG_MODE){
+                                            searchFunction.emit(':tellWithCard', speechOutput, cardTitle, cardContent);
+                                        } 
+                                        else {
+                                        searchFunction.emit(':tell', speechOutput);
+                                        }
+                                    }
+                                } else {
+                                    searchFunction.emit(':tell', 'There was an error creating the signed URL. Please ensure that the S3 Bucket name is correct in the environment variables and IAM permissions are set correctly');
+                                } 
+                        });
                             
-                            console.log(cardContent);
-                            var cardTitle = 'Google Assistant Debug'
-                            var speechOutput = '<audio src="https://s3-eu-west-1.amazonaws.com/' + S3_BUCKET + '/' + S3_BUCKET + '"/>'; 
-                            // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
-                            if (microphoneOpen == true){
-                                console.log('Microphone is open so keeping session open')                        
-                                console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
-                                cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) + 
-                                '\nMore detailed debug information can be found in the Cloud Watch logs' );
-                                //
-                                if (DEBUG_MODE){
-                                    console.log
-                                    searchFunction.emit(':askWithCard', speechOutput, null, cardTitle, cardContent);
-                                } 
-                                else {
-                                    searchFunction.emit(':ask', speechOutput);    
-                                }
-                            // Otherwise we create an Alexa 'Tell' command which will close the session
-                            } else{
-                                console.log('Microphone is closed so closing session')
-                                console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
-                                cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) +
-                                '\nMore detailed debug information can be found in the Cloud Watch logs' );
-                                if (DEBUG_MODE){
-                                    searchFunction.emit(':tellWithCard', speechOutput, cardTitle, cardContent);
-                                } 
-                                else {
-                                searchFunction.emit(':tell', speechOutput);
-                                }
-                            }
+                            
 
                       }
                     });
