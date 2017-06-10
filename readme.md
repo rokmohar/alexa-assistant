@@ -20,7 +20,8 @@ The following features are **NOT** supported: -
 9. Asking Google Assistant to change volume. You will need to ask Alexa directly.
 
 A short demo of the skill in action is here:-
-https://youtu.be/KA3W6eR_6LY
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KA3W6eR_6LY?ecver=1" frameborder="0" allowfullscreen></iframe>
 
 
 # KNOWN ISSUES
