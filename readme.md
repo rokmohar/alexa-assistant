@@ -99,11 +99,11 @@ John JDuo, Pete Bready and Mark Riley for proof reading these installation instr
 
 # SETUP INSTRUCTIONS (VIDEO)
 
-Paul Hibbert has created a rather fine set of installation intructions here:-
+Paul Hibbert has created a rather fine set of installation instructions here:-
 
 [![Alt text](https://img.youtube.com/vi/2KzbJyTQTZE/0.jpg)](https://www.youtube.com/watch?v=2KzbJyTQTZE)
 
-https://www.youtube.com/watch?v=2KzbJyTQTZE
+
 
 
 # SETUP INSTRUCTIONS (TEXT)
