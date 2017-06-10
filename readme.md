@@ -44,7 +44,7 @@ The following features are **NOT** supported: -
 8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
 
 
-### SECURITY WARNING. In order for this skill to work the response from Google must be made available as a publicly accessible mp3 file. Rather than host this in an open AWS S3 bucket, the bucket and it’s content are kept private but a temporary publicly signed URL is created by AWS which expires after 5 seconds. These URLs are unique and typically over 600 characters long (see example below). 
+### SECURITY WARNING. In order for this skill to work the response from Google must be made available as a publicly accessible mp3 file. Rather than host this in an open AWS S3 bucket, the bucket and it’s contents are kept private but a temporary publicly signed URL is created by AWS which expires after 5 seconds. These URLs are unique and typically over 600 characters long (see example below). 
 
 https://XXXXXXXXXXXXXXX.s3-eu-west-1.amazonaws.com/XXXXXXXXXXXXXXX?AWSAccessKeyId=ASXXXXXXXXXX6AVQQ&amp;Expires=1497107703&amp;Signature=BoNNOAcm0VhEVy9jcQqCeP9gkWw%3D&amp;response-content-type=audio%2Fmpeg&amp;x-amz-security-token=FQoDYXdzEI3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDHC4OE%2BjSG18yTrmnyLpAfoDMxG%2BWPPphnXnkTjw6SmFP8AulH1woW5ZkmrQn5zafK1Sbbv1S8L1n0GzJlRuV8vcT4fijUjek3zJ%2F0NJEYI18enHwyiERD0SXXXXXXXXXXXX%2F9gwI98rw8cKeK9VM1iqhDpPZZxkCJ0Xy0dWfNCe8vuP4j9ZQHMeuSESBU8WrjzXsvZGDn2b8HuenlEVJp0WaH68qUWBuJpGvEDmeAooD7hA%2Fr4XCm8ZS%2FZqa4i05QvbmRX8mjn8eRwgb%2FRBPS190IswaGoxOa9vgSXASRewWJfMjftjM6XXXXXXXXXXKL%2B878kF
 
