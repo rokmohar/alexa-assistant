@@ -19,6 +19,9 @@ The following features are **NOT** supported: -
 5. Multiple Users are not supported - it will only use the Google account linked through the Alexa app
 9. Asking Google Assistant to change volume. You will need to ask Alexa directly.
 
+A short demo of the skill in action is here:-
+https://youtu.be/KA3W6eR_6LY
+
 
 # KNOWN ISSUES
 
