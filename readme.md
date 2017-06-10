@@ -21,8 +21,8 @@ The following features are **NOT** supported: -
 
 A short demo of the skill in action is here:-
 
-[![Alt text](https://img.youtube.com/vi/VID/0.jpg)](https://youtu.be/KA3W6eR_6LY)
-https://youtu.be/KA3W6eR_6LY
+[![Alt text](https://img.youtube.com/vi/KA3W6eR_6LY/0.jpg)](https://youtu.be/KA3W6eR_6LY)
+
 
 
 # KNOWN ISSUES
