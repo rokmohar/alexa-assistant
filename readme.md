@@ -21,7 +21,8 @@ The following features are **NOT** supported: -
 
 A short demo of the skill in action is here:-
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/KA3W6eR_6LY?ecver=1" frameborder="0" allowfullscreen></iframe>
+[![Alt text](https://img.youtube.com/vi/VID/0.jpg)](https://youtu.be/KA3W6eR_6LY)
+https://youtu.be/KA3W6eR_6LY
 
 
 # KNOWN ISSUES
