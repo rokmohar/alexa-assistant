@@ -101,6 +101,8 @@ John JDuo, Pete Bready and Mark Riley for proof reading these installation instr
 
 Paul Hibbert has created a rather fine set of installation intructions here:-
 
+[![Alt text](https://img.youtube.com/vi/2KzbJyTQTZE/0.jpg)](https://www.youtube.com/watch?v=2KzbJyTQTZE)
+
 https://www.youtube.com/watch?v=2KzbJyTQTZE
 
 
