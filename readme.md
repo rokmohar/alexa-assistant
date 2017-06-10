@@ -44,7 +44,7 @@ A short demo of the skill in action is here:-
 
 6. The Google API only supports the US version of the Google Assistant and is US English only, however it will still work in other countries. Local services *should* work if you set a home/work addresses in your google account as per the instructions here:- https://support.google.com/maps/answer/3093979?co=GENIE.Platform%3DDesktop&hl=en
 
-7. Alexa is limited to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
+7. Responses from the assistant are returned as MP£. Alexa is limited, as part of a spoken response, to playing back MP3 files that are less then 90 seconds. If the Assistant response is longer than this then it will be truncated.
 
 8. Audio quality. The skill has to convert the Assistant output into a 48kb/s MP3 for use with Alexa which means that the audio loses some fidelity in the process. 
 
