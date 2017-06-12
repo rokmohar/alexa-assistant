@@ -53,7 +53,7 @@ A short demo of the skill in action is here:-
 
 https://XXXXXXXXXXXXXXX.s3-eu-west-1.amazonaws.com/XXXXXXXXXXXXXXX?AWSAccessKeyId=ASXXXXXXXXXX6AVQQ&amp;Expires=1497107703&amp;Signature=BoNNOAcm0VhEVy9jcQqCeP9gkWw%3D&amp;response-content-type=audio%2Fmpeg&amp;x-amz-security-token=FQoDYXdzEI3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDHC4OE%2BjSG18yTrmnyLpAfoDMxG%2BWPPphnXnkTjw6SmFP8AulH1woW5ZkmrQn5zafK1Sbbv1S8L1n0GzJlRuV8vcT4fijUjek3zJ%2F0NJEYI18enHwyiERD0SXXXXXXXXXXXX%2F9gwI98rw8cKeK9VM1iqhDpPZZxkCJ0Xy0dWfNCe8vuP4j9ZQHMeuSESBU8WrjzXsvZGDn2b8HuenlEVJp0WaH68qUWBuJpGvEDmeAooD7hA%2Fr4XCm8ZS%2FZqa4i05QvbmRX8mjn8eRwgb%2FRBPS190IswaGoxOa9vgSXASRewWJfMjftjM6XXXXXXXXXXKL%2B878kF
 
-### In theory anyone who has the URL can access the response, however this URL never leaves the secure AWS skill environment so it cannot be hijacked/intercepted, and due to the very short 5 second period that the mp3 file is exposed via this single link, the chances of someone being able to undertake a brute force attack to find out the URL are statically close to zero. The S3 bucket can be securely accessed from your AWS account at any time from AWS https://console.aws.amazon.com/s3/
+### In theory anyone who has the URL can access the response, however this URL never leaves the secure AWS skill environment so it cannot be hijacked/intercepted, and due to the very short 5 second period that the mp3 file is exposed via this single link, the chances of someone being able to undertake a brute force attack to find out the URL are statically close to zero. The S3 bucket can be securely accessed from your AWS account at any time from https://console.aws.amazon.com/s3/
 
 ### IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! 
 
@@ -398,7 +398,7 @@ To enable access to the Google Assistant API, do the following:
 
 ![alt text](screenshots/credentials_2.jpeg)
 
-13. On the next page the Email address field should auto populate with your Gogole accoutn email address
+13. On the next page the Email address field should auto populate with your Google account email address
 14. In the "Product name shown to users" enter:-
 
     ```
