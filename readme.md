@@ -13,7 +13,7 @@ NOTE - this skill is built against the beta version of the the Assistant API so 
 The following features are **NOT** supported: -
 
 1. Alarms and timers. Use Alexa for these.
-2. Device location. If you have a Home address set in your google account then it will use that as a default
+2. Device location. If you have a Home address set in your google account then it will use that as a default. NOTE:- if you are in Europe and want weather forecasts in metric then just ask the assistant to "Change my units to Celsius".
 3. Playing music, news, or podcasts is not supported.
 4. Account linking for third party services requires owning a Google Home and installing the Google Home application. This affects using services like Uber, or connecting to home automation devices like Hue.
 5. Multiple Users are not supported - it will only use the Google account linked through the Alexa app
@@ -31,9 +31,9 @@ A short demo of the skill in action is here:-
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
-2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work (This is a Google policy not mine). If you are concerned about privacy, then you could use a new google account just for this skill and not login using this account elsewhere
+2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work and you it will tell you "There are some things I need to set up in the Google Home app first". (This is a Google policy not mine). If you are concerned about privacy, then you could use a new google account just for this skill and not login using this account elsewhere
 
-    1. Web & App Activity
+    1. Web & App Activity - Make sure the box marked "Include Chrome browsing history and activity from websites and apps that use Google Services" is also checked 
     2. Location History
     3. Device Information
     4. Voice & Audio Activity
