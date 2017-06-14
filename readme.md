@@ -65,7 +65,7 @@ This Skill uses AWS Polly and S3 which are normally charged on a pay as you go b
 
 A breakdown of estimated charges based upon 1000 uses per month are below. These figures are taken from https://aws.amazon.com/s3/pricing/ and https://aws.amazon.com/polly/pricing/ as of 4th June 2017.
 
-Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fees based upon 1000 requestes to the skill are calculated as follows:
+Assuming your S3 bucket is in the US East (Northern Virginia) Region, the S3 fees based upon 1000 requests to the skill are calculated as follows:
 
 |Monthly Usage|Calculation|Monthly Cost|
 |-------------|-----------|--------|
