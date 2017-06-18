@@ -2,7 +2,9 @@
 
 Implementation of the Google Assistant API for Alexa
 
-# Release 1.0
+# Release 1.1
+
+Minor change to STOP and CANCEL intents to only trigger assistant if follow-on mode is true
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE WAY THE RESPONSES ARE HOSTED.
 

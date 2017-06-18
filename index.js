@@ -36,7 +36,7 @@ const blank_audio_long = Buffer.alloc(80000,0);
 
 // Get Google Credentials from Evironment Variables - these are set in the Lambda function configuration
 
-const VERSION_NUMBER = '1.0';
+const VERSION_NUMBER = '1.1';
 var CLIENT_ID = process.env.CLIENT_ID;
 var CLIENT_SECRET = process.env.CLIENT_SECRET;
 var REDIRECT_URL = process.env.REDIRECT_URL;
@@ -754,20 +754,26 @@ var handlers = {
         console.log('Unhandled event');
         
         var message = 'STOP';
-        this.emit('SearchIntent', message);
+        if (microphoneOpen == true){
+            this.emit('SearchIntent', message);
+        }
     },
     
     'AMAZON.StopIntent' : function () {
         console.log('Stop Intent')
         var message = 'STOP';
-        this.emit('SearchIntent', message);
+        if (microphoneOpen == true){
+            this.emit('SearchIntent', message);
+        }
         
             
     },
     'AMAZON.CancelIntent' : function () {
         console.log('Cancel Intent')
         var message = 'CANCEL';
-        this.emit('SearchIntent', message);
+        if (microphoneOpen == true){
+            this.emit('SearchIntent', message);
+        }
     },
         
     
@@ -781,7 +787,9 @@ var handlers = {
         // The easiset way to do this is to just send a stop command and this will close the conversation for us
         // (this is against Amazons guides but we're not submitting this!)
         var message = 'STOP';
-        this.emit('SearchIntent', message);
+        if (microphoneOpen == true){
+            this.emit('SearchIntent', message);
+        }
         
     }
 };
