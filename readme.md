@@ -503,7 +503,7 @@ You can now close this tab/window
 4. Go to the Environment Variables that you created earlier
 3. Paste the google Client Secret from your Notepad/TextEdit doc into the value field for the CLIENT_SECRET variable.
 4. Paste the google Client ID from your Notepad/TextEdit doc into the value field for the CLIENT_ID variable.
-5. Paste the *first* of the "Redirect URLS" from the skill setup page into the REDIRECT_URL variable. (it will either start with https://layla.amazon.com/api/skill/link/ or https://pitangui.amazon.com/api/skill/link  - it will depend on whether you are US or EU based as to which one will be first)
+5. If you are based in UK/Europe then paste the "Redirect URL" from the skill setup page that starts with "https://pitangui.amazon.com/api/skill/link" into the REDIRECT_URL variable. If you are based in the US then paste the one that starts with "https://layla.amazon.com/api/skill/link/"
 
 ![alt text](screenshots/environment_variables_2.jpeg)
 
