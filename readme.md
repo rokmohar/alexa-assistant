@@ -10,7 +10,7 @@ Minor change to STOP and CANCEL intents to only trigger assistant if follow-on m
 
 This skill is an implementation of the official Google Assistant API wrapped as an Alexa skill. It supports many of the same functions as the Raspberry Pi version of the Google Assistant but there are some limitations in functionality due to the Amazon Echo platform. It is limited to 500 requests a day and only supports US English (although it is usable in the UK). It supports local search, IFTTT and should support most Actions as long as the responses are less than 90 seconds and don't require use of the Home app.
 
-NOTE - this skill is built against the beta version of the the Assistant API so it may stop working if an API update is released (which will happen eventually - an updated version of this skill will be released in that event)
+NOTE - this skill is built against the beta version of the Assistant API so it may stop working if an API update is released (which will happen eventually - an updated version of this skill will be released in that event)
 
 The following features are **NOT** supported: -
 
@@ -29,7 +29,7 @@ A short demo of the skill in action is here:-
 
 # KNOWN ISSUES
 
-1. **This skill uses chargable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month. See the AWS Charges section below for more details**
+1. **This skill uses chargeable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month. See the AWS Charges section below for more details**
 
 1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
 
@@ -55,7 +55,7 @@ A short demo of the skill in action is here:-
 
 https://XXXXXXXXXXXXXXX.s3-eu-west-1.amazonaws.com/XXXXXXXXXXXXXXX?AWSAccessKeyId=ASXXXXXXXXXX6AVQQ&amp;Expires=1497107703&amp;Signature=BoNNOAcm0VhEVy9jcQqCeP9gkWw%3D&amp;response-content-type=audio%2Fmpeg&amp;x-amz-security-token=FQoDYXdzEI3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDHC4OE%2BjSG18yTrmnyLpAfoDMxG%2BWPPphnXnkTjw6SmFP8AulH1woW5ZkmrQn5zafK1Sbbv1S8L1n0GzJlRuV8vcT4fijUjek3zJ%2F0NJEYI18enHwyiERD0SXXXXXXXXXXXX%2F9gwI98rw8cKeK9VM1iqhDpPZZxkCJ0Xy0dWfNCe8vuP4j9ZQHMeuSESBU8WrjzXsvZGDn2b8HuenlEVJp0WaH68qUWBuJpGvEDmeAooD7hA%2Fr4XCm8ZS%2FZqa4i05QvbmRX8mjn8eRwgb%2FRBPS190IswaGoxOa9vgSXASRewWJfMjftjM6XXXXXXXXXXKL%2B878kF
 
-### In theory anyone who has the URL can access the response, however this URL never leaves the secure AWS skill environment so it cannot be hijacked/intercepted, and due to the very short 5 second period that the mp3 file is exposed via this single link, the chances of someone being able to undertake a brute force attack to find out the URL are statically close to zero. The S3 bucket can be securely accessed from your AWS account at any time from https://console.aws.amazon.com/s3/
+### In theory anyone who has the URL can access the response, however this URL never leaves the secure AWS skill environment so it cannot be hijacked/intercepted, and due to the very short 5 second period that the mp3 file is exposed via this single link, the chances of someone being able to undertake a brute force attack to find out the URL are statistically close to zero. The S3 bucket can be securely accessed from your AWS account at any time from https://console.aws.amazon.com/s3/
 
 ### IF THIS IS NOT ACCEPTABLE TO YOU THEN PLEASE DO NOT INSTALL THIS SKILL! 
 
@@ -112,17 +112,17 @@ Paul Hibbert has created a rather fine set of installation instructions here:-
 
 To run the skill you need to do a number of things: -
 
-1. download the file from github 
-4. deploy the example code in lambda
-5. configure the Alexa skill to use Lambda.
-6. get an API key from Google
-7. link skill to your Google Account
+1. download the file from GitHub.
+2. deploy the example code in Lambda.
+3. configure the Alexa skill to use Lambda.
+4. get an API key from Google.
+5. link skill to your Google Account.
 
-## Download code from github
+## Download code from GitHub
 
-1. Click on the green "Clone or download" button just under the yellow bar
-2. Click download ZIP
-3. Unzip the file (it will be called alexa-assistant-master.zip) to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames)
+1. Click on the green "Clone or download" button just under the yellow bar.
+2. Click Download ZIP.
+3. Unzip the file (it will be called alexa-assistant-master.zip) to a known place on your hard-drive (suggest root of C: drive in Windows to avoid problems with long filenames).
 
 ## AWS Lambda Setup (Part 1)
 
@@ -152,7 +152,7 @@ To run the skill you need to do a number of things: -
     google-assistant
     ```
     
-5. Set the decription as :-
+5. Set the description as :-
 
     ```
     Google Assistant
@@ -163,7 +163,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/lambda_1.jpeg)
 
-7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from Github, select index.zip and click open. Do not upload the alexa-assistant-master.zip you downloaded from Github - only the index.zip contained within it.
+7. Click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from GitHub, select index.zip and click open. Do not upload the alexa-assistant-master.zip you downloaded from GitHub - only the index.zip contained within it.
 
 7. You will need to create a random string to act as the name of the Amazon S3 bucket that will be used to store the MP3 response from the Google Assistant (see security note at the start of this readme). Open this page in a new tab or window and copy the random string that it produces: https://www.random.org/strings/?num=1&len=20&digits=on&loweralpha=on&unique=on&format=html&rnd=new.
 
@@ -252,7 +252,7 @@ To run the skill you need to do a number of things: -
 
 ![alt text](screenshots/advanced_settings.jpeg)
 
-13. Click on the blue "Next" at the bottom of the page and review the settings then click "Create Function". This will upload the Archive.zip file to Lambda. This may take a number of minutes depending on your connection speed. **NOTE - If the creation process takes more than five minutes or produces an error similar to "Signature expired: 20170612T135832Z is now earlier than 20170612T142721Z (20170612T143221Z - 5 min.)" then this is due to having a slow internet upload speed.  You'll need to upload the zip file via S3 instead. Go here:- https://console.aws.amazon.com/s3/home. Create a bucket - call it whatever you want. You can then upload the index.zip to that S3 bucket. Once it's uploaded use the "Upload a file from S3" rather than the "Upload a zip " option in the lambda setup.**
+13. Click on the blue "Next" at the bottom of the page and review the settings then click "Create Function". This will upload the index.zip file to Lambda. This may take a number of minutes depending on your connection speed. **NOTE - If the creation process takes more than five minutes or produces an error similar to "Signature expired: 20170612T135832Z is now earlier than 20170612T142721Z (20170612T143221Z - 5 min.)" then this is due to having a slow internet upload speed.  You'll need to upload the zip file via S3 instead. Go here:- https://console.aws.amazon.com/s3/home. Create a bucket - call it whatever you want. You can then upload the index.zip to that S3 bucket. Once it's uploaded use the "Upload a file from S3" rather than the "Upload a zip " option in the Lambda setup.**
 
 ![alt text](screenshots/review_function.jpeg)
 
@@ -323,7 +323,7 @@ To run the skill you need to do a number of things: -
 ![alt text](screenshots/intent_schema.jpeg)
 
 12. Under Custom Slot Types:-
-13. Type into the "Enter Type" field (NOTE - this is captialised) :-
+13. Type into the "Enter Type" field (NOTE - this is capitalised) :-
     ```
     SEARCH
     ```
@@ -361,14 +361,14 @@ At this point we will pause the setup of the skill and setup the google API. Cop
 ### Enable Google Assistant API:-
 To enable access to the Google Assistant API, do the following:
 
-1. In a **new** browser tab or window, go to the Cloud Platform Console here https://console.cloud.google.com/project (If this is the first time you have use the google developer console then you will need to agree to the the Terms on service on the pop-up box.)
+1. In a **new** browser tab or window, go to the Cloud Platform Console here https://console.cloud.google.com/project (If this is the first time you have use the google developer console then you will need to agree to the Terms of service on the pop-up box.)
 ![alt text](screenshots/google_terms.jpg)
 
 2. Click on "Select a project" and then the "+" button to create a new project
 ![alt text](screenshots/new_google_project.jpg)
 
 3. Give the project a name, it doesn't really matter what it is but it needs to be unique so Google will add a series of numbers to the end of the name if somebody has already used it. Press create.
-4. You will be taken to a new page. It will take about 15 seconds for the project to be created. Look for a notification within the blue bar at the top of the page. Once the project is created click on the the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project.
+4. You will be taken to a new page. It will take about 15 seconds for the project to be created. Look for a notification within the blue bar at the top of the page. Once the project is created click on the notification and then select the "Create Project: XXX" where XXX is the name that you gave the project.
 
 ![alt text](screenshots/google_notification.jpg)
 
@@ -490,13 +490,13 @@ You can now close this tab/window
 
 15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot authenticate against the Google API. 
 
-**You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe incase you need these details again**
+**You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe in case you need these details again**
 
 
 ## AWS Lambda Setup (Part 2)
 
 1. Return to the Lambda Function page we left open earlier.
-2. Click on the lambda function "Code" tab.
+2. Click on the Lambda function "Code" tab.
 
 ![alt text](screenshots/code_tab.jpeg) 
 
@@ -521,7 +521,7 @@ You can now close this tab/window
     3. Device Information
     4. Voice & Audio Activity
     
-3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g "my assistant"
+3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g. "my assistant"
 4. The skill will tell you if you have forgotten to set any environment variables or if there any other set-up issues
 4. You will then be prompted to link your account through the Alexa app.
 5. Select the Google account you want to use (it does not have to be the one you authorised the API with) and then make sure you click "Allow" on the Google authorisation page. 
@@ -548,5 +548,5 @@ There are a number of optional environment variables that can be set. These are 
 |DEBUG_MODE|Produces an Alexa card for each response showing debug information such as the utternace detected by Alexa, the utterance detected by Google along with a breakdown of processing time.|true|(No effect unless set)| 
 |POLLY_VOICE|Voice used for Polly text to speech|[Polly Docs](http://docs.aws.amazon.com/polly/latest/dg/voicelist.html)|Joey|
 |CHUNK_SIZE|The size in bytes of the PCM audio chunks to be sent to the API. The API will send an error if this is too big|integer|32000 (1 second of PCM)|
-|SEND_SPEED|The skill will try and send chucks in real time. This variable will act as a mutliplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunksizes. The API will send an error if the chunks are sent too fast|Float |0.1 (once every 100ms to speed up responses. This is signifiantly faster than real time, but we are using a large chunk size and a small number of chunks so we can get away with it!)|
-|UTTERANCE_TEXT|Overide the Alexa speech to text and send a specifc phrase to Polly|string|(No effect unless set)|
+|SEND_SPEED|The skill will try and send chucks in real time. This variable will act as a multiplier. 1 = realtime, <1 faster than real time, >1 slower than real time. Faster than real time is best used with large chunk sizes. The API will send an error if the chunks are sent too fast|Float |0.1 (once every 100ms to speed up responses. This is significantly faster than real time, but we are using a large chunk size and a small number of chunks so we can get away with it!)|
+|UTTERANCE_TEXT|Override the Alexa speech to text and send a specific phrase to Polly|string|(No effect unless set)|
