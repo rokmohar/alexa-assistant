@@ -244,9 +244,9 @@ To run the skill you need to do a number of things: -
     }
     ```
 11. Then press the blue "Allow" box at the bottom right hand corner. The tab/window will automatically close.
-11. You should now be back on the Lambda Management page. The Role box will have automatically changed to "Choose an existing role" and Role we just created will be selected under the "Existing role" box.
+11. You should now be back on the Lambda Management page. The Role box will have automatically changed to "existing" and Role we just created will be selected under the "Existing role" box.
 
-![alt text](screenshots/existing_role.jpeg)
+![Lambda Role selection](screenshots/existing_role.png)
 
 12. Under Advanced Settings set Memory (MB) to 1536 and change the Timeout to 12 seconds
 
