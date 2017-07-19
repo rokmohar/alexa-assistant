@@ -291,10 +291,10 @@ To run the skill you need to do a number of things: -
     
 8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england". For best results the invocation name should be lowercase **NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill.**
 
-8. Leave the "Audio Player" setting to "No"
+8. Leave the Global Fields settings to "No".
 9. Click "Save" and then click "Next".
 
-![alt text](screenshots/skill_information.jpeg)
+![Skill infrormation](screenshots/skill_information.png)
 
 10. You will now be on the "Invocation Model" page.
 11. Copy the text below into the "Intent Schema" box.
