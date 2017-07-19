@@ -194,7 +194,7 @@ To run the skill you need to do a number of things: -
     google_assistant
     ```
 
-11. Click on "Hide Policy Document" - a grey box will appear.
+11. Click on "View Policy Document" - a grey box will appear.
 
 ![alt text](screenshots/role_summary_1.jpeg)
 
@@ -244,9 +244,9 @@ To run the skill you need to do a number of things: -
     }
     ```
 11. Then press the blue "Allow" box at the bottom right hand corner. The tab/window will automatically close.
-11. You should now be back on the Lambda Management page. The Role box will have automatically changed to "Choose an existing role" and Role we just created will be selected under the "Existing role" box.
+11. You should now be back on the Lambda Management page. The Role box will have automatically changed to "existing" and Role we just created will be selected under the "Existing role" box.
 
-![alt text](screenshots/existing_role.jpeg)
+![Lambda Role selection](screenshots/existing_role.png)
 
 12. Under Advanced Settings set Memory (MB) to 1536 and change the Timeout to 12 seconds
 
@@ -291,12 +291,12 @@ To run the skill you need to do a number of things: -
     
 8. You can set the "Invocation Name" to whatever you want although some names work better than others. I have found that "google" or "my assistant" seem to work well. The name you choose will be the activation name e.g. "Alexa, ask my assistant how long will it take to drive to London?". For these instructions we will set "google" as the invocation name, so in this case you would say: "Alexa, Ask google who is the queen of england". For best results the invocation name should be lowercase **NOTE - if you have already installed my previous Google Skill and have used the "google" invocation name for this then you will either have to use a different invocation name for this skill or rename/delete the older Google skill.**
 
-8. Leave the "Audio Player" setting to "No"
+8. Leave the Global Fields settings to "No".
 9. Click "Save" and then click "Next".
 
-![alt text](screenshots/skill_information.jpeg)
+![Skill infrormation](screenshots/skill_information.png)
 
-10. You will now be on the "Invocation Model" page.
+10. You will now be on the "Interaction Model" page.
 11. Copy the text below into the "Intent Schema" box.
 
     ```
