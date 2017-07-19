@@ -296,7 +296,7 @@ To run the skill you need to do a number of things: -
 
 ![Skill infrormation](screenshots/skill_information.png)
 
-10. You will now be on the "Invocation Model" page.
+10. You will now be on the "Interaction Model" page.
 11. Copy the text below into the "Intent Schema" box.
 
     ```
