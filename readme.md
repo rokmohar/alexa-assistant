@@ -194,7 +194,7 @@ To run the skill you need to do a number of things: -
     google_assistant
     ```
 
-11. Click on "Hide Policy Document" - a grey box will appear.
+11. Click on "View Policy Document" - a grey box will appear.
 
 ![alt text](screenshots/role_summary_1.jpeg)
 
