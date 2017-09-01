@@ -31,7 +31,7 @@ A short demo of the skill in action is here:-
 
 1. **This skill uses chargeable services on Amazon Web Services - although these *should* be free for the first 12 months of use if you are a new user of AWS. Otherwise the costs will be approx $5.20 per year based upon 1000 calls to the skill a month. See the AWS Charges section below for more details**
 
-1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. You should then be able to relink the skill permanently.
+1. If you unlink the skill to your account and then re-enable it then the skill might keep asking for you to re-link every hour. You can resolve this by going to this page and removing the Alexa Skill https://myaccount.google.com/permissions?pli=1. Relink the skill via the alexa web app https://alexa.amazon.com You should then be able to relink the skill permanently.
 
 2. You will need to give Google Assistant access to the following features on your Google account. If you do not give access to these then the skill will not work and you it will tell you "There are some things I need to set up in the Google Home app first". (This is a Google policy not mine). If you are concerned about privacy, then you could use a new google account just for this skill and not login using this account elsewhere
 
