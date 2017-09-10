@@ -282,7 +282,7 @@ To run the skill you need to do a number of things: -
 
 4. You will now be on the "Skill Information" page.
 5. Set "Custom Interaction Model" as the Skill type
-6. Select the language as English (US), English (UK) - **Note German is not currently supported**
+6. Select the language as English (US), English (UK) - **Note German is not currently supported and won't be until the Google Assistant API supports it**
 6. Set the "Name" to 
 
     ```
@@ -346,7 +346,8 @@ To run the skill you need to do a number of things: -
 16. Click "Save" and then "Next".
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
-19. Then pick the most appropriate geographical region (either US or EU as appropriate) and paste into the box (highlighted in red in the screenshot) the ARN you copied earlier from the AWS Lambda setup.
+19. Paste into the "Default" box the ARN you copied earlier from the AWS Lambda setup.
+19. Select "Yes" for "Provide geographical region endpoints?" and select either US or Europe depending on where you live. (NOTE the screenshot below is out of date and does not show this option)
 
 ![alt text](screenshots/endpoint.jpeg) 
 
