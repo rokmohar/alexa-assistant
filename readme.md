@@ -347,7 +347,7 @@ To run the skill you need to do a number of things: -
 17. You will now be on the "Configuration" page.
 18. Select "AWS Lambda ARN (Amazon Resource Name)" for the skill Endpoint Type.
 19. Paste into the "Default" box the ARN you copied earlier from the AWS Lambda setup.
-19. Select "Yes" for "Provide geographical region endpoints?" and select either US or Europe depending on where you live. (NOTE the screenshot below is out of date and does not show this option)
+19. Leave "Provide geographical region endpoints?" set to "No"
 
 ![alt text](screenshots/endpoint.jpeg) 
 
