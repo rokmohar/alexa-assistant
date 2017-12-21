@@ -684,7 +684,7 @@ function createassistant (){
                                     
                                     searchFunction.response.speak(speechOutput)
                                     
-                                    if (this.event.context.System.device.supportedInterfaces.Display) {
+                                    if (searchFunction.event.context.System.device.supportedInterfaces.Display) {
                                         searchFunction.response.renderTemplate(template);
         
                                     }
