@@ -12,6 +12,7 @@ var lame = require('lame');
 var grpc = require('grpc')
 var resolve = require('path').resolve;
 var volume = require('pcm-volume');
+var request = require('request');
 
 
 
@@ -21,9 +22,9 @@ var OAuth2 = google.auth.OAuth2;
 var assistant;
 var audio_chunk = 0;
 var microphoneOpen = true;
-var sendingAudio = false;
 
-// create JSON string to hold config
+
+// create JSON object to hold config
 var config = {};
 
 // Load AWS credentials
@@ -42,7 +43,7 @@ var CLIENT_SECRET = process.env.CLIENT_SECRET;
 var REDIRECT_URL = process.env.REDIRECT_URL;
 var API_ENDPOINT = process.env.API_ENDPOINT;
 var S3_BUCKET = process.env.S3_BUCKET;
-
+var PROJECT_ID = process.env.PROJECT_ID;
 
 
 
@@ -51,13 +52,13 @@ var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 // load assistant API proto and bind using grpc
 
 const protoDescriptor = grpc.load({
-  file: 'assistant/embedded/v1alpha1/embedded_assistant.proto',
+  file: 'assistant/embedded/v1alpha2/embedded_assistant.proto',
   root: resolve(__dirname, 'proto')
 });
 
-const EmbeddedAssistantClient = protoDescriptor.google.assistant.embedded.v1alpha1.EmbeddedAssistant;
+const EmbeddedAssistantClient = protoDescriptor.google.assistant.embedded.v1alpha2.EmbeddedAssistant;
 
-const embedded_assistant = protoDescriptor.google.assistant.embedded.v1alpha1;
+const embedded_assistant = protoDescriptor.google.assistant.embedded.v1alpha12
 const callCreds = new grpc.Metadata();
 
 
@@ -65,9 +66,14 @@ const END_OF_UTTERANCE = 'END_OF_UTTERANCE';
 const EVENT_TYPE = 'event_type';
 const RESULT = 'result';
 const AUDIO_OUT = 'audio_out';
+var locale
+
+
+
 
 var conversation_State = Buffer.alloc(0);
 var error_text;
+var deviceModelRegistered = false
 
 
 var APP_ID = undefined; //replace with 'amzn1.echo-sdk-ams.app.[your-unique-value-here]'; NOTE THIS IS A COMPLETELY OPTIONAL STEP WHICH MAY CAUSE MORE ISSUES THAN IT SOLVES IF YOU DON'T KNOW WHAT YOU ARE DOING
@@ -104,6 +110,7 @@ if (S3_BUCKET){
   
 }
 
+var ID = 'test_id'
 
 var handlers = {
     
@@ -129,6 +136,9 @@ var handlers = {
         if (!S3_BUCKET){
             this.emit(':tell','ERROR! S3 Bucket is not set in Lambda Environment Variables','ERROR! S3 Bucket is not set in Lambda Environment Variables')
         }
+        if (!PROJECT_ID){
+            this.emit(':tell','ERROR! PROJECT_ID is not set in Lambda Environment Variables','ERROR! PROJECT_ID is not set in Lambda Environment Variables')
+        }
         
         if (!this.event.session.user.accessToken) {
             
@@ -143,13 +153,15 @@ var handlers = {
         
     },
 
+
+
     'SearchIntent': function (overrideText) {
         
         console.log('Starting Search Intent')
         
         
         // Function variables
-        var setupStart = new Date().getTime();
+       
         var encodeStart;
         var encodeTotal;
         var pollyStart
@@ -163,7 +175,7 @@ var handlers = {
         var setupTotal;
         var audioLength = 0;
         var searchFunction = this;
-        var googleUtternaceText;
+        var googleResponseText = '"🔊"'
         var audioPresent = false;
         
 
@@ -185,6 +197,9 @@ var handlers = {
         if (!S3_BUCKET){
             this.emit(':tell','ERROR! S3 Bucket Name is not set in Lambda Environment Variables','ERROR! S3 Bucket Name is not set in Lambda Environment Variables')
         }
+        if (!PROJECT_ID){
+            this.emit(':tell','ERROR! PROJECT_ID is not set in Lambda Environment Variables','ERROR! PROJECT_ID is not set in Lambda Environment Variables')
+        }
 
         
         // Check for optional environment variables otherwise set to defaults
@@ -193,28 +208,7 @@ var handlers = {
         var DEBUG_MODE = process.env.DEBUG_MODE;
         
     
-        var POLLY_VOICE = process.env.POLLY_VOICE;
-        
-        // Whilst the Assistant API is US only 'Joey' seems to to be the best option for recognition
-        if (!POLLY_VOICE){
-            POLLY_VOICE = 'Joey';
-        }
-        
-        
-        var CHUNK_SIZE = process.env.CHUNK_SIZE;
-        if (!CHUNK_SIZE){
-            CHUNK_SIZE = 32000;
-        }
-        
-        console.log('CHUNK_SIZE: ' + CHUNK_SIZE);
-        
-        var SEND_SPEED = process.env.SEND_SPEED;
-        if (!SEND_SPEED){
-            SEND_SPEED = 0.1;
-        }
-        
-        console.log('SEND_SPEED: ' + SEND_SPEED);
-        
+
         
         // See if text value recieved from Alexa is being over-ridden with value in environment variable
         var UTTERANCE_TEXT =  process.env.UTTERANCE_TEXT;
@@ -241,6 +235,8 @@ var handlers = {
         
         console.log('Input text to be processed is "' + alexaUtteranceText +'"');
         var ACCESS_TOKEN = this.event.session.user.accessToken;
+        console.log('token')
+        console.log(ACCESS_TOKEN)
 
         
         // Check whether we have a valid authentication token
@@ -261,10 +257,139 @@ var handlers = {
             var combinedCreds = grpc.credentials.combineChannelCredentials(channelCreds, call_creds);
             assistant = new EmbeddedAssistantClient(API_ENDPOINT, combinedCreds);  
 
+var bearer = 'Bearer ' + ACCESS_TOKEN
+
+var registrationModelURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + PROJECT_ID + '/deviceModels/'
+
+var registrationInstanceURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + PROJECT_ID + '/devices/'
+
+
+
+// Start the request
+//Registering Model
+var registerModel = function (callback) {
+    
+    var deviceModel = {
+      "project_id": PROJECT_ID,
+      "device_model_id": "alexa_assistant",
+      "manifest": {
+        "manufacturer": "Assistant SDK developer",
+        "product_name": "Alexa Assistant",
+        "device_description": "Alexa Assistant Skill"
+      },
+      "device_type": "action.devices.types.LIGHT",
+      "traits": ["action.devices.traits.OnOff"]
+    }
+    
+    var deviceModelString = JSON.stringify(deviceModel)
+    
+    var POSToptionsModel = {
+      url: registrationModelURL,
+      method: 'POST',
+      headers: {
+          'Authorization': bearer,
+          'Content-Type': 'application/json'
+         },
+        body: deviceModelString
+    };
+    
+    
+    
+
+    request(POSToptionsModel, function (error, response, body) {
+        if (error){
+            
+            callback(error, null);
+        } else if (response){
+            var bodyJSON = JSON.parse(body)
+            if (bodyJSON.error){
+                console.log('error code recieved')
+                if (bodyJSON.error.code == 409){
+                    console.log('Device already exists')
+                    callback (null, bodyJSON)
+                } else {
+                    callback (bodyJSON, null)
+                }
+            } else {
+                callback (null, bodyJSON)
+            }
+
+        }
+    })
+}
+
+//Registering instance
+var registerInstance = function (id, callback) {
+    
+    var instanceModel = {
+        "id": id,
+        "model_id": "alexa_assistant",
+        "nickname": "Alexa Assistant",
+        "clientType": "SDK_SERVICE"
+      }
+    
+    var instanceModelString = JSON.stringify(instanceModel)
+    
+    var POSToptionsInstance = {
+      url: registrationInstanceURL,
+      method: 'POST',
+      headers: {
+          'Authorization': bearer,
+          'Content-Type': 'application/json'
+         },
+        body: instanceModelString
+    };
+
+    request(POSToptionsInstance, function (error, response, body) {
+        if (error){
+            
+            callback(error, null);
+        } else if (response){
+            var bodyJSON = JSON.parse(body)
+            if (bodyJSON.error){
+                console.log('error code recieved')
+                if (bodyJSON.error.code == 409){
+                    console.log('Instance already exists')
+                    callback (null, bodyJSON)
+                } else {
+                    callback (bodyJSON, null)
+                }
+            } else {
+                callback (null, bodyJSON)
+            }
+
+        }
+    })
+}
+
+registerModel (function(err, result)  {
+    
+    if(err){
+        console.log ('Got Model register error', err)
+    } else if (result){
+        console.log('Got positive model response' + result)
+        
+        registerInstance (ID, function(err, result){
+            
+            if (err){
+                console.log('Error:', err)
+            } else if (result){
+                console.log('Got positive Instance response' )
+                createassistant()
+                
+            }
+            
+        })
+        
+    }
+    
+})
+            
+function createassistant (){
             const options = {};
             // create a timed event incase something causes the skill to stall
             // This will stop the skill from timing out
-            wait(8, 'seconds', function() { 
+            wait(10, 'seconds', function() { 
                 if (audioPresent == false){
                   searchFunction.emit(':tell',"I wasn't able to talk to Google - please try again") 
                 }
@@ -273,7 +398,7 @@ var handlers = {
             })
             
             // Create new GRPC stub to communicate with Assistant API
-            const conversation = assistant.converse(callCreds, options);
+            const conversation = assistant.assist(callCreds, options);
             
             //Deal with errors from Google API
             // These aren't necessarily all bad unless they are fatal
@@ -284,7 +409,7 @@ var handlers = {
             
             conversation.on('end', () => {
                 console.log('End of response from GRPC stub');
-                responseWaitTotal = new Date().getTime() - responseWaitStart;
+                
                 // close resonse file which will then trigger encode
                 responseFile.end();
 
@@ -328,191 +453,90 @@ var handlers = {
             console.log(conversation_State);
             
 
-            var audioSetupConfig;
-
+            var setupConfigTemplate1 = {
+                config: { 
+                    audio_out_config: { 
+                        encoding: 1, 
+                        sample_rate_hertz: 16000, 
+                        volume_percentage: 100  
+                    },
+                    dialog_state_in: {
+                        language_code: locale
+                    },
+                    device_config: {
+                        device_id: ID,
+                        device_model_id: 'alexa_assistant'
+                    },
+                    text_query: alexaUtteranceText
+                }
+            }
+            
+            var setupConfigTemplate2 = {
+                config: { 
+                    audio_out_config: { 
+                        encoding: 1, 
+                        sample_rate_hertz: 16000, 
+                        volume_percentage: 100  
+                    },
+                    dialog_state_in: {
+                        conversation_state: conversation_State,
+                        language_code: locale
+                    },
+                    device_config: {
+                        device_id: ID,
+                        device_model_id: 'alexa_assistant'
+                    },
+                    text_query: alexaUtteranceText
+                }
+            }
+            
+            var setupConfig = {}
             
             if (conversation_State.length < 1){
                 console.log('No prior ConverseResponse')
-                audioSetupConfig = {config: 
-                        { 
-                            audio_in_config: { encoding: 1, sample_rate_hertz: 16000 },
-                            audio_out_config: { encoding: 1, sample_rate_hertz: 16000, volume_percentage: 100 } 
-                        }
-                       }
+                 setupConfig = setupConfigTemplate1
+                
             } else {
                 console.log('Prior ConverseResponse detected')
-                audioSetupConfig = {config: 
-                    { 
-                        audio_in_config: { encoding: 1, sample_rate_hertz: 16000 },
-                        audio_out_config: { encoding: 1, sample_rate_hertz: 16000, volume_percentage: 100 }, 
-                        converse_state: {conversation_state: conversation_State}
-                    }
-                   }
-            }
-            
-            // Send audio config to API
-            conversation.write(audioSetupConfig);
-            
-            
-            
-            // Function to Split up audio part into chunks for sending to Google API in real time to simulate spoken request
-            // This function is courtesy of Richard vowles https://github.com/rvowles/node-assistant
-            
-            
-            var setupConversationAudioRequestStream = function (converseStream) {
-                const audioPipe = new Stream.Writable();
-                console.log('created audioPipe');
-
-                    audioPipe._write = (chunk, enc, next) => {
-
-                        console.log('Polly audio data recieved');
-
-                        // Save total Polly respponse time
-                        pollyTotal = new Date().getTime() - pollyStart;
-                        
-                        audioSendStart = new Date().getTime();
-
-                        if (!chunk.length) {
-                            console.log('ignoring');
-                            return;
-                        }
-                        
-                        
-                        const parts = Math.ceil(chunk.length / CHUNK_SIZE);
-                        console.log('chunk length is ' + chunk.length)
-                        console.log("Parts = " + parts);
-                        const partLength = CHUNK_SIZE/32000;    
-
-                        audio_chunk++;
-                        // Delay sending of all chunk data for this part until all previous chuncks have been sent
-                        
-                        
-                        wait(partLength*parts*audio_chunk*SEND_SPEED, 'seconds', function() {    
-                            for (let count = 0; count < parts; count++) {
-                                //console.log('part: ' + count)
-                                wait(partLength*count*SEND_SPEED, 'seconds', function() {
-                                    //console.log('Sending Part: ' + count );
-                                    sendTimedData (chunk, CHUNK_SIZE, count, converseStream);
-                                });
-                            }
-                        })
-                        next();
-                };
-                audioPipe.on('end', () => {
-                    console.log('end of audio');
-                    converseStream.end();
-                });
-                return audioPipe;
-            }
-            
-            // Save total setup time in milliseconds
-            setupTotal = new Date().getTime() - setupStart;
-            
-
-            // Google Assistant API does not accept text input        
-            // So we convert Alexa result text to audio stream using AWS Polly
-            
-            pollyStart = new Date().getTime();
-            const audioRequestStream = setupConversationAudioRequestStream(conversation);
-            audio_chunk = -1;
-            
-            // sendingAudio variable is used to track as to whether we should keep sending utterance audio to API
-            // This will be set to FALSE once "END_OF_UTTERANCE" message is recieved from Google API
-            sendingAudio = true;
-            
-            const params = {
-                                'Text': alexaUtteranceText,
-                                'OutputFormat': 'pcm',
-                                'VoiceId': POLLY_VOICE,
-                                'SampleRate': '16000',
-                                'TextType': 'text',
-                            }
-            
-            // If utterance is 'stop' then we will send pre-recorded polly audio to reduce AWS charges
-            if (alexaUtteranceText == "STOP"){
-                console.log('Send stop command pcm');
-                var readStop = fs.createReadStream('./stop.pcm');
-                readStop.pipe(audioRequestStream);
- 
-            // 'cancel' command
-            } else if (alexaUtteranceText == "CANCEL"){
-                console.log('Send cancel command pcm');
-                var readCancel = fs.createReadStream('./cancel.pcm');
-                readCancel.pipe(audioRequestStream);
+                setupConfig = setupConfigTemplate2
                 
-            // 'exit' command
-            } else if (alexaUtteranceText == "exit"){
-                console.log('Send exit command pcm');
-                var readExit = fs.createReadStream('./exit.pcm');
-                readExit.pipe(audioRequestStream);
- 
-            // Otherwise we send utterance text to Polly
-            } else {
-            
-                var pollyAudio = Polly.synthesizeSpeech(params, (err, data) => {
-                    if (err) {
-                        console.log('There was a polly error' + err.code)
-                    } else if (data) {
-                        if (data.AudioStream instanceof Buffer) {
-                            // Initiate the source
-                            console.log('Recieved polly audio');
-
-                            // Add 5 seconds of silence to stream - this is needed so that Assistant API can detect end of utterance event
-                            var totalLength = blank_audio_long.length + data.AudioStream.length;
-                            var combinedAudio = Buffer.concat([data.AudioStream, blank_audio_long] , totalLength);    
-                            // convert AudioStream into a readable stream
-                            var bufferStream = new Stream.PassThrough();
-                            bufferStream.end(combinedAudio);
-                            // Pipe into chunker for sending to Google API
-                            bufferStream.pipe(audioRequestStream);
-                        }
-                    } 
-                })
+                
             }
+
+        
             
-            // Deal with responses from API
+            // Send config request to API
+            conversation.write(setupConfig);
+    
+    // Deal with responses from API
             conversation.on('data', function(ConverseResponse) {
-                //console.log(ConverseResponse);
-                if (ConverseResponse.converse_response == EVENT_TYPE){
-
-                  if (ConverseResponse.event_type ){
-                      // Look for "END_OF_UTTERANCE" event
-                      if (ConverseResponse.event_type == END_OF_UTTERANCE){
-                          console.log('End of Utterance received')
-                          // Set sendingAudio to false so that we will stop streaming audio to API
-                          sendingAudio = false;
-                          conversation.end();
-                          audioSendTotal = new Date().getTime() - audioSendStart;
-                          console.log('Audio Send Total time is ' + audioSendTotal + 'ms');
-                          responseWaitStart = new Date().getTime();
-                      }
-                  }
-
-                }
+                //console.log(ConverseResponse)
+            
 
                 // Deal with RESULTS TYPE
-                else if (ConverseResponse.converse_response == RESULT){
-                    console.log('Result received');
+                
                     // check there is actually a value in result
-                    if (ConverseResponse.result ){
-
-                        if (ConverseResponse.result.spoken_request_text){
-                          console.log('Request text is: '+ JSON.stringify(ConverseResponse.result.spoken_request_text));
-                            googleUtternaceText = JSON.stringify(ConverseResponse.result.spoken_request_text);
+                    if (ConverseResponse.dialog_state_out ){
+                        console.log('Dialog state out recieved')
+                        if (ConverseResponse.dialog_state_out.supplemental_display_text){
+                            
+                            googleResponseText = JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text)
+                          console.log('Supplemental text is: '+ googleResponseText);
+                            
                            
                         }
-                        if (ConverseResponse.result.microphone_mode){
-                            if (ConverseResponse.result.microphone_mode == 'CLOSE_MICROPHONE'){
+                        if (ConverseResponse.dialog_state_out.microphone_mode){
+                            if (ConverseResponse.dialog_state_out.microphone_mode == 'CLOSE_MICROPHONE'){
                                 microphoneOpen = false;
                                 console.log('closing microphone');
-                            } else if (ConverseResponse.result.microphone_mode == 'DIALOG_FOLLOW_ON'){
+                            } else if (ConverseResponse.dialog_state_out.microphone_mode == 'DIALOG_FOLLOW_ON'){
                                 microphoneOpen = true;
                                 console.log('keeping microphone open');
                             } 
                         }
-                        if (ConverseResponse.result.conversation_state){
-                            if (ConverseResponse.result.conversation_state.length > 0 ){
-                                conversation_State = ConverseResponse.result.conversation_state;
+                        if (ConverseResponse.dialog_state_out.conversation_state){
+                            if (ConverseResponse.dialog_state_out.conversation_state.length > 0 ){
+                                conversation_State = ConverseResponse.dialog_state_out.conversation_state;
                                 
                                 console.log('Conversation state changed');
                                 console.log('Conversation state var is:')
@@ -521,12 +545,12 @@ var handlers = {
                         }
                     }
 
-                }
+                
                 
                 // Deal with audio data from API
  
-                else if (ConverseResponse.converse_response == AUDIO_OUT){
- 
+                if (ConverseResponse.audio_out){
+                    //console.log('audio received')
                     var audio_chunk = ConverseResponse.audio_out.audio_data;
                     if (audio_chunk instanceof Buffer) {
                         audioLength = audioLength + audio_chunk.length;
@@ -552,6 +576,7 @@ var handlers = {
                 }
  
             })
+}
             
 
  
@@ -564,27 +589,7 @@ var handlers = {
             
  
  
-            // This function sends a chunk of audio data to the Assistant API via grpc
-            var sendTimedData = function (chunk, size, count, converseStream){
 
-                // Only send the chunk if the END_of_UTTERANCE command hasn't been received
-                if (sendingAudio == true){
-                    //console.log('sending to API');
-                    const converseRequest = new embedded_assistant.ConverseRequest();
-                    const end = ((count + 1) * size) > chunk.length ? chunk.length : ((count + 1) * size);
-                    const bit = new Uint8Array(chunk.slice(count * size, end));
-                    converseRequest.setAudioIn(bit);
-                    try {
-                         converseStream.write(converseRequest);
-                    }
-                    catch (err) {
-                        console.error(err);
-                    }
-                } else {
-                    console.log('End of utterance recieved - not sending data');
-                }
-
-            }
 
             // This function take the response fromt the API and re-encodes using LAME
             // There is lots of reading and writing from temp files which isn't ideal
@@ -594,7 +599,6 @@ var handlers = {
 
                 console.log('Starting Transcode');
                 
-                encodeStart = new Date().getTime();
 
                 // Read the linear PCM response from file and create stream
                 var readpcm = fs.createReadStream('/tmp/response.pcm');
@@ -641,7 +645,7 @@ var handlers = {
                             
                         } else{
                             // Upload has been sucessfull - we can know issue an alexa response based upon microphone state
-                            uploadTotal = new Date().getTime() - uploadStart;
+
                             
                             var signedURL;
                             // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
@@ -653,54 +657,48 @@ var handlers = {
                                     url = url.replace(/&/g, '&amp;'); // replace ampersands    
                                     signedURL = url;
 
-                                    var cardContent = 
-                                    '*********************************************************************************\n' +
-                                    'DEBUG INFORMATION - Delete "DEBUG_MODE" environment variable to disable this card\n' +
-                                    '*********************************************************************************\n' +
-                                    'Skill Version:               ' + VERSION_NUMBER + '\n\n' +
-                                    'Alexa heard:                 ' + alexaUtteranceText_original + '\n' +
-                                    'Google assistant heard:       ' + googleUtternaceText + '\n' +
-                                    'Polly voice was:             ' + POLLY_VOICE + '\n' +
-                                    'Audio chunk size was:        ' + CHUNK_SIZE + '\n' +
-                                    'Audio send speed multiplyer: ' + SEND_SPEED + '\n' +
-                                    '*******************************PROCESSING TIMES**********************************\n' +
-                                    'Setup Total time was:           ' + setupTotal + 'ms\n' + 
-                                    'Polly Total time was:           ' + pollyTotal + 'ms\n' +
-                                    'Audio Total Send Time was:      ' + audioSendTotal + 'ms\n' +
-                                    'Response Wait time was:         ' + responseWaitTotal + 'ms\n' +
-                                    'Encode Total time was:          ' + encodeTotal + 'ms\n' +
-                                    'Total Upload time was:          ' + uploadTotal + 'ms\n\n\n' 
+                                    var cardContentOriginal = googleResponseText
+                                    // Remove quotes from start and end of response
+                                    var cardContent = cardContentOriginal.substr(1).slice(0, -1);
 
                                     console.log(cardContent);
-                                    var cardTitle = 'Google Assistant Debug'
+                                    var cardTitle = 'Google Assistant for Alexa'
+                                    
+                                    // Let remove any (playing sfx)
+                                    cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
 
                                     var speechOutput = '<audio src="' + signedURL + '"/>'; 
+                                    
+                                    var template = {
+                                        "type": "BodyTemplate1",
+                                        "token": "bt1",
+                                        "backButton": "HIDDEN",
+                                        "title": cardTitle,
+                                        "textContent": {
+                                            "primaryText": {
+                                                "text": cardContent,
+                                                "type": "RichText"
+                                            }
+                                        }
+                                    }
+                                    
+                                    searchFunction.response.speak(speechOutput)
+                                    searchFunction.response.renderTemplate(template);
+                                    
                                     // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                                     if (microphoneOpen == true){
                                         console.log('Microphone is open so keeping session open')                        
-                                        console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
-                                        cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) + 
-                                        '\nMore detailed debug information can be found in the Cloud Watch logs' );
-                                        //
-                                        if (DEBUG_MODE){
-                                            console.log
-                                            searchFunction.emit(':askWithCard', speechOutput, null, cardTitle, cardContent);
-                                        } 
-                                        else {
-                                            searchFunction.emit(':ask', speechOutput);    
-                                        }
+                                        
+                                            searchFunction.response.shouldEndSession(false)
+                                            searchFunction.emit(':responseReady');    
+                                        
                                     // Otherwise we create an Alexa 'Tell' command which will close the session
                                     } else{
                                         console.log('Microphone is closed so closing session')
-                                        console.log('Total runtime: ' + (new Date().getTime() - setupStart) );
-                                        cardContent = cardContent + ('Total runtime: ' + (new Date().getTime() - setupStart) +
-                                        '\nMore detailed debug information can be found in the Cloud Watch logs' );
-                                        if (DEBUG_MODE){
-                                            searchFunction.emit(':tellWithCard', speechOutput, cardTitle, cardContent);
-                                        } 
-                                        else {
-                                        searchFunction.emit(':tell', speechOutput);
-                                        }
+                                        
+                                        searchFunction.response.shouldEndSession(true)
+                                            searchFunction.emit(':responseReady')
+                                        
                                     }
                                 } else {
                                     searchFunction.emit(':tell', 'There was an error creating the signed URL. Please ensure that the S3 Bucket name is correct in the environment variables and IAM permissions are set correctly');
@@ -716,9 +714,7 @@ var handlers = {
 
                 // When encoding of MP3 has finished we upload the result to S3
                 encoder.on('finish', function () {
-                    encodeTotal = new Date().getTime() - encodeStart;
-                    console.log('Encode Total time is ' + encodeTotal + 'ms');
-                    uploadStart = new Date().getTime();
+                    
                     // Close the MP3 file
                     writemp3.end();
                     console.error('Encoding done!');
@@ -797,6 +793,7 @@ var handlers = {
 
 exports.handler = function(event, context, callback){
     var alexa = Alexa.handler(event, context);
+    locale = event.request.locale
     alexa.registerHandlers(handlers);
     // Create DynamoDB Table
     //alexa.dynamoDBTableName = 'AlexaAssistantSettings';
