@@ -683,7 +683,12 @@ function createassistant (){
                                     }
                                     
                                     searchFunction.response.speak(speechOutput)
-                                    searchFunction.response.renderTemplate(template);
+                                    
+                                    if (this.event.context.System.device.supportedInterfaces.Display) {
+                                        searchFunction.response.renderTemplate(template);
+        
+                                    }
+                                    
                                     
                                     // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                                     if (microphoneOpen == true){
