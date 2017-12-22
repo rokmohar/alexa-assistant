@@ -263,6 +263,8 @@ var registrationModelURL = 'https://embeddedassistant.googleapis.com/v1alpha2/pr
 
 var registrationInstanceURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + PROJECT_ID + '/devices/'
 
+var modelID =  PROJECT_ID
+
 
 
 // Start the request
@@ -271,7 +273,7 @@ var registerModel = function (callback) {
     
     var deviceModel = {
       "project_id": PROJECT_ID,
-      "device_model_id": "alexa_assistant",
+      "device_model_id": modelID,
       "manifest": {
         "manufacturer": "Assistant SDK developer",
         "product_name": "Alexa Assistant",
@@ -323,7 +325,7 @@ var registerInstance = function (id, callback) {
     
     var instanceModel = {
         "id": id,
-        "model_id": "alexa_assistant",
+        "model_id": modelID,
         "nickname": "Alexa Assistant",
         "clientType": "SDK_SERVICE"
       }
@@ -369,7 +371,7 @@ registerModel (function(err, result)  {
     } else if (result){
         console.log('Got positive model response' + result)
         
-        registerInstance (ID, function(err, result){
+        registerInstance (PROJECT_ID, function(err, result){
             
             if (err){
                 console.log('Error:', err)
