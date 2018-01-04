@@ -263,6 +263,7 @@ var setup = function (requester, callback) {
                             console.log('Got positive Instance response' )
                             
                             requester.attributes['registered'] = true;
+                            this.attributes['microphone_open'] = false;
                             
                             callback (null,true)
 
@@ -304,7 +305,7 @@ var handlers = {
                        
                        launchRequest.emit(':tell', "Skill could not register with Google assistant API");
                    } else if (result){
-                       // sometimes the assistant closes the microphoen following the hello cammand - we force it to remain open
+                       
                        launchRequest.emit('SearchIntent', 'Hello'); 
                    }
 
@@ -571,10 +572,12 @@ function createassistant (){
                             if (ConverseResponse.dialog_state_out.microphone_mode == 'CLOSE_MICROPHONE'){
                                 
                                 microphoneOpen = false;
+                                searchFunction.attributes['microphone_open'] = false
                                 console.log('closing microphone');
                                
                             } else if (ConverseResponse.dialog_state_out.microphone_mode == 'DIALOG_FOLLOW_ON'){
                                 microphoneOpen = true;
+                                searchFunction.attributes['microphone_open'] = true
                                 console.log('keeping microphone open');
                             } 
                         }
@@ -808,7 +811,7 @@ function encode() {
     'AMAZON.StopIntent' : function () {
         console.log('Stop Intent')
         var message = 'stop';
-        if (microphoneOpen == true){
+        if (this.attributes['microphone_open'] == true){
             this.emit('SearchIntent', message);
         }else {
             this.emit(':tell', 'Stopped');
@@ -827,7 +830,7 @@ function encode() {
     'AMAZON.CancelIntent' : function () {
         console.log('Cancel Intent')
         var message = 'cancel';
-        if (microphoneOpen == true){
+        if (this.attributes['microphone_open'] == true){
             this.emit('SearchIntent', message);
         } else {
             this.emit(':tell', 'Cancelled');
@@ -836,14 +839,14 @@ function encode() {
     'AMAZON.NoIntent' : function () {
         console.log('No Intent')
         var message = 'no';
-        if (microphoneOpen == true){
+        if (this.attributes['microphone_open'] == true){
             this.emit('SearchIntent', message);
         }
     },
     'AMAZON.YesIntent' : function () {
         console.log('Yes Intent')
         var message = 'yes';
-        if (microphoneOpen == true){
+        if (this.attributes['microphone_open'] == true){
             this.emit('SearchIntent', message);
         }
     },
@@ -859,7 +862,7 @@ function encode() {
         // The easiset way to do this is to just send a stop command and this will close the conversation for us
         // (this is against Amazons guides but we're not submitting this!)
         var message = 'goodbye';
-        if (microphoneOpen == true){
+        if (this.attributes['microphone_open'] == true){
             this.emit('SearchIntent', message);
         }
         
