@@ -13,7 +13,7 @@ var grpc = require('grpc')
 var resolve = require('path').resolve;
 var volume = require('pcm-volume');
 var request = require('request');
-
+var xmlescape = require('xml-escape');
 
 
 var OAuth2 = google.auth.OAuth2;
@@ -132,6 +132,9 @@ var checkEV = function (request){
 var setup = function (requester, callback) {
 
             var ACCESS_TOKEN = requester.event.session.user.accessToken;
+    
+            console.log('token')
+            console.log(ACCESS_TOKEN)
             //create bucket
             createBucket()
             
@@ -160,8 +163,8 @@ var setup = function (requester, callback) {
                   "device_model_id": PROJECT_ID,
                   "manifest": {
                     "manufacturer": "Assistant SDK developer",
-                    "product_name": "Alexa Assistant",
-                    "device_description": "Alexa Assistant Skill"
+                    "product_name": "Alexa Assistant v1",
+                    "device_description": "Alexa Assistant Skill v1"
                   },
                   "device_type": "action.devices.types.LIGHT",
                   "traits": ["action.devices.traits.OnOff"]
@@ -207,7 +210,7 @@ var setup = function (requester, callback) {
                 var instanceModel = {
                     "id": id,
                     "model_id": id,
-                    "nickname": "Alexa Assistant",
+                    "nickname": "Alexa Assistant v1",
                     "clientType": "SDK_SERVICE"
                   }
 
@@ -263,7 +266,7 @@ var setup = function (requester, callback) {
                             console.log('Got positive Instance response' )
                             
                             requester.attributes['registered'] = true;
-                            this.attributes['microphone_open'] = false;
+                            requester.attributes['microphone_open'] = false;
                             
                             callback (null,true)
 
@@ -293,6 +296,7 @@ var handlers = {
             this.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.");
         
         } else {
+            
             
             if (this.attributes['registered']){
                 console.log('Device already registered')
@@ -390,7 +394,7 @@ var handlers = {
             if (this.attributes['registered']){
                 console.log('Device already registered')
                 
-                createassistant() 
+                createassistant(ACCESS_TOKEN) 
             } else {
                 console.log('Device not registered')
                setup (this, function(err, result)  {
@@ -400,28 +404,20 @@ var handlers = {
                        SearchIntent.emit(':tell', "Skill could not register with Google assistant API");
                    } else if (result){
 
-                       createassistant()
+                       createassistant(ACCESS_TOKEN)
                    }
 
                })
   
             }
-                 
-        
-
-
-            
-            
-
-
-            
-function createassistant (){
+          
+function createassistant (token){
     
                 // authenticate against OAuth using session accessToken
     
             
             
-            oauth2Client.setCredentials({access_token: ACCESS_TOKEN });
+            oauth2Client.setCredentials({access_token: token });
             const call_creds = grpc.credentials.createFromGoogleCredential(oauth2Client);
             var channelCreds = grpc.credentials.createSsl(null);
             var combinedCreds = grpc.credentials.combineChannelCredentials(channelCreds, call_creds);
@@ -502,11 +498,11 @@ function createassistant (){
                         volume_percentage: 100  
                     },
                     dialog_state_in: {
-                        language_code: locale
+                        language_code: 'en-US'
                     },
                     device_config: {
-                        device_id: PROJECT_ID + '_test',
-                        device_model_id: PROJECT_ID + '_test'
+                        device_id: PROJECT_ID,
+                        device_model_id: PROJECT_ID
                     },
                     text_query: alexaUtteranceText
                 }
@@ -521,11 +517,11 @@ function createassistant (){
                     },
                     dialog_state_in: {
                         conversation_state: conversation_State,
-                        language_code: locale
+                        language_code: 'en-US'
                     },
                     device_config: {
-                        device_id: PROJECT_ID + '_test',
-                        device_model_id: PROJECT_ID + '_test'
+                        device_id: PROJECT_ID,
+                        device_model_id: PROJECT_ID
                     },
                     text_query: alexaUtteranceText
                 }
@@ -563,7 +559,7 @@ function createassistant (){
                         console.log('Dialog state out recieved')
                         if (ConverseResponse.dialog_state_out.supplemental_display_text){
                             
-                            googleResponseText = JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text)
+                            googleResponseText = xmlescape(JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text))
                           console.log('Supplemental text is: '+ googleResponseText);
                             
                            
@@ -705,15 +701,18 @@ function encode() {
                 s3.getSignedUrl('getObject', signedParams, function (err, url) {
 
                     if (url){
-                        // ampersands are not valid in SSML so we need to escape these out with &amp;
-                        url = url.replace(/&/g, '&amp;'); // replace ampersands    
+                        // escape out any illegal XML characters;
+                        url = xmlescape(url)
                         signedURL = url;
 
-                        var cardContentOriginal = googleResponseText
-                        // Remove quotes from start and end of response
-                        var cardContent = cardContentOriginal.substr(1).slice(0, -1);
+                        
+                        var cardContent = 'Request:<br/><i>' + alexaUtteranceText + '</i><br/><br/>Response:<br/>' + googleResponseText
+                        // replace carriage returns with breaks
+                        cardContent = cardContent.replace(/\\n/g, '<br/>');
+                        // deal with any \&quot;
+                        cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
 
-                        console.log(cardContent);
+                        //console.log(cardContent);
                         var cardTitle = 'Google Assistant for Alexa'
 
                         // Let remove any (playing sfx)
