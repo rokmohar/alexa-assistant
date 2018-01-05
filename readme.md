@@ -35,7 +35,11 @@ https://eu-west-1.console.aws.amazon.com/lambda/home
 
 If you can't see your skill the go to drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in the US or EU(Ireland) if you are based in the UK or Germany.
 
+![alt text](screenshots/lambda_region.jpg)
+
 2. Scroll down the page to the 'Function code' section and click on the "Upload" button. Go to the folder where you unzipped the files you downloaded from GitHub, select index.zip and click open. Do not upload the alexa-assistant-master.zip you downloaded from GitHub - only the index.zip contained within it.
+
+![alt text](screenshots/function_upload.jpg)
 
 2.  In the section below called 'Environment Variables create a new lambda function Environment Variable called "PROJECT_ID". The value of this environment variable must be the ID of the Google Project that you created in the API console. You can get to your project via this link (you will probably only have one project): 
 
