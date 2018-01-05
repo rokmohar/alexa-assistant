@@ -28,7 +28,7 @@ https://developer.amazon.com/edw/home.html
 4. Select the Google Assistant Skill
 5. Go to the Skill Information tab make sure "Render Template is set to Yes"
 6. On the Interaction Model, replace the existing Intent Schema with this:
-    '''
+    ```
     {
       "intents": [
         {
@@ -87,7 +87,7 @@ https://developer.amazon.com/edw/home.html
         }
       ]
     }
-    '''
+    ```
     
 7. Leave the custom slots and sample utterance as per the previous version.
 8. Click Save and then next once it has processed
