@@ -359,29 +359,20 @@ var handlers = {
         var UTTERANCE_TEXT =  process.env.UTTERANCE_TEXT;
         var alexaUtteranceText;
         
-        // No environent variable set
-        if (!UTTERANCE_TEXT){
-            // Have we recieved an direct utterance from another intent?
-            if (overrideText){
-                alexaUtteranceText = overrideText;
-                console.log("Utterance recieved from another intent: " + overrideText);
-                
-            } else {
-            // use detected utterance  
-            alexaUtteranceText = this.event.request.intent.slots.search.value;
-            var alexaUtteranceText_original = this.event.request.intent.slots.search.value;
-            }
-        } else {
-            // otherwise use value in environment variable
-            alexaUtteranceText = UTTERANCE_TEXT;
-            console.log('Utternace text overidden in environment variables: ' + UTTERANCE_TEXT);
-        }
+        // Have we recieved an direct utterance from another intent?
+        if (overrideText){
+            alexaUtteranceText = overrideText;
+            console.log("Utterance recieved from another intent: " + overrideText);
 
+        } else {
+        // use detected utterance  
+            alexaUtteranceText = this.event.request.intent.slots.search.value;
+        }
+ 
         
         console.log('Input text to be processed is "' + alexaUtteranceText +'"');
         var ACCESS_TOKEN = this.event.session.user.accessToken;
-        console.log('token')
-        console.log(ACCESS_TOKEN)
+        
 
         
         // Check whether we have a valid authentication token
@@ -390,7 +381,8 @@ var handlers = {
             this.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.");
         
         } else {
-            
+            console.log('token')
+            console.log(ACCESS_TOKEN)
             if (this.attributes['registered']){
                 console.log('Device already registered')
                 
@@ -411,12 +403,10 @@ var handlers = {
   
             }
           
-function createassistant (token){
+    function createassistant (token){
     
-                // authenticate against OAuth using session accessToken
-    
-            
-            
+            // authenticate against OAuth using session accessToken
+
             oauth2Client.setCredentials({access_token: token });
             const call_creds = grpc.credentials.createFromGoogleCredential(oauth2Client);
             var channelCreds = grpc.credentials.createSsl(null);
@@ -439,9 +429,10 @@ function createassistant (token){
             const conversation = assistant.assist(callCreds, options);
             
             //Deal with errors from Google API
-            // These aren't necessarily all bad unless they are fatal
+            
             conversation.on('error', err => {
               console.log('***There was a Google error**' + err);
+                searchFunction.emit(':tell', "The Google API returned an error which was:- " + JSON.stringify(err)) 
 
             });
             
@@ -712,7 +703,7 @@ function encode() {
                         // deal with any \&quot;
                         cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
 
-                        //console.log(cardContent);
+                        console.log(cardContent);
                         var cardTitle = 'Google Assistant for Alexa'
 
                         // Let remove any (playing sfx)
@@ -742,7 +733,9 @@ function encode() {
 
 
                         // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
-                        if (microphoneOpen == true){
+                        // We also keep the microphone on the launchintent 'Hello' request as for some reason the API closes the microphone
+                        
+                        if (microphoneOpen == true || alexaUtteranceText == 'Hello'){
                             console.log('Microphone is open so keeping session open')                        
 
                                 searchFunction.response.listen(" ");
@@ -772,9 +765,15 @@ function encode() {
     encoder.on('finish', function () {
 
         // Close the MP3 file
-        writemp3.end();
-        console.error('Encoding done!');
-        console.error('Streaming mp3 file to s3');
+        
+        wait(0.1, 'seconds', function() { 
+            console.error('Encoding done!');
+            console.error('Streaming mp3 file to s3');    
+            writemp3.end();             
+                        
+            })
+        
+        
         
     });        
 
