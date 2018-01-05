@@ -4,9 +4,10 @@ Implementation of the Google Assistant API for Alexa
 
 # Beta Release 2.05
 
-Supports the new Assistant SDK
-Adds support for languages other than US English
-Adds suppurt for Echo Show
+1. Supports the new Assistant SDK
+2. Adds support for languages other than US English
+3. Adds support for Echo Show and other visual devices
+4. Registers as a device so that it appears in the Google Assistant mobile app for changing settings such as location and language
 
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE WAY THE RESPONSES ARE HOSTED.
@@ -15,7 +16,9 @@ This is a beta release for testing and is only available as an upgrade to the ex
 
 # Upgrade instructions
 
-You must already have the skill installed. Inorder to upgarde to thus version you will need  to:-
+You must already have the previous version of skill installed. If you do not then please wait for the instructions for a fresh install/
+
+Inorder to upgrade to thus version you will need  to:-
 
 ## Download code from GitHub
 
