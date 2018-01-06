@@ -333,7 +333,7 @@ var handlers = {
         
         var audioLength = 0;
         var searchFunction = this;
-        var googleResponseText = '"🔊"'
+        var googleResponseText = ''
         var audioPresent = false;
         var microphoneOpen = true;
         
@@ -550,7 +550,7 @@ var handlers = {
                         console.log('Dialog state out recieved')
                         if (ConverseResponse.dialog_state_out.supplemental_display_text){
                             
-                            googleResponseText = xmlescape(JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text))
+                            googleResponseText = googleResponseText + xmlescape(JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text))
                           console.log('Supplemental text is: '+ googleResponseText);
                             
                            
@@ -695,7 +695,11 @@ function encode() {
                         // escape out any illegal XML characters;
                         url = xmlescape(url)
                         signedURL = url;
-
+                        
+                        // if response text is blank just add a speaker icon to response
+                        if (googleResponseText == ''){
+                            googleResponseText = '"🔊"'
+                        }
                         
                         var cardContent = 'Request:<br/><i>' + alexaUtteranceText + '</i><br/><br/>Response:<br/>' + googleResponseText
                         // replace carriage returns with breaks
