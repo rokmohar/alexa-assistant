@@ -1,0 +1,228 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Mappings": {
+        "RegionMap": {
+            "us-east-1": {
+                "BUCKET": "alexagoogleassistantskilluseast1"
+            },
+            "eu-west-1": {
+                "BUCKET": "alexagoogleassistantskilleuwest1"
+            }
+        }
+    },
+    "Conditions": {
+        "CorrectAWSRegion": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "eu-west-1"
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "us-east-1"
+                    ]
+                }
+            ]
+        },
+        "IncorrectAWSRegion": {
+            "Fn::Not": [
+                {
+                    "Condition": "CorrectAWSRegion"
+                }
+            ]
+        }
+    },
+    "Resources": {
+        "S3Bucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                
+            }
+        },
+        "DynamoDBtable": {
+                "Type" : "AWS::DynamoDB::Table",
+                "Properties" : {
+                    "AttributeDefinitions" : [
+                      {
+                        "AttributeName" : "userId",
+                        "AttributeType" : "S"   
+                      }
+                    ],
+                  "KeySchema" : 
+                      [
+                          {
+                            "AttributeName" : "userId",
+                            "KeyType" : "HASH"
+                          }
+                      ]
+                    
+                    ,
+                  "ProvisionedThroughput" : {
+                    "ReadCapacityUnits" : 5,
+                    "WriteCapacityUnits" : 5
+                  },
+                  "TableName": "AlexaAssistantSkillSettings"                       
+                }
+            
+        },
+        "LambdaFunctionRole": {
+            "Type": "AWS::IAM::Role",
+            "Condition": "CorrectAWSRegion",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "GoogleAssistantPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "AllowLogging",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogGroup",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "s3:*",
+                                    "Resource": [
+                                        {
+                                            "Fn::Join": [
+                                                "",
+                                                [
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "S3Bucket",
+                                                            "Arn"
+                                                        ]
+                                                    },
+                                                    "*"
+                                                ]
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "dynamodb:*",
+                                    "Resource": [
+                                        {
+                                            "Fn::Join": [
+                                                "",
+                                                [
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "DynamoDBtable",
+                                                            "Arn"
+                                                        ]
+                                                    },
+                                                    "*"
+                                                ]
+                                            ]
+                                        }
+                                    ]
+                                }
+                                
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AlexaSkillFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Condition": "CorrectAWSRegion",
+            "Properties": {
+                "FunctionName": "alexa-assistant-skill-function",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaFunctionRole",
+                        "Arn"
+                    ]
+                },
+                "Description": "Alexa Skill code for the Google Assistant Skill",
+                "Code": {
+                    "S3Bucket": {
+                        "Fn::FindInMap": [
+                            "RegionMap",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "BUCKET"
+                        ]
+                    },
+                    "S3Key": "index.zip"
+                },
+                "Runtime": "nodejs6.10",
+                "Timeout": "10",
+                "MemorySize": "1344",
+                "Environment": {
+                    "Variables": {
+                        "S3_BUCKET": {
+                            "Ref": "S3Bucket"
+                        },
+                        "API_ENDPOINT": "embeddedassistant.googleapis.com"
+                    }
+                }
+            }
+        },
+        "AlexaSkillFunctionPermissions": {
+            "Type": "AWS::Lambda::Permission",
+            "Condition": "CorrectAWSRegion",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "AlexaSkillFunction"
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "alexa-appkit.amazon.com"
+            }
+        }
+    },
+    "Outputs": {
+        "FunctionARN": {
+            "Condition": "CorrectAWSRegion",
+            "Value": {
+                "Fn::GetAtt": [
+                    "AlexaSkillFunction",
+                    "Arn"
+                ]
+            },
+            "Description": "Lambda function ARN to be placed in the Amazon Developer Portal"
+        },
+        "FunctionError": {
+            "Condition": "IncorrectAWSRegion",
+            "Value": "Incorrect AWS Region!!! Must be US-East(N. VIRGINIA) or EU(Ireland)",
+            "Description": "You must Select US-EAST (North Virgina) if you are located in North America or EU (Ireland) if you are located elsewhere"
+        }
+    }
+}

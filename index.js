@@ -816,7 +816,7 @@ exports.handler = function(event, context, callback){
     locale = event.request.locale
     alexa.registerHandlers(handlers);
     //Create DynamoDB Table
-    alexa.dynamoDBTableName = 'AlexaAssistantSettings';
+    alexa.dynamoDBTableName = 'AlexaAssistantSkillSettings';
     alexa.execute();
 };
 
