@@ -19,6 +19,12 @@ This is a beta release for testing
 5. Added support for devices with screen like the Show and Spot - this will display text responses when available
 6. Lambda function is now deployed via a hosted cloudformation config. This means you don't need to download the skill code from github and most of the settings are automatically configured. It should make upgrading the skill easier in the future
 
+# Why do I need a credit card?
+
+The skill is hosted on AWS which is an Amazon service. The usage of this skill is free for many thousands of requests however Amazon still require a credit card incase you start using their services beyond the free limits. Your credit card details stay with Amazon - neither I nor any other developers can access them.
+
+There is no way around this. If you don't want to give your credit card details to Amazon then you cannot install and run this skill - sorry
+
 # Upgrade instructions
 
 If you already have a previous version of the skill installed then please read the upgrade instructions here:-
