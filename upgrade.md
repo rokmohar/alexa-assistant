@@ -4,7 +4,7 @@
 You must already have the previous version of skill installed. If you do not then please follow the fresh installation instructions here:-
 [Installation Instructions](fresh_install.md)
 
-Note - this manual upgrade is required so that the skill code is deployed via AWS CloudFormation. This will alow future upgrades to be automated.
+Note - this manual upgrade is required so that the skill code is deployed via AWS CloudFormation. This will alow future upgrades to deployed vai a CloudFormation update
 
 
 ## Delete the existing Google Assistant  Lambda Function
