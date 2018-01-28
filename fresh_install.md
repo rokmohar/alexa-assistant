@@ -213,11 +213,11 @@ To enable access to the Google Assistant API, do the following:
     ```
 and save it somewhere safe on your hardrive as we will need it later. NEVER SHARE THIS FILE WITH ANYONE AS IT CONTAINS YOUR AUTHENTICATION DETAILS
 
-17. A new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
+18. Click "Done" and a new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
 
 ![alt text](screenshots/credentials_5.jpeg)
 
-18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a new line in your Notepad/TextEdit document 
+19. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a new line in your Notepad/TextEdit document 
 
 ![alt text](screenshots/client_id.jpeg)
 
@@ -265,6 +265,8 @@ AlexaAssistant
 
 12. On the "Review" page click the box next to "I acknowledge that AWS CloudFormation might create IAM resources." 
 
+![alt text](screenshots/stack_review.jpg)
+
 13. Click "Create" at the bottom right of the page
 
 14. Cloudformation will then start to create the stack. THIS WILL TAKE SOME TIME SO I'D SUGGEST GOING TO MAKE A CUP OF TEA.
@@ -286,6 +288,8 @@ AlexaAssistant
 ![alt text](screenshots/stack_error.jpg)
 
 19. If you see the output below with the Key "FunctionARN", then select the text starting "arn:aws" and copy it
+
+![alt text](screenshots/stack_arn.jpg)
 
 ## Skill Setup Part 2
 
@@ -385,11 +389,6 @@ AlexaAssistant
 ![alt text](screenshots/s3_uploaded.jpg)
 
 
-
-
-
-
-
 ## Linking the skill to your Google Account
 
 1. In order to use the Google Assistant, you must share certain activity data with Google. The Google Assistant needs this data to function properly; this is not specific to the SDK.
@@ -404,7 +403,7 @@ AlexaAssistant
 3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g. "my assistant"
 4. The skill will tell you if you have forgotten to set any environment variables or if there any other set-up issues
 4. You will then be prompted to link your account through the Alexa app.
-5. Select the Google account you want to use (it does not have to be the one you authorised the API with) and then make sure you click "Allow" on the Google authorisation page. 
+5. Select the Google account you want to use (the first time you run the skill it MUST be the one you authorised the API with) and then make sure you click "Allow" on the Google authorisation page. 
 
 ![alt text](screenshots/authorise.jpeg)
 
