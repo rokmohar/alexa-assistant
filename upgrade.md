@@ -184,7 +184,7 @@ https://developer.amazon.com/edw/home.html
 
 8. Leave the custom slots and sample utterance as per the previous version.
 9. Click Save and then next once it has processed
-10 On the Configuration Page, replace the exisitng Default Enpoitn with the one you copied to your notepad file earlier.
+10. On the Configuration Page, replace the exisitng Default Endpoint with the one you copied to your notepad file earlier.
 
 ![alt text](screenshots/endpoint.jpg)
 
