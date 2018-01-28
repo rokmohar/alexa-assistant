@@ -42,12 +42,14 @@
     "Resources": {
         "S3Bucket": {
             "Type": "AWS::S3::Bucket",
+            "Condition": "CorrectAWSRegion",
             "Properties": {
                 
             }
         },
         "DynamoDBtable": {
                 "Type" : "AWS::DynamoDB::Table",
+            "Condition": "CorrectAWSRegion",
                 "Properties" : {
                     "AttributeDefinitions" : [
                       {

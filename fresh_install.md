@@ -14,6 +14,8 @@ If you already have Version 1 of the skill installed then please use the instruc
 
 1. If you need to create a Developer account then fill in your details and ensure you answer "NO" for "Do you plan to monetize apps by charging for apps or selling in-app items" and "Do you plan to monetize apps by displaying ads from the Amazon Mobile Ad Network or Mobile Associates?"
 
+## Skill Setup Part 1
+
 ![alt text](screenshots/payment.jpeg)
 
 1. Once you are logged into your account click on the yellow "Get Started" button under Alexa Skills Kit.
@@ -211,7 +213,19 @@ To enable access to the Google Assistant API, do the following:
     ```
 and save it somewhere safe on your hardrive as we will need it later. NEVER SHARE THIS FILE WITH ANYONE AS IT CONTAINS YOUR AUTHENTICATION DETAILS
 
-18. You can now close this tab/window
+17. A new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
+
+![alt text](screenshots/credentials_5.jpeg)
+
+18. Copy the text in the Client ID box (excluding the Client ID text) and paste it into a new line in your Notepad/TextEdit document 
+
+![alt text](screenshots/client_id.jpeg)
+
+19. Copy the text in the Client Secret box (excluding the Client Secret text) and paste it into a new line in your Notepad/TextEdit document 
+
+![alt text](screenshots/client_secret.jpeg)
+
+20. You can now close this tab/window
 
 ## AWS Lambda Setup
 
@@ -230,7 +244,7 @@ Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic 
 ![alt text](screenshots/new_stack.jpg)
 
 5. A new page will open titled "Select Template"
-6. Under "Choose a template" select "Specify an Amazon S3 template URL and past the following into the box
+6. Under "Choose a template" select "Specify an Amazon S3 template URL" and paste the following into the box
 
     ```
     https://s3-eu-west-1.amazonaws.com/googleassistantskillcloudformationbucket/cloudformation.json
@@ -243,12 +257,6 @@ Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic 
 ```
 AlexaAssistant
 ```
-9. The "FunctionName" under "Parameters" should also be set to
-```
-AlexaAssistant
-```
-
-![alt text](screenshots/specify_details.jpg)
 
 10. Click Next
 11. On the "Options" page do not change anything and just click on Next
@@ -264,6 +272,149 @@ AlexaAssistant
 15. You can check progress by clicking on the refresh button towards the top right of the page
 
 ![alt text](screenshots/start_creation.jpg)
+
+16. You will know that the creation process is complete as it will say "CREATE_COMPLETE" in green under the "Status" heading
+
+![alt text](screenshots/create_complete.jpg)
+
+17. Click on the "Outputs" tab at the bottom of the page
+
+18. If the creation process is very quick (less than 10 seconds) and the Ouput Tab looks like the one below then this means that you have selected the wrong AWS region. You will need to delete the CloudFormation Stack, select the right AWS region and then create the stack again. Instructions for deleting the stack are here:-
+
+[How to delete the stack](delete_stack.md)
+
+![alt text](screenshots/stack_error.jpg)
+
+19. If you see the output below with the Key "FunctionARN", then select the text starting "arn:aws" and copy it
+
+## Skill Setup Part 2
+
+1. Return to the Skill setup page that we left earlier
+2. Paste the FunctionARN text we copied from the previous step and paste into the "Default" box
+
+![alt text](screenshots/endpoint.jpg)
+
+2. In the Authorization URL paste the following: -
+
+    ```
+    https://accounts.google.com/o/oauth2/auth?access_type=offline
+    ```
+2. Delete the existing text from the "Client ID" field (it will probably say "alexa-skill")  
+3. Copy the Client ID from your Notepad/TextEdit document (HINT - it's the longer of the two) and paste it into the Client ID box
+
+![alt text](screenshots/linking_1.jpeg)
+
+4. Under Domain List : Press "Add domain" and enter:-
+
+    ```
+    google.com
+    ```
+
+5. Press "Add domain" again for a second box into which enter:-
+
+    ```
+    googleapis.com
+    ```
+
+6. Under Scope: Press "Add Scope" and enter:-
+
+    ```
+    https://www.googleapis.com/auth/assistant-sdk-prototype
+    ```
+    
+7. Press "add scope" again for a second box into which enter:-
+
+    ```
+    https://www.googleapis.com/auth/script.external_request
+    ```
+    
+![alt text](screenshots/linking_2.jpeg)
+
+8. Under Authorisation Grant Type make sure "Auth Code Grant" is selected.
+9. The Access Token URI should be set to: -
+    
+    ```
+    https://accounts.google.com/o/oauth2/token
+    ```
+
+10. Copy the Client Secret from your Notepad/TextEdit document (HINT - it's the shorter of the two) and paste it into the Client Secret box
+11. Leave Client Authentication Scheme as "HTTP Basic"
+12. Leave eveything under Permission unselected.
+13. Paste into the Privacy Policy URL box: -
+
+    ```
+    https://www.google.com/policies/privacy/
+    ```
+![alt text](screenshots/linking_3.jpeg)    
+
+14. Click "Save" and then "Next".
+
+15. There is no need to go any further through the process i.e. submitting for certification. There is no point in testing the skill on the next page as the simulator cannot authenticate against the Google API. 
+
+**You can now close this window/tab - makes sure you save your Notepad/TextEdit file somewhere safe in case you need these details again**
+
+
+## Upload client_secret.json file to the S3 Bucket
+
+1. Open a new browser window or tab
+2. Goto to https://s3.console.aws.amazon.com/
+3. You will see a list of S3 buckets (you might only have one if you havne't created any before).
+4. Click on the one with a name starting with (where XXXXXX will be some random characters)
+    ```
+    arn:aws:s3:::alexaassistant-s3bucket-XXXXXXX
+    ```
+    
+![alt text](screenshots/s3_bucket.jpg)
+    
+5. Click on the blue "Upload" button
+
+![alt text](screenshots/s3_upload.jpg)
+
+6. On the grey window that appears click on "Add files"
+
+![alt text](screenshots/add_files.jpg)
+
+7. Select the client_secret.json file that you downloaded and renamed earlier (You did remember to rename it didn't you?)
+
+8. On the next page *DO NOT CLICK NEXT* - Just click on the "Upload" button the the bottom left hand side
+
+![alt text](screenshots/s3_upload_final.jpg)
+
+9. The grey window will now clode and you should see a screen like below. You can now close this window/tab
+
+![alt text](screenshots/s3_uploaded.jpg)
+
+
+
+
+
+
+
+## Linking the skill to your Google Account
+
+1. In order to use the Google Assistant, you must share certain activity data with Google. The Google Assistant needs this data to function properly; this is not specific to the SDK.
+
+2. Open the Activity Controls page https://myaccount.google.com/activitycontrols for the Google account that you want to use with the Assistant. Ensure the following toggle switches are enabled (blue):
+
+    1. Web & App Activity - Make sure the box marked "Include Chrome browsing history and activity from websites and apps that use Google Services" is also checked 
+    2. Location History
+    3. Device Information
+    4. Voice & Audio Activity
+    
+3. Launch the Google skill by asking "Alexa, open google" (or whatever invocation name you gave e.g. "my assistant"
+4. The skill will tell you if you have forgotten to set any environment variables or if there any other set-up issues
+4. You will then be prompted to link your account through the Alexa app.
+5. Select the Google account you want to use (it does not have to be the one you authorised the API with) and then make sure you click "Allow" on the Google authorisation page. 
+
+![alt text](screenshots/authorise.jpeg)
+
+6. If you have problems linking through the IOS or Android app then please try the web based version of the Alexa app here:- http://alexa.amazon.com
+
+
+
+
+
+
 
 
 
