@@ -1,10 +1,10 @@
 
 # Upgrade instructions
 
-You must already have the previous version of skill installed. If you do not then please follw the fresh installation instructions here
+You must already have the previous version of skill installed. If you do not then please follow the fresh installation instructions here:-
+[Installation Instructions](fresh_install.md)
 
-
-Inorder to upgrade to thus version you will need  to:-
+Note - this manual upgrade is required so that the skill code is deployed via AWS CloudFormation. This will alow future upgrades to be automated.
 
 
 ## Delete the existing Google Assistant  Lambda Function
@@ -214,29 +214,40 @@ You can now close this window
 
 1. Open a new browser window or tab
 2. Goto to https://s3.console.aws.amazon.com/
-3. You will see a list of S3 buckets (you might only have one if you havne't created any before).
-4. Click on the one with a name starting with (where XXXXXX will be some random characters)
+3. You will see a list of S3 buckets
+4. Find the bucket with the random 20 character name that you created for the skill originally and click on the bucket icon next to it's name
+5. A box will open on the right hand side - ignore this and click on the "Delete bucket" button
+
+![alt text](screenshots/select_bucket.jpg)
+
+6. A confirmation box will apear. Type in the name of the bucket (hint select the name from the warning above and copy and paste it) then press confirm
+
+![alt text](screenshots/confirm_s3_delete.jpg)
+
+7. The bucket will be deleted and you will be taken back to a list of your other buckets,
+
+8. Click on the name of the bucket with its name starting with (where XXXXXX will be some random characters)
     ```
     arn:aws:s3:::alexaassistant-s3bucket-XXXXXXX
     ```
     
 ![alt text](screenshots/s3_bucket.jpg)
     
-5. Click on the blue "Upload" button
+9. Click on the blue "Upload" button
 
 ![alt text](screenshots/s3_upload.jpg)
 
-6. On the grey window that appears click on "Add files"
+10. On the grey window that appears click on "Add files"
 
 ![alt text](screenshots/add_files.jpg)
 
-7. Select the client_secret.json file that you downloaded and renamed earlier (You did remember to rename it didn't you?)
+11. Select the client_secret.json file that you downloaded and renamed earlier (You did remember to rename it didn't you?)
 
-8. On the next page *DO NOT CLICK NEXT* - Just click on the "Upload" button the the bottom left hand side
+12. On the next page *DO NOT CLICK NEXT* - Just click on the "Upload" button the the bottom left hand side
 
 ![alt text](screenshots/s3_upload_final.jpg)
 
-9. The grey window will now clode and you should see a screen like below. You can now close this window/tab
+13. The grey window will now clode and you should see a screen like below. You can now close this window/tab
 
 ![alt text](screenshots/s3_uploaded.jpg)
 
