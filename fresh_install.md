@@ -362,7 +362,7 @@ AlexaAssistant
 
 1. Open a new browser window or tab
 2. Goto to https://s3.console.aws.amazon.com/
-3. You will see a list of S3 buckets (you might only have one if you havne't created any before).
+3. You will see a list of S3 buckets (you might only have one if you haven't created any before).
 4. Click on name of the the bucket with a name starting with (where XXXXXX will be some random characters)
     ```
     arn:aws:s3:::alexaassistant-s3bucket-XXXXXXX
