@@ -19,3 +19,8 @@ If you already have a previous version of the skill installed then please read t
 If you have not installed the skill before then follow the instructions here:-
 
 [Installation Instructions](fresh_install.md)
+
+# Problems
+
+
+
