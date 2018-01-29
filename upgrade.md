@@ -6,6 +6,8 @@ You must already have the previous version of skill installed. If you do not the
 
 Note - this manual upgrade is required so that the skill code is deployed via AWS CloudFormation. This will alow future upgrades to deployed vai a CloudFormation update
 
+## MAKE SURE YOU DO THIS INSTALLATION ON A PC/MAC/LINUX MACHINE - A PHONE OR TABLET RUNNING iOS OR ANDROID WILL CAUSE ISSUES
+
 
 ## Delete the existing Google Assistant  Lambda Function
 1. Goto your lambda function
