@@ -213,12 +213,14 @@ To enable access to the Google Assistant API, do the following:
 
 ![alt text](screenshots/credentials_4.jpeg)
 
-21. A menu will open to save the file. Rename the file so that it is called
+21. A menu will open to save the file. Rename the file so that it is called 
 
     ```
     client_secret.json
     ```
-and save it somewhere safe on your hardrive as we will need it later. NEVER SHARE THIS FILE WITH ANYONE AS IT CONTAINS YOUR AUTHENTICATION DETAILS
+
+(HINT if your system does not show file name extensions and you do not see .json at the end of the existing filename then you do not need to add .json when renaming otherwise you will end up with client_secret.json.json which won't work!!)
+Save it somewhere safe on your hardrive as we will need it later. NEVER SHARE THIS FILE WITH ANYONE AS IT CONTAINS YOUR AUTHENTICATION DETAILS
 
 22. Click "Done" and a new page will appear. Click on the OAuth 2.0 client ID called "google_assistant"
 
