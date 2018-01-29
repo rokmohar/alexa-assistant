@@ -117,7 +117,7 @@ If you already have Version 1 of the skill installed then please use the instruc
     SEARCH
     ```
     
-16. Copy the text below and paste into the "Enter Values" box 
+16. Copy the text below and paste into the "Enter Values" box. Once you've pasted them in press the return key to add one blank line at the end of the list
 
     ```
     who is the queen
@@ -125,9 +125,9 @@ If you already have Version 1 of the skill installed then please use the instruc
     ```
 ![alt text](screenshots/slot_types.jpeg)
 
-16. MAKE SURE YOU PRESS THE "ADD" BUTTON UNDERNEATH THE BOX
+16. NOW MAKE SURE YOU PRESS THE "ADD" BUTTON UNDERNEATH THE BOX
 
-17. Copy the text below and paste them into the Sample Utterances box.
+17. Copy the text below and paste them into the Sample Utterances box. Again, once you've pasted them in press the return key to add one blank line at the end of the list
 
     ```
     SearchIntent {search}
