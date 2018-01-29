@@ -144,9 +144,11 @@ If you already have Version 1 of the skill installed then please use the instruc
 
 23. Select "Yes" for Account Linking
 
-At this point we will pause the setup of the skill and setup the google API. Copy the  Redirect URLs lower down the page you are currently on (there will be a number of these the first should start https://layla.amazon.com/api/skill/link the secondhttps://pitangui.amazon.com/api/skill/link - see screenshot below) and paste them into a Notepad document on windows or TextEdit on mac. We will need these during the setup of the Google API and later on in the setup of the Lambda function
+24. Copy the  Redirect URLs lower down the page you are currently on (there will be a number of these the first should start https://layla.amazon.com/api/skill/link the secondhttps://pitangui.amazon.com/api/skill/link - see screenshot below) and paste them into a Notepad document on windows or TextEdit on mac. We will need these during the setup of the Google API and later on in the setup of the Lambda function
 
 ![alt text](screenshots/redirect.jpeg)
+
+25. At this point we will pause the setup of the skill and setup the google API. 
 
 **Leave this page open as we will come back to it after we have setup the Google Assistant API**
 
