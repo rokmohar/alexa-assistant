@@ -3,7 +3,7 @@
 If you already have Version 1 of the skill installed then please use the instructions here:-
 [Upgrade Instructions](other_file.md)
 
-##MAKE SURE YOU DO THIS INSTALLATION ON A PC/MAC/LINUX MACHINE - A PHONE OR TABLET RUNNING iOS OR ANDROID WILL CAUSE ISSUES
+## MAKE SURE YOU DO THIS INSTALLATION ON A PC/MAC/LINUX MACHINE - A PHONE OR TABLET RUNNING iOS OR ANDROID WILL CAUSE ISSUES
 
 1. In a new browser tab/window go to https://developer.amazon.com/alexa
 2. Click on the "Your Alexa Dashboards" at the top right of the screen
