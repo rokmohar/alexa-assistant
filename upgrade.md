@@ -183,7 +183,8 @@ https://developer.amazon.com/edw/home.html
 
 
 8. Leave the custom slots and sample utterance as per the previous version.
-9. Click Save and then next once it has processed
+9. Click Save and then next once it has processed - Note if you are getting an error saying that the interaction model cannot be built then try adding a blank line to the sample utternaces. You can do this by putting the cursor to the end of the line that says "SearchIntent {search}" and pressing the return key. (This seems to be an Amazon issue). Try Saving the configuration as before. If this doesn't address the issue, then try adding a blank line to the Custom Slots by pressing the "Edit" button, adding a blank line as before, then press the "Edit" button and then Save.
+
 10. On the Configuration Page, replace the exisitng Default Endpoint with the one you copied to your notepad file earlier.
 
 ![alt text](screenshots/endpoint.jpg)
