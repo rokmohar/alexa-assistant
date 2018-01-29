@@ -31,7 +31,11 @@ If you already have a previous version of the skill installed then please read t
 
 [Upgrade Instructions](upgrade.md)
 
-# New Installation
+# New Installation via CloudFormation 
+
+This is the easiest method as it creates the lambda function automatically for you.
+NOTE - PLEASE ONLY USE THE CLOUDFORMATION TEMPLATE URL PROVIDED IN THE INSTRUCTIONS ON THIS SITE OR PAUL HIBBERTS VIDEO. 
+I CANNOT GUARANTEE THE SAFETY OF URLS GIVEN ON OTHER SITES
 
 If you have not installed the skill before then follow the instructions here:-
 
