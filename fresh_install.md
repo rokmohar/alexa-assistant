@@ -234,7 +234,8 @@ and save it somewhere safe on your hardrive as we will need it later. NEVER SHAR
 
 ## AWS Lambda Setup
 
-1. Go to http://aws.amazon.com/. You will need to set-up an AWS account (the basic one will do fine) if you don't have one already. Make sure you use the same Amazon account that your Echo device is registered to. **Note - you will need a valid credit or debit card to set up an AWS account - there is no way around this. **
+1. Go to http://aws.amazon.com/. You will need to set-up an AWS account if you don't have one already (the basic one will do fine). Make sure you use the same Amazon account that your Echo device is registered to. **Note - you will need a valid credit or debit card to set up an AWS account - there is no way around this. **
+You may have to wait for then to authroise your card and then wait for an automated call so this may take 20 minutes or so)
 
 2.  Go to the drop down "Location" menu at the top right and ensure you select US-East (N. Virginia) if you are based in North America or EU(Ireland) if you are based anywhere else. This is important as only these two AWS regions support Alexa.
 
