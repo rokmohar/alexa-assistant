@@ -189,6 +189,7 @@ To enable access to the Google Assistant API, do the following:
     ```
     
 13. Under Authorised redirect URIs, paste the first of the "Redirect URLS" from the skill setup page and hit "Enter"
+(These are the one's you copied earlier from the Account Linking Section and put into your notepad file - it should start with https://pitangui.amazon.com)
 14. A second box will appear - into this paste the second "Redirect URL" and then hit "Enter" again
 15. Continue this process untill all redirect URLs than you copies from the skill setup have been entered
 16. Click the blue "Create client ID" button.
