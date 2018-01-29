@@ -1,5 +1,7 @@
 # New Installation Instructions
 
+MAKE SURE YOU DO THIS INSTALLATION ON A PC/MAC/LINUX MACHINE - A PHONE OR TABLET RUNNING iOS OR ANDROID MAY CUASE ISSUES
+
 If you already have Version 1 of the skill installed then please use the instructions here:-
 [Upgrade Instructions](other_file.md)
 
