@@ -14,7 +14,7 @@ The skill software is provided as open source as are the instructions so you are
 
 I do however have to pay the costs of hosting the cloudformation templates and zip files on AWS S3. As such the CloudFormation template linked to in these instructions provided for users installing the lambda function via this github page is licenced under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/)
 
-If you wish to reproduce the installation instructions hosted on your own website then you may link to my Cloudformation template (and consequently the zips on my S3 buckets)  provided that there is no monetisation on the page e.g. adverts. If you do wish to have monetisation then you will need to host your own Cloudformation template and associated zip files. 
+If you wish to reproduce the installation instructions hosted on your own website (**I really wish you wouldn't as it makes my life very difficult to support and update the skill**) then you may link to my Cloudformation template (and consequently the zips on my S3 buckets)  provided that there is no monetisation on the page e.g. adverts. If you do wish to have monetisation then you will need to host your own Cloudformation template and associated zip files. 
 
 I AM VERY SERIOUS ABOUT THIS POINT - I WILL BE CHECKING FREQUENTLY AND WILL CHANGE OR REMOVE THE CLOUDFORMATION TEMPLATE URL IF PEOPLE ARE ABUSING IT
 
