@@ -2,7 +2,7 @@
 
 Implementation of the Google Assistant API for Alexa
 
-![alt text](screenshots/alexa_assistant.jpg)
+![alt text](alexa_assistant.jpg)
 
 # Beta Release 2.1
 
