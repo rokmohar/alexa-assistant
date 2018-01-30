@@ -41,7 +41,7 @@ NOTE: I have granted Paul Hibbert the rights to link to the Cloudformation for t
 
 If you already have a previous version of the skill installed then please read the upgrade instructions here:-
 
-[Upgrade Instructions](upgrade.md)
+[Upgrade Instructions](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/upgrade.md)
 
 # New Installation via CloudFormation 
 
@@ -52,7 +52,7 @@ I CANNOT GUARANTEE THE SAFETY OF URLS GIVEN ON OTHER SITES
 
 If you have not installed the skill before then follow the instructions here:-
 
-[Installation Instructions](fresh_install.md)
+[Installation Instructions](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/fresh_install.md)
 
 Otherwise watch Paul Hibberts excellent installation video here:-
 
