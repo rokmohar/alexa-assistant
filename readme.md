@@ -27,7 +27,7 @@ There is no way around this. If you don't want to give your credit card details 
 
 # Sites reproducing installation instructions
 
-The skill software is provided as open source as are the instructions so you are welcome to distribute and modify as per the [Apache License 2.0](LICENSE.txt)
+The skill software is provided as open source as are the instructions so you are welcome to distribute and modify as per the [GNU General Public License v3.0](LICENSE)
 
 I do however have to pay the costs of hosting the cloudformation templates and zip files on AWS S3. As such the CloudFormation template linked to in these instructions provided for users installing the lambda function via this github page is licenced under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/)
 
