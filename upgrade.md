@@ -251,7 +251,7 @@ You can now close this window
 
 ![alt text](screenshots/s3_upload_final.jpg)
 
-13. The grey window will now clode and you should see a screen like below. You can now close this window/tab
+13. The grey window will now close and you should see a screen like below. You can now close this window/tab
 
 ![alt text](screenshots/s3_uploaded.jpg)
 
@@ -259,7 +259,7 @@ You can now close this window
 
 1. The skill will default to US English and the Google Assistant will think you live in either West Virginia or Dublin depending on which AWS region you used
 
-2. To change the language to aother language and set your location you will need to have the very latest version of Google Assistant installed on your iOS or Android phone.
+2. To change the language to another language and set your location you will need to have the very latest version of Google Assistant installed on your iOS or Android phone.
 
 Using the Google Assistant App on your phone/tablet follow these instructions to set the language to German (the skill will be listed as "Alexa Assistant v1" in the devices section of settings):
 
