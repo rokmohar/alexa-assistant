@@ -323,6 +323,12 @@ var handlers = {
     
     'SearchIntent': function (overrideText) {
         
+        var overideLocale = 'en-US'
+        console.log('Locale is:- ' + locale)
+        if (locale == 'en-GB' || locale == 'de-DE' || locale == 'en-AU' || locale == 'en-CA' || locale == 'en-IN' || locale == 'ja-JP'){
+            overideLocale = locale
+            
+        }
         var searchFunction = this
         // Function variables
         var audioLength = 0
@@ -492,7 +498,7 @@ var handlers = {
                     volume_percentage: 100  
                 },
                 dialog_state_in: {
-                    language_code: 'en-US'
+                    language_code: overideLocale
                 },
                 device_config: {
                     device_id: PROJECT_ID,
@@ -511,7 +517,7 @@ var handlers = {
                 },
                 dialog_state_in: {
                     conversation_state: conversation_State,
-                    language_code: 'en-US'
+                    language_code: overideLocale
                 },
                 device_config: {
                     device_id: PROJECT_ID,
