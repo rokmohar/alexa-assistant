@@ -58,6 +58,12 @@ Otherwise watch Paul Hibberts excellent installation video here:-
 
 ADD LINK WHEN DONE
 
+# IT DOESN'T WORK / PROBLEM SOLVING
+
+**BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/common_problems.md)**
+
+I get asked the same questions many times a day and most of them due are missing steps in the instructions
+
 # CREDITS
 
 Paul Hibbert for producing the installation video.
