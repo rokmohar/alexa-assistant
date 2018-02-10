@@ -80,7 +80,9 @@ Thanks but I'm not in it for the money, but if you do find this skill usefull th
 
 https://www.pancreaticcancer.org.uk/donate/single-donation/
 
-If you aren't in the UK then please feel free to donate to a local cancer charity
+If you are in the US then feel free to donate to the National Pancreatice Cancer Foundation:-
+
+http://www.npcf.us/donate/
 
 
 
