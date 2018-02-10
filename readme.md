@@ -7,7 +7,6 @@ Implementation of the Google Assistant API for Alexa
 
 ### THIS SKILL IS FOR PERSONAL USE ONLY AND IS NOT ENDORSED BY GOOGLE OR AMAZON. WHILST THIS SKILL USES AN OFFICIAL GOOGLE API, IT WILL NEVER PASS AMAZON CERTIFICATION DUE TO THE WAY THE RESPONSES ARE HOSTED.
 
-This is a beta release for testing 
 
 # What's New in this release
 
@@ -36,9 +35,9 @@ I AM VERY SERIOUS ABOUT THIS POINT - I WILL BE CHECKING FREQUENTLY AND WILL CHAN
 
 NOTE: I have granted Paul Hibbert the rights to link to the Cloudformation for the purposes of his installation videos
 
-# Upgrade instructions
+# Upgrading from version 1 of the skill
 
-If you already have a previous version of the skill installed then please read the upgrade instructions here:-
+If you already have the original version of the skill which was installed manuallly WITHOUT using Cloudformation then please read the upgrade instructions here:-
 
 [Upgrade Instructions](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/upgrade.md)
 
@@ -55,7 +54,9 @@ If you have not installed the skill before then follow the instructions here:-
 
 Otherwise watch Paul Hibberts excellent installation video here:-
 
-ADD LINK WHEN DONE
+[Installation video](https://www.youtube.com/watch?v=saN_N30kPc4)
+
+https://www.youtube.com/watch?v=saN_N30kPc4
 
 # IT DOESN'T WORK / PROBLEM SOLVING
 
