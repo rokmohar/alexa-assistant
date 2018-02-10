@@ -74,6 +74,14 @@ John JDuo, Pete Bready and Mark Riley for proof reading previous installation in
 
 @groky and @prestomation for for their pointers in moving to a CloudFormation deployment of the skills Lambda code
 
+# CAN I BUY YOU A BEER?
+
+Thanks but I'm not in it for the money, but if you do find this skill usefull then please consider making a small donation to Pancreatic Cancer UK who have helped my family recently:-
+
+https://www.pancreaticcancer.org.uk/donate/single-donation/
+
+If you aren't in the UK then please feel free to donate to a local cancer charity
+
 
 
 
