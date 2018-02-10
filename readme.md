@@ -76,7 +76,7 @@ John JDuo, Pete Bready and Mark Riley for proof reading previous installation in
 
 # CAN I BUY YOU A BEER?
 
-Thanks but I'm not in it for the money, but if you do find this skill usefull then please consider making a small donation to Pancreatic Cancer UK who have helped my family recently:-
+Thanks but I'm not in it for the money nor do I drink beer, but if you do find this skill usefull then please consider making a small donation to Pancreatic Cancer UK who have helped my family recently:-
 
 https://www.pancreaticcancer.org.uk/donate/single-donation/
 
@@ -84,6 +84,7 @@ If you are in the US then feel free to donate to the National Pancreatice Cancer
 
 http://www.npcf.us/donate/
 
+If you live elsewhere in the world then please donate a local cancer charity
 
 
 
