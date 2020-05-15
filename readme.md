@@ -2,6 +2,18 @@
 
 Implementation of the Google Assistant API for Alexa
 
+# Build and Deploy
+
+Run the following commands:
+
+- `docker build --build-arg AWS_LAMBDA_NAME="" -t mylambda .`
+
+You must set value of `AWS_LAMBDA_NAME` variable in the command to your AWS Lambda function name.
+
+- `docker run --rm -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" mylambda`
+
+You must set values of `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` variables in the command.
+You can get the access key ID and secret access key in IAM section of the AWS console.
 
 # Release 2.1
 
