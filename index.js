@@ -1,831 +1,694 @@
 'use strict';
 
+const { google } = require('googleapis');
+const { getProtoPath } = require('google-proto-files');
 
-var Alexa = require('alexa-sdk');
-var google = require('googleapis');
+const Alexa = require('alexa-sdk');
 const AWS = require('aws-sdk');
-var fs = require('fs');
-var every = require('every-moment');
-var wait = require('wait-one-moment');
-const Stream = require("stream");
+const Stream = require('stream');
+const Volume = require('pcm-volume');
 
-var resolve = require('path').resolve;
-var volume = require('pcm-volume');
-var request = require('request');
-var xmlescape = require('xml-escape');
-
-// load native modules
-var lame = require('lame');
-var grpc = require('grpc')
-
-
-var OAuth2 = google.auth.OAuth2;
-var firstRunText = 'REPEAT AFTER ME Welcome to the unofficial Google Assistant skill for the Amazon Echo. For other languages and local search results, please open the Google Assistant app on your phone and complete the language and address settings.'
-
-// create JSON object to hold config
-var config = {};
+const fs = require('fs');
+const grpc = require('@grpc/grpc-js');
+const lame = require('lame');
+const request = require('request');
+const xmlescape = require('xml-escape');
+const protoLoader = require('@grpc/proto-loader');
 
 // Load AWS credentials
+const s3 = new AWS.S3();
 
-var s3 = new AWS.S3();
+// Get Google Credentials from Environment Variables - these are set in the Lambda function configuration
 
-// Get Google Credentials from Evironment Variables - these are set in the Lambda function configuration
+const S3_BUCKET = process.env.S3_BUCKET;
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
-const VERSION_NUMBER = '1.1';
-var CLIENT_ID
-var CLIENT_SECRET
-var REDIRECT_URL
-var API_ENDPOINT = process.env.API_ENDPOINT;
-var S3_BUCKET = process.env.S3_BUCKET;
-var PROJECT_ID
-
-var oauth2Client 
-
-// load assistant API proto and bind using grpc
-
-const protoDescriptor = grpc.load({
-  file: 'assistant/embedded/v1alpha2/embedded_assistant.proto',
-  root: resolve(__dirname, 'proto')
+const protoDefinition = protoLoader.loadSync('google/assistant/embedded/v1alpha2/embedded_assistant.proto', {
+    includeDirs: [getProtoPath('..')],
+    enums: String,
+    longs: String,
+    defaults: true,
+    keepCase: true,
+    oneofs: true,
 });
+const protoDescriptor = grpc.loadPackageDefinition(protoDefinition);
+const assistantClient = protoDescriptor.google.assistant.embedded.v1alpha2.EmbeddedAssistant;
 
-const EmbeddedAssistantClient = protoDescriptor.google.assistant.embedded.v1alpha2.EmbeddedAssistant;
-
-const embedded_assistant = protoDescriptor.google.assistant.embedded.v1alpha12
-
-const END_OF_UTTERANCE = 'END_OF_UTTERANCE';
-const EVENT_TYPE = 'event_type';
-const RESULT = 'result';
-const AUDIO_OUT = 'audio_out';
-var locale
-
-var settingsError
-var settingsLoaded = false
-var registeredwithAPI = false
-var jsonError = false
-var configJson
-
-
-var APP_ID = undefined; //replace with 'amzn1.echo-sdk-ams.app.[your-unique-value-here]'; NOTE THIS IS A COMPLETELY OPTIONAL STEP WHICH MAY CAUSE MORE ISSUES THAN IT SOLVES IF YOU DON'T KNOW WHAT YOU ARE DOING
-
-getSecretParams();
-
+const clientState = {
+    locale: undefined,
+    s3Config: undefined,
+    projectId: undefined,
+    registered: false,
+    initialized: false,
+    oauth2Client: undefined,
+};
 
 function getSecretParams() {
-    
-    var secretParams = {
-      Bucket: S3_BUCKET, 
-      Key: "client_secret.json"
+    const s3Params = {
+        Bucket: S3_BUCKET,
+        Key: 'client_secret.json',
     };
-    console.log('Getting JSON')
-    s3.getObject(secretParams, function(err, data) {
-       if (err) {
-            settingsError = 'I could not load the client secret file from S3. Please make sure that you have uploaded it into the correct place on the S3 bucket'
-            settingsLoaded = true
-        }
 
-       else {
+    console.log('Getting JSON');
 
-           configJson = JSON.parse(new Buffer(data.Body).toString("utf8"));
-           console.log(configJson)
-           if (configJson.hasOwnProperty('web')){
-                console.log('Valid JSON found')
-                CLIENT_SECRET = configJson.web.client_secret
-                CLIENT_ID = configJson.web.client_id
-                PROJECT_ID = configJson.web.project_id
-                REDIRECT_URL = configJson.web.redirect_uris[0]                  
-                oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL)
-
-               if (configJson.hasOwnProperty('registered')){
-                   console.log('Registration with API is completed')
-                   registeredwithAPI = true
-                   settingsLoaded = true
-                   jsonError = false
-
-               } else {
-                   console.log('Registration with API is not completed')
-                   settingsLoaded = true
-               }
-
-            } else {
-               settingsLoaded = true
-               settingsError = 'The client secret file was not configured for a web based client. Please ensure you follow the instructions when creating the credentials in the Google API console'
-                    }
+    return new Promise((resolve, reject) => {
+        s3.getObject(s3Params, function (err, data) {
+            if (err) {
+                return reject(new Error('I could not load the client secret file from S3.'));
             }
-     });
 
+            console.log('Current ConfigJSON: ' + JSON.stringify(clientState.s3Config));
+            const s3Config = JSON.parse(Buffer.from(data.Body).toString('utf8'));
 
+            if (!s3Config.hasOwnProperty('web')) {
+                return reject(new Error('The client secret file was not configured for a web based client.'));
+            }
+
+            console.log('S3 Config is loaded: ' + JSON.stringify(s3Config));
+
+            const clientId = s3Config.web.client_id;
+            const redirectUri = s3Config.web.redirect_uris[0];
+            const clientSecret = s3Config.web.client_secret;
+
+            clientState.s3Config = s3Config;
+            clientState.projectId = s3Config.web.project_id;
+            clientState.registered = !!s3Config.registered;
+            clientState.initialized = true;
+            clientState.oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+
+            return resolve();
+        });
+    });
 }
 
-function setup (requester) {
-    
+async function registerProject(scope$) {
+    console.log('Project registration started.');
+
+    if (clientState.registered) {
+        console.warn('Project is already registered.');
+        return;
+    }
+
+    if (!clientState.initialized) {
+        try {
+            await getSecretParams();
+        } catch (err) {
+            console.error('Loading of SecretParams failed: ' + err);
+            throw err;
+        }
+    }
+
     // This isn't massively efficient code but it only needs to run once!
-    
-    var ACCESS_TOKEN = requester.event.session.user.accessToken;
-    console.log('token')
-    console.log(ACCESS_TOKEN)
-    //authenticate against Google OAUTH2
-    oauth2Client.setCredentials({access_token: ACCESS_TOKEN });
-    const call_creds = grpc.credentials.createFromGoogleCredential(oauth2Client);
-    var channelCreds = grpc.credentials.createSsl(null);
-    var combinedCreds = grpc.credentials.combineChannelCredentials(channelCreds, call_creds);
-    //Create Stub
-    var assistant = new EmbeddedAssistantClient(API_ENDPOINT, combinedCreds);
-    var bearer = 'Bearer ' + ACCESS_TOKEN
-    var registrationModelURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + PROJECT_ID + '/deviceModels/'
-    var registrationInstanceURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + PROJECT_ID + '/devices/'
+    const ACCESS_TOKEN = scope$.event.context.System.user.accessToken;
 
-    // Start the request
-    //Registering Model
-    var registerModel = function (callback) {
-        var deviceModel = {
-          "project_id": PROJECT_ID,
-          "device_model_id": PROJECT_ID,
-          "manifest": {
-            "manufacturer": "Assistant SDK developer",
-            "product_name": "Alexa Assistant v1",
-            "device_description": "Alexa Assistant Skill v1"
-          },
-          "device_type": "action.devices.types.LIGHT",
-          "traits": ["action.devices.traits.OnOff"]
-        }
-        var deviceModelString = JSON.stringify(deviceModel)
-        var POSToptionsModel = {
-          url: registrationModelURL,
-          method: 'POST',
-          headers: {
-              'Authorization': bearer,
-              'Content-Type': 'application/json'
-             },
-            body: deviceModelString
+    console.log('Access Token: ' + ACCESS_TOKEN);
+
+    // Authenticate against Google OAUTH2
+    clientState.oauth2Client.setCredentials({ access_token: ACCESS_TOKEN });
+
+    const registrationModelURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + clientState.projectId + '/deviceModels/';
+    const registrationInstanceURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + clientState.projectId + '/devices/';
+
+    // Create Stub
+    const bearer = 'Bearer ' + ACCESS_TOKEN;
+
+    // Registering Model
+    const registerModel = function (callback) {
+        const deviceModel = {
+            project_id: clientState.projectId,
+            device_model_id: clientState.projectId,
+            manifest: {
+                manufacturer: 'Assistant SDK developer',
+                product_name: 'Alexa Assistant v1',
+                device_description: 'Alexa Assistant Skill v1',
+            },
+            device_type: 'action.devices.types.LIGHT',
+            traits: ['action.devices.traits.OnOff'],
         };
-        request(POSToptionsModel, function (error, response, body) {
-            if (error){
+        const postOptions = {
+            url: registrationModelURL,
+            method: 'POST',
+            headers: {
+                Authorization: bearer,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(deviceModel),
+        };
+        request(postOptions, function (error, response, body) {
+            if (error) {
                 callback(error, null);
-            } else if (response){
-                var bodyJSON = JSON.parse(body)
-                if (bodyJSON.error){
-                    console.log('error code recieved')
-                    if (bodyJSON.error.code == 409){
-                        console.log('Device already exists')
-                        callback (null, bodyJSON)
+            } else if (response) {
+                const bodyJSON = JSON.parse(body);
+
+                if (bodyJSON.error) {
+                    console.log('error code received');
+
+                    if (bodyJSON.error.code === 409) {
+                        console.log('Model already exists');
+                        callback(null, bodyJSON);
                     } else {
-                        callback (bodyJSON, null)
+                        callback(bodyJSON, null);
                     }
                 } else {
-                    callback (null, bodyJSON)
+                    callback(null, bodyJSON);
                 }
             }
-        })
-    }
-
-    //Registering instance
-    var registerInstance = function (id, callback) {
-        var instanceModel = {
-            "id": id,
-            "model_id": id,
-            "nickname": "Alexa Assistant v1",
-            "clientType": "SDK_SERVICE"
-          }
-        var instanceModelString = JSON.stringify(instanceModel)
-        var POSToptionsInstance = {
-          url: registrationInstanceURL,
-          method: 'POST',
-          headers: {
-              'Authorization': bearer,
-              'Content-Type': 'application/json'
-             },
-            body: instanceModelString
+        });
+    };
+    // Registering instance
+    const registerInstance = function (callback) {
+        const instanceModel = {
+            id: clientState.projectId,
+            model_id: clientState.projectId,
+            nickname: 'Alexa Assistant v1',
+            clientType: 'SDK_SERVICE',
         };
-        request(POSToptionsInstance, function (error, response, body) {
-            if (error){
+        const postOptions = {
+            url: registrationInstanceURL,
+            method: 'POST',
+            headers: {
+                Authorization: bearer,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(instanceModel),
+        };
+        request(postOptions, function (error, response, body) {
+            if (error) {
                 callback(error, null);
-            } else if (response){
-                var bodyJSON = JSON.parse(body)
-                if (bodyJSON.error){
-                    console.log('error code recieved')
-                    if (bodyJSON.error.code == 409){
-                        console.log('Instance already exists')
-                        callback (null, bodyJSON)
+            } else if (response) {
+                const bodyJSON = JSON.parse(body);
+
+                if (bodyJSON.error) {
+                    console.log('error code received');
+
+                    if (bodyJSON.error.code === 409) {
+                        console.log('Instance already exists');
+                        callback(null, bodyJSON);
                     } else {
-                        callback (bodyJSON, null)
+                        callback(bodyJSON, null);
                     }
                 } else {
-                    callback (null, bodyJSON)
+                    callback(null, bodyJSON);
                 }
             }
-        })
-    }
-
-    // lets register the model and instance - we only need to do this once
-    registerModel (function(err, result)  {
-        if(err){
-            console.log ('Got Model register error', err)
-            settingsError = 'There was an error registering the Model with the Google API. The first time that you run the skill, make sure that you are logged into the same google account that created the API'
-            registeredwithAPI = true
-        } else if (result){
-            console.log('Got positive model response' + result)
-            registerInstance (PROJECT_ID, function(err, result){
-                if (err){
-                    console.log('Error:', err)
-                    settingsError = 'There was an error registering the Instance with the Google API. The first time that you run the skill, make sure that you are logged into the same Google account that created the API'
-                    registeredwithAPI = true
-                } else if (result){
-                    console.log('Got positive Instance response' )
-                    var jsondata = configJson
-                    jsondata['registered'] = true
-                    var jsonpayload = JSON.stringify(jsondata)
-                    var params = {
-                        Bucket: S3_BUCKET, 
-                        Key: "client_secret.json", 
-                        Body: jsonpayload,
-                        ContentType: "application/json"
+        });
+    };
+    return new Promise((resolve, reject) => {
+        // lets register the model and instance - we only need to do this once
+        registerModel(function (err, result) {
+            if (err) {
+                console.log('Got Model register error', err);
+                return reject(new Error('There was an error registering the Model with the Google API.'));
+            } else if (result) {
+                console.log('Got positive model response' + JSON.stringify(result));
+                registerInstance(function (err, result) {
+                    if (err) {
+                        console.log('Error:', err);
+                        return reject(new Error('There was an error registering the Instance with the Google API.'));
                     }
-                    s3.upload(params, function(err, data) {
-                        if (err){
-                        console.log('S3 upload error: ' + err) 
-                            settingsError = 'There was an error uploading to S3. Please ensure that the S3 Bucket name is correct in the environment variables and IAM permissions are set correctly'
-                            registeredwithAPI = true
 
-                        } else{
-                            configJson['registered'] = true
-                            requester.attributes['microphone_open'] = false;
-                            registeredwithAPI = true
+                    console.log('Got positive Instance response');
+
+                    const s3Body = { ...clientState.s3Config, registered: true };
+                    const s3Params = {
+                        Bucket: S3_BUCKET,
+                        Key: 'client_secret.json',
+                        Body: JSON.stringify(s3Body),
+                        ContentType: 'application/json',
+                    };
+
+                    s3.upload(s3Params, function (err) {
+                        if (err) {
+                            return reject(new Error('There was an error uploading to S3.'));
                         }
-                    })
-                  }
-            })
-        }
-    })
+
+                        clientState.s3Config = s3Body;
+                        scope$.attributes['microphone_open'] = false;
+
+                        return resolve();
+                    });
+                });
+            }
+        });
+    });
 }
 
-var handlers = {
-    'LaunchRequest': function () {
-        var launchRequest = this
-        
-        if (!launchRequest.event.session.user.accessToken) {
-                settingsError = null
-                settingsLoaded = false
-                jsonError = true
-                this.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account. If you are repeatedly asked to do this every hour then please see the troubleshooting steps on the github page github.com/tartanguru/alexa-assistant");
-            }
-        
-         else {   
-            if (jsonError == true){
-                getSecretParams()
-            }
-            // Wait for the client secret file to load from S3
-            wait(0.1, 'seconds', function() {
-                if(settingsLoaded == false) {
-                    console.log('Waiting for setup to complete');
-                    this.start();
-                } else {
-                    console.log('Setup Complete')
-                    if (settingsError){
-                        console.log('There was an error: ' + settingsError)
-                        var errorSpeech = settingsError
-                        settingsError = null
-                        settingsLoaded = false
-                        jsonError = true
-                        launchRequest.emit(':tellWithCard', errorSpeech, "Setup Error", errorSpeech)
-                    }
-                     else {
-                        if (registeredwithAPI == false){
-                            console.log ('Not Registered with API')
-                            setup(launchRequest)
-                            wait(0.1, 'seconds', function() {
-                                if(registeredwithAPI == false) {
-                                    console.log('Waiting for regisration to complete');
-                                    this.start();
-                                } else {
-                                    console.log('Registration Function Complete')
-                                    if (settingsError){
-                                        console.log('There was an error: ' + settingsError)
-                                        var errorSpeech = settingsError
-                                        settingsError = null
-                                        settingsLoaded = false
-                                        registeredwithAPI = false
-                                        launchRequest.emit(':tellWithCard', errorSpeech, "Setup Error", settingsError)
-                                    } else {
-                                       launchRequest.emit('SearchIntent', firstRunText); 
-                                    }
-                                }
-                            })   
-                        }
-                        else  {   
-                            launchRequest.emit('SearchIntent', 'Hello');  
-                        }
-                    };        
-                }
-            })
+function createGrpcGoogleCreds() {
+    return grpc.credentials.combineChannelCredentials(grpc.credentials.createSsl(null), grpc.credentials.createFromGoogleCredential(clientState.oauth2Client));
+}
+
+function executeAssist(token, audioState, scope$) {
+    let audioLength = 0;
+    let audioPresent = false;
+    let overrideLocale = 'en-US';
+    let conversationState = Buffer.alloc(0);
+
+    console.log('Locale is: ' + clientState.locale);
+
+    if (['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'].includes(clientState.locale)) {
+        overrideLocale = clientState.locale;
+    }
+
+    // Update access token
+    clientState.oauth2Client.setCredentials({ access_token: token });
+
+    const grpcCreds = createGrpcGoogleCreds();
+    const assistant = new assistantClient(API_ENDPOINT, grpcCreds);
+
+    // create a timed event in case something causes the skill to stall
+    // This will stop the skill from timing out
+    setTimeout(function () {
+        if (!audioPresent) {
+            scope$.emit(':tell', 'I wasn\'t able to talk to Google - please try again');
         }
-    },
-    
-    
-    'SearchIntent': function (overrideText) {
-        
-        var overideLocale = 'en-US'
-        console.log('Locale is:- ' + locale)
-        if (locale == 'en-GB' || locale == 'de-DE' || locale == 'en-AU' || locale == 'en-CA' || locale == 'en-IN' || locale == 'ja-JP'){
-            overideLocale = locale
-            
-        }
-        var searchFunction = this
-        // Function variables
-        var audioLength = 0
-        var googleResponseText = ''
-        var audioPresent = false
-        var microphoneOpen = true
-        var audio_chunk = 0;
-        var conversation_State = Buffer.alloc(0)
-        // See if text value recieved from Alexa is being over-ridden with value in environment variable
-        var alexaUtteranceText;
-        // Have we recieved an direct utterance from another intent?
-        if (overrideText){
-            alexaUtteranceText = overrideText;
-            console.log("Utterance recieved from another intent: " + overrideText)
+    }, 9000);
+
+    // create file into which we will stream pcm response from Google
+    // Closing the stream into this file will trigger encoding into MP3
+    console.log('Creating temp response file');
+
+    let responseFile = fs.createWriteStream('/tmp/response.pcm', { flags: 'w' });
+
+    responseFile.on('finish', function () {
+        console.log('temp response file has been written');
+
+        const stats = fs.statSync('/tmp/response.pcm');
+        const fileSizeInBytes = stats.size;
+
+        console.log('files size is ' + fileSizeInBytes);
+
+        // Check whether response file has any content. If it doesn't then we have a response with no audio
+        if (fileSizeInBytes > 0) {
+            // encode MP3
+            executeEncode(audioState, scope$);
         } else {
-        // use detected utterance  
-            alexaUtteranceText = searchFunction.event.request.intent.slots.search.value
+            // Save setting and exit
+            console.log('Emitting blank sound');
+            scope$.emit(':tell', 'I didn\'t get an audio response from the Google Assistant');
         }
-        console.log('Input text to be processed is "' + alexaUtteranceText +'"')
+    });
 
-        console.log('Starting Search Intent')
-        
-        
-        var ACCESS_TOKEN = searchFunction.event.session.user.accessToken;
-        // Check whether we have a valid authentication token
-        if (!ACCESS_TOKEN) {
-            
-            settingsError = null
-            settingsLoaded = false
-            jsonError = true
-            // We haven't so create an account link card
-            searchFunction.emit(':tellWithLinkAccountCard', "You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account. If you are repeatedly asked to do this every hour then please see the troubleshooting steps on the github page. github.com/tartanguru/alexa-assistant");
-        } 
-        
-        else {
+    // Create Audio Configuration before we send any commands
+    // We are using linear PCM as the input and output type so encoding value is 1
+    console.log('Creating Audio config');
 
-            
+    const assistRequest = {
+        config: {
+            text_query: audioState.alexaUtteranceText,
+            audio_out_config: {
+                encoding: 1,
+                volume_percentage: 100,
+                sample_rate_hertz: 16000,
+            },
+            dialog_state_in: {
+                language_code: overrideLocale,
+                is_new_conversation: true,
+            },
+            device_config: {
+                device_id: clientState.projectId,
+                device_model_id: clientState.projectId,
+            },
+        },
+    };
 
-            if (jsonError==true){
-                getSecretParams()
+    if (scope$.attributes['CONVERSATION_STATE']) {
+        console.log('Prior ConverseResponse detected');
+        conversationState = Buffer.from(scope$.attributes['CONVERSATION_STATE']);
+        assistRequest.config.dialog_state_in.conversation_state = conversationState;
+        assistRequest.config.dialog_state_in.is_new_conversation = false;
+    } else {
+        console.log('No prior ConverseResponse');
+    }
+
+    console.log('Current ConversationState is ', conversationState);
+    console.log('AssistRequest is ', assistRequest);
+
+    const conversation = assistant.Assist();
+
+    conversation.on('error', function (err) {
+        console.log('***There was a Google error***' + err);
+        scope$.emit(':tell', 'The Google API returned an error.');
+        // Clear conversation state
+        scope$.attributes['CONVERSATION_STATE'] = undefined;
+    });
+
+    conversation.on('end', function () {
+        console.log('End of response from GRPC stub');
+        // Close response file which will then trigger encode
+        responseFile.end();
+        // Clear conversation state
+        scope$.attributes['CONVERSATION_STATE'] = undefined;
+    });
+
+    conversation.on('data', function (response) {
+        console.log('AssistResponse is: ' + JSON.stringify(response));
+
+        // Check there is actually a value in result
+        if (response.dialog_state_out) {
+            console.log('Dialog state out received');
+
+            if (response.dialog_state_out.supplemental_display_text) {
+                audioState.googleResponseText += xmlescape(JSON.stringify(response.dialog_state_out.supplemental_display_text));
+                console.log('Supplemental text is: ' + audioState.googleResponseText);
             }
 
-            // create a timed event incase something causes the skill to stall whilst loasding settings from S3
-            // This will stop the skill from timing out
-            wait(5, 'seconds', function() { 
-                if (settingsLoaded == false){
-                  searchFunction.emit(':tell',"There was a problem loading the settings from the S3 Bucket") 
-                }        
-            })
+            if (response.dialog_state_out.microphone_mode) {
+                if (response.dialog_state_out.microphone_mode === 'CLOSE_MICROPHONE') {
+                    audioState.microphoneOpen = false;
+                    scope$.attributes['microphone_open'] = false;
+                    console.log('closing microphone');
+                } else if (response.dialog_state_out.microphone_mode === 'DIALOG_FOLLOW_ON') {
+                    audioState.microphoneOpen = true;
+                    scope$.attributes['microphone_open'] = true;
+                    console.log('keeping microphone open');
+                }
+            }
 
-            // Wait for the client secret file to load from S3
-           wait(0.02, 'seconds', function() {
-                if(settingsLoaded == false) {
-                    console.log('Waiting for setup to complete');
-                    this.start();
+            if (response.dialog_state_out.conversation_state) {
+                if (response.dialog_state_out.conversation_state.length > 0) {
+                    console.log('Conversation state changed');
+                    conversationState = response.dialog_state_out.conversation_state;
+                    console.log('Conversation state var is: ' + conversationState);
+                    scope$.attributes['CONVERSATION_STATE'] = conversationState.toString();
+                }
+            }
+        }
+
+        // Deal with audio data from API
+        if (response.audio_out) {
+            //console.log('audio received')
+            const audio_chunk = response.audio_out.audio_data;
+
+            if (audio_chunk instanceof Buffer) {
+                audioLength += audio_chunk.length;
+
+                if (!audioPresent) {
+                    audioPresent = true;
+                }
+
+                // Total length of MP3's in alexa skills must be less than 90 seconds.
+                if (audioLength <= (90 * 16 * 16000) / 8) {
+                    // Seconds x Bits per sample x samples per second / 8 to give bytes per second
+                    responseFile.write(audio_chunk);
                 } else {
-                    if (settingsError){
-
-                        var errorSpeech = settingsError
-                        settingsError = null
-                        settingsLoaded = false
-                        jsonError = true
-                        searchFunction.emit(':tellWithCard', errorSpeech, "Setup Error", errorSpeech)
-
-                    } 
-                        else {
-
-                            if (registeredwithAPI == false){
-                                console.log ('Not Registered with API')
-                                setup(searchFunction)
-                                wait(0.1, 'seconds', function() {
-                                    if(registeredwithAPI == false) {
-                                        console.log('Waiting for registration to complete');
-                                        this.start();
-                                    } else {
-                                        console.log('Registration Complete')
-                                        if (settingsError){
-                                            console.log('There was an error: ' + settingsError)
-                                            var errorSpeech = settingsError
-                                            settingsError = null
-                                            settingsLoaded = false
-                                            registeredwithAPI = false
-                                            searchFunction.emit(':tellWithCard', errorSpeech, "Setup Error", settingsError)
-                                        } else {
-                                           searchFunction.emit('SearchIntent', firstRunText); 
-                                        }
-                                    }
-                                })   
-                            }
-                            else  {   
-                                console.log('token')
-                                        console.log(ACCESS_TOKEN)
-                                        createassistant(ACCESS_TOKEN, searchFunction)  
-                            }                
-                        }
-                    }
-                })
+                    // we won't write any more timestamps
+                    console.log('Ignoring audio data as it is longer than 90 seconds');
+                }
             }
-        
-        
-  
-    function createassistant (token, searchFunction ){
-        // authenticate against OAuth using session accessToken
-        oauth2Client.setCredentials({access_token: token });
-        const call_creds = grpc.credentials.createFromGoogleCredential(oauth2Client);
-        var channelCreds = grpc.credentials.createSsl(null);
-        var combinedCreds = grpc.credentials.combineChannelCredentials(channelCreds, call_creds);
-        var assistant = new EmbeddedAssistantClient(API_ENDPOINT, combinedCreds); 
-            const options = {};
-        // create a timed event incase something causes the skill to stall
-        // This will stop the skill from timing out
-        wait(9, 'seconds', function() { 
-            if (audioPresent == false){
-              searchFunction.emit(':tell', "I wasn't able to talk to Google - please try again") 
-            }          
-        })
+        }
+    });
 
-        // Create new GRPC stub to communicate with Assistant API
-        const callCreds = new grpc.Metadata();
-        const conversation = assistant.assist(callCreds, options);
-        //Deal with errors from Google API
-        conversation.on('error', err => {
-          console.log('***There was a Google error**' + err);
-            searchFunction.emit(':tell', "The Google API returned an error which was:- " + JSON.stringify(err)) 
-        });
-        conversation.on('end', () => {
-            console.log('End of response from GRPC stub');
-            // close resonse file which will then trigger encode
-            responseFile.end();
-        });
-        // create file into which we will stream pcm response from Google
-        // Closing the stream into this file will trigger encoding into MP3
-        console.log ('Creating temp response file') 
-        var responseFile = fs.createWriteStream("/tmp/response.pcm",{flags: 'w'},{encoding: 'buffer'});
-        responseFile.on('finish', function () {
-            console.log('temp response file has been written');
-            const stats = fs.statSync("/tmp/response.pcm")
-            const fileSizeInBytes = stats.size
-            console.log('files size is '+ fileSizeInBytes)
+    conversation.write(assistRequest);
+    conversation.end();
+}
 
-            // Check whether response file has any content. If it doesn't then we have a response
-            // with no audio
-            if (fileSizeInBytes > 0 ){
-                // encode MP3
-                encode();
+// This function takes the response from the API and re-encodes using LAME
+// There is lots of reading and writing from temp files which isn't ideal
+// but I couldn't get piping to/from LAME work reliably in Lambda
+function executeEncode(audioState, scope$) {
+    console.log('Starting Transcode');
+
+    // Read the linear PCM response from file and create stream
+    const readpcm = fs.createReadStream('/tmp/response.pcm');
+
+    readpcm.on('end', function () {
+        console.log('pcm stream read complete');
+    });
+
+    // Create file to which MP3 will be written
+    const writemp3 = fs.createWriteStream('/tmp/response.mp3');
+
+    // Log when MP3 file is written
+    writemp3.on('finish', function () {
+        console.log('mp3 has been written');
+        // Create read stream from MP3 file
+        const readmp3 = fs.createReadStream('/tmp/response.mp3');
+        // Pipe to S3 upload function
+        readmp3.pipe(uploadFromStream(s3));
+    });
+
+    // Create LAME encoder instance
+    const encoder = new lame.Encoder({
+        // input
+        channels: 1, // 1 channels (MONO)
+        bitDepth: 16, // 16-bit samples
+        sampleRate: 16000, // 16,000 Hz sample rate
+        // output
+        bitRate: 48,
+        outSampleRate: 16000,
+        mode: lame.JOINTSTEREO, // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
+    });
+
+    // The output from the google assistant is much lower than Alexa so we need to apply a gain
+    const vol = new Volume();
+
+    // Set volume gain on google output to be +75%
+    // Any more than this then we risk major clipping
+    vol.setVolume(1.75);
+
+    // Create function to upload MP3 file to S3
+    function uploadFromStream(s3) {
+        const pass = new Stream.PassThrough();
+        const filename = scope$.event.session.user.userId;
+        const params = { Bucket: S3_BUCKET, Key: filename, Body: pass };
+
+        s3.upload(params, function (err, data) {
+            if (err) {
+                console.log('S3 upload error: ' + err);
+                scope$.emit(':tell', 'There was an error uploading to S3. ');
             } else {
-                // Save setting and exit
-
-                // have a short pause until exiting
-
-                    console.log('Emiting blank sound')
-                    searchFunction.emit(':tell',"I didn't get an audio response from the Google Assistant")
-
-            }
-
-        });
-        // Create Audio Configuration before we send any commands
-        // We are using linear PCM as the input and output type so encoding value is 1
-
-        console.log("Creating Audio config");
-        //config if no previous conversation_state
-        var setupConfigTemplate1 = {
-            config: { 
-                audio_out_config: { 
-                    encoding: 1, 
-                    sample_rate_hertz: 16000, 
-                    volume_percentage: 100  
-                },
-                dialog_state_in: {
-                    language_code: overideLocale
-                },
-                device_config: {
-                    device_id: PROJECT_ID,
-                    device_model_id: PROJECT_ID
-                },
-                text_query: alexaUtteranceText
-            }
-        }
-        //config if there is a previous conversation_state
-        var setupConfigTemplate2 = {
-            config: { 
-                audio_out_config: { 
-                    encoding: 1, 
-                    sample_rate_hertz: 16000, 
-                    volume_percentage: 100  
-                },
-                dialog_state_in: {
-                    conversation_state: conversation_State,
-                    language_code: overideLocale
-                },
-                device_config: {
-                    device_id: PROJECT_ID,
-                    device_model_id: PROJECT_ID
-                },
-                text_query: alexaUtteranceText
-            }
-        }
-
-        var setupConfig = {}
-
-        if (!searchFunction.attributes['CONVERSTION_STATE']){
-            console.log('No prior ConverseResponse')
-             setupConfig = setupConfigTemplate1
-
-        } else {
-            console.log('Prior ConverseResponse detected')
-            conversation_State = Buffer.from(searchFunction.attributes['CONVERSTION_STATE'])
-            setupConfig = setupConfigTemplate2
-
-
-        }
-
-        console.log('Current ConversationState is ', conversation_State);
-        
-        // Send config request to API
-        conversation.write(setupConfig);
-
-        // Deal with responses from API
-        conversation.on('data', function(ConverseResponse) {
-
-            // Deal with RESULTS TYPE
-
-                // check there is actually a value in result
-                if (ConverseResponse.dialog_state_out ){
-                    console.log('Dialog state out recieved')
-                    if (ConverseResponse.dialog_state_out.supplemental_display_text){
-
-                        googleResponseText = googleResponseText + xmlescape(JSON.stringify(ConverseResponse.dialog_state_out.supplemental_display_text))
-                        console.log('Supplemental text is: '+ googleResponseText);
-                    }
-                    if (ConverseResponse.dialog_state_out.microphone_mode){
-                        if (ConverseResponse.dialog_state_out.microphone_mode == 'CLOSE_MICROPHONE'){
-
-                            microphoneOpen = false;
-                            searchFunction.attributes['microphone_open'] = false
-                            console.log('closing microphone');
-
-                        } else if (ConverseResponse.dialog_state_out.microphone_mode == 'DIALOG_FOLLOW_ON'){
-                            microphoneOpen = true;
-                            searchFunction.attributes['microphone_open'] = true
-                            console.log('keeping microphone open');
-                        } 
-                    }
-                    if (ConverseResponse.dialog_state_out.conversation_state){
-                        if (ConverseResponse.dialog_state_out.conversation_state.length > 0 ){
-                            conversation_State = ConverseResponse.dialog_state_out.conversation_state;
-
-                            console.log('Conversation state changed');
-                            console.log('Conversation state var is:')
-                            searchFunction.attributes['CONVERSTION_STATE'] = conversation_State.toString();
-
-                        }
-                    }
-                }
-
-            // Deal with audio data from API
-
-            if (ConverseResponse.audio_out){
-                //console.log('audio received')
-                var audio_chunk = ConverseResponse.audio_out.audio_data;
-                if (audio_chunk instanceof Buffer) {
-                    audioLength = audioLength + audio_chunk.length;
-
-                    if (audioPresent == false){
-                        audioPresent = true;
-
-                    }
-                    // Total length of MP3's in alexa skills must be less than 90 seconds.
-                    if ( audioLength <= (90*16*16000/8)){  // Seconds x Bits per sample x samples per second / 8 to give bytes per second
-                        responseFile.write(audio_chunk);
-
-                    } else {
-                        // we won't write any more timestamps
-                        console.log ('Ignoring audio data as it is longer than 90 seconds')
-
-                    }
-
+                // Upload has been successful - we can know issue an alexa response based upon microphone state
+                let signedURL;
+                // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
+                const signedParams = {
+                    Bucket: S3_BUCKET,
+                    Key: filename,
+                    Expires: 10,
+                    ResponseContentType: 'audio/mpeg',
                 };
 
-            }
+                s3.getSignedUrl('getObject', signedParams, function (err, url) {
+                    if (url) {
+                        // escape out any illegal XML characters;
+                        url = xmlescape(url);
+                        signedURL = url;
 
-        })
-    }
-            
-    // This function takes the response fromt the API and re-encodes using LAME
-    // There is lots of reading and writing from temp files which isn't ideal
-    // but I couldn't get piping to/from LAME work reliably in Lambda
+                        // if response text is blank just add a speaker icon to response
+                        if (!audioState.googleResponseText) {
+                            audioState.googleResponseText = '"🔊"';
+                        }
 
-    function encode() {
+                        // remove any REPEAT AFTER ME form alexa utterance
+                        const cleanUtterance = audioState.alexaUtteranceText.replace('REPEAT AFTER ME ', '');
+                        let cardContent = 'Request:<br/><i>' + cleanUtterance + '</i><br/><br/>Supplemental Response:<br/>' + audioState.googleResponseText;
 
-        console.log('Starting Transcode');
-        // Read the linear PCM response from file and create stream
-        var readpcm = fs.createReadStream('/tmp/response.pcm');
-        readpcm.on('end', function () {  
-            console.log('pcm stream read complete')
-        });
-        // Create file to which MP3 will be written
-        var writemp3 = fs.createWriteStream('/tmp/response.mp3');
-        // Log when MP3 file is written
-        writemp3.on('finish', function () {
-          console.log('mp3 has been written');
-            // Create read stream from MP3 file
-            var readmp3 = fs.createReadStream('/tmp/response.mp3');
-            // Pipe to S3 upload function
-            readmp3.pipe(uploadFromStream(s3));
-        })
-        // Create LAME encoder instance
-        var encoder = new lame.Encoder({
-              // input
-              channels: 1,        // 1 channels (MONO)
-              bitDepth: 16,       // 16-bit samples
-              sampleRate: 16000,  // 16,000 Hz sample rate
+                        // replace carriage returns with breaks
+                        cardContent = cardContent.replace(/\\n/g, '<br/>');
 
-              // output
-              bitRate: 48,
-              outSampleRate: 16000,
-              mode: lame.JOINTSTEREO // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
-            }); 
+                        // deal with any \&quot;
+                        cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
 
-        // The output from the google assistant is much lower than Alexa so we need to apply a gain
-        var vol = new volume();
-        // Set volume gain on google output to be +75%
-        // Any more than this then we risk major clipping
-        vol.setVolume(1.75);
-        // Create function to upload MP3 file to S3 
-        function uploadFromStream(s3) {
-            var pass = new Stream.PassThrough();
-            var filename = searchFunction.event.session.user.userId
-            var params = {Bucket: S3_BUCKET, Key: filename, Body: pass};
-            s3.upload(params, function(err, data) {
-                if (err){
-                console.log('S3 upload error: ' + err) 
-                    searchFunction.emit(':tell', 'There was an error uploading to S3. ');
+                        console.log(cardContent);
 
-                } else{
-                    // Upload has been sucessfull - we can know issue an alexa response based upon microphone state
-                    var signedURL;
-                    // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
-                    var signedParams = {Bucket: S3_BUCKET, Key: filename, Expires: 10, ResponseContentType: 'audio/mpeg'};
-                    s3.getSignedUrl('getObject', signedParams, function (err, url) {
+                        const cardTitle = 'Google Assistant for Alexa';
 
-                        if (url){
-                            // escape out any illegal XML characters;
-                            url = xmlescape(url)
-                            signedURL = url;
+                        // Let remove any (playing sfx)
+                        cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
 
-                            // if response text is blank just add a speaker icon to response
-                            if (googleResponseText == ''){
-                                googleResponseText = '"🔊"'
-                            }
+                        const speechOutput = '<audio src="' + signedURL + '"/>';
+                        const template = {
+                            type: 'BodyTemplate1',
+                            token: 'bt1',
+                            backButton: 'HIDDEN',
+                            title: cardTitle,
+                            textContent: {
+                                primaryText: {
+                                    text: cardContent,
+                                    type: 'RichText',
+                                },
+                            },
+                        };
 
-                            // remove any REPEAT AFTER ME form alexa utterance 
-                            var cleanUtterance = alexaUtteranceText.replace('REPEAT AFTER ME ', '');
+                        scope$.response.speak(speechOutput);
 
-                            var cardContent = 'Request:<br/><i>' + cleanUtterance + '</i><br/><br/>Supplemental Response:<br/>' + googleResponseText
-                            // replace carriage returns with breaks
-                            cardContent = cardContent.replace(/\\n/g, '<br/>');
-                            // deal with any \&quot;
-                            cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
-                            console.log(cardContent);
-                            var cardTitle = 'Google Assistant for Alexa'
-                            // Let remove any (playing sfx)
-                            cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
-                            var speechOutput = '<audio src="' + signedURL + '"/>'; 
-                            var template = {
-                                "type": "BodyTemplate1",
-                                "token": "bt1",
-                                "backButton": "HIDDEN",
-                                "title": cardTitle,
-                                "textContent": {
-                                    "primaryText": {
-                                        "text": cardContent,
-                                        "type": "RichText"
-                                    }
-                                }
-                            }
-                            searchFunction.response.speak(speechOutput)
-                            if (searchFunction.event.context.System.device.supportedInterfaces.Display) {
-                                searchFunction.response.renderTemplate(template);
-                            }
-                            // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
-                            // We also keep the microphone on the launchintent 'Hello' request as for some reason the API closes the microphone
+                        if (scope$.event.context.System.device.supportedInterfaces.Display) {
+                            scope$.response.renderTemplate(template);
+                        }
 
-                            if (microphoneOpen == true || alexaUtteranceText == 'Hello'){
-                                console.log('Microphone is open so keeping session open')                        
-                                searchFunction.response.listen(" ");
-                                searchFunction.emit(':responseReady');    
-                            } 
-                            // Otherwise we create an Alexa 'Tell' command which will close the session
-                            else{
-                                console.log('Microphone is closed so closing session')
-                                searchFunction.response.shouldEndSession(true)
-                                    searchFunction.emit(':responseReady')
-
-                            }
+                        // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
+                        // We also keep the microphone on the launch intent 'Hello' request as for some reason the API closes the microphone
+                        if (audioState.microphoneOpen || audioState.alexaUtteranceText === 'Hello') {
+                            console.log('Microphone is open so keeping session open');
+                            scope$.response.listen(' ');
+                            scope$.emit(':responseReady');
                         } else {
-                            searchFunction.emit(':tell', 'There was an error creating the signed URL.');
-                        } 
-                    });
-
-                  }
+                            // Otherwise we create an Alexa 'Tell' command which will close the session
+                            console.log('Microphone is closed so closing session');
+                            scope$.response.shouldEndSession(true);
+                            scope$.emit(':responseReady');
+                        }
+                    } else {
+                        scope$.emit(':tell', 'There was an error creating the signed URL.');
+                    }
                 });
-                return pass;
             }
+        });
+        return pass;
+    }
 
-            // When encoding of MP3 has finished we upload the result to S3
-            encoder.on('finish', function () {
-                // Close the MP3 file
-                wait(0.1, 'seconds', function() { 
-                    console.error('Encoding done!');
-                    console.error('Streaming mp3 file to s3');    
-                    writemp3.end();             
-                })
-            });        
+    // When encoding of MP3 has finished we upload the result to S3
+    encoder.on('finish', function () {
+        // Close the MP3 file
+        setTimeout(function () {
+            console.error('Encoding done!');
+            console.error('Streaming mp3 file to s3');
+            writemp3.end();
+        });
+    }, 1000);
 
+    // Pipe output of PCM file reader to the gain process
+    readpcm.pipe(vol);
 
-            // Pipe output of PCM file reader to the gain process
-            readpcm.pipe(vol);
-            // pipe the pcm output of the gain process to the LAME encoder
-            vol.pipe(encoder);
-            // Pipe output of LAME encoder into MP3 file writer
-            encoder.pipe(writemp3);
+    // pipe the pcm output of the gain process to the LAME encoder
+    vol.pipe(encoder);
 
+    // Pipe output of LAME encoder into MP3 file writer
+    encoder.pipe(writemp3);
+}
+
+const handlers = {
+    LaunchRequest: async function () {
+        const scope$ = this;
+
+        if (!scope$.event.context.System.user.accessToken) {
+            scope$.emit(
+                ':tellWithLinkAccountCard',
+                'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.'
+            );
+        } else {
+            try {
+                await getSecretParams();
+            } catch (err) {
+                console.error('Loading of SecretParams failed: ' + err);
+                scope$.emit(':tell', 'There was a problem loading the settings from the S3 Bucket.');
+                throw err;
+            }
+            if (!clientState.registered) {
+                try {
+                    await registerProject(scope$);
+                } catch (err) {
+                    console.error('Client setup failed: ' + err);
+                    scope$.emit(':tell', 'There was a problem setting up the project.');
+                    throw err;
+                }
+                console.log('Registration Function Complete');
+            }
         }
     },
-    
-    'Unhandled': function() {
-        console.log('Unhandled event');
-        this.emit(':ask', "I'm not sure what you said. Can you repeat please");
+    SearchIntent: async function (overrideText) {
+        const scope$ = this;
+        const audioState = {
+            microphoneOpen: true,
+            alexaUtteranceText: '',
+            googleResponseText: '',
+        }
 
+        // Have we received an direct utterance from another intent?
+        if (overrideText) {
+            audioState.alexaUtteranceText = overrideText;
+            console.log('Utterance received from another intent: ' + overrideText);
+        } else {
+            // use detected utterance
+            audioState.alexaUtteranceText = scope$.event.request.intent.slots.search.value;
+        }
+
+        console.log('Input text to be processed is "' + audioState.alexaUtteranceText + '"');
+        console.log('Starting Search Intent');
+
+        const accessToken = scope$.event.context.System.user.accessToken;
+
+        // Check whether we have a valid authentication token
+        if (!accessToken) {
+            // We haven't so create an account link card
+            scope$.emit(
+                ':tellWithLinkAccountCard',
+                'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.'
+            );
+        } else {
+            try {
+                await getSecretParams();
+            } catch (err) {
+                console.error('Loading of SecretParams failed: ' + err);
+                scope$.emit(':tell', 'There was a problem loading the settings from the S3 Bucket.');
+                throw err;
+            }
+            if (!clientState.registered) {
+                try {
+                    await registerProject(scope$);
+                } catch (err) {
+                    console.error('Client setup failed: ' + err);
+                    scope$.emit(':tell', 'There was a problem setting up the project.');
+                    throw err;
+                }
+            }
+
+            console.log('token: ' + accessToken);
+            executeAssist(accessToken, audioState, this);
+        }
     },
-    
-    'AMAZON.StopIntent' : function () {
-        console.log('Stop Intent')
-        var message = 'stop';
-        if (this.attributes['microphone_open'] == true){
-            this.emit('SearchIntent', message);
-        }else {
+    Unhandled: function () {
+        console.log('Unhandled event');
+        this.emit(':ask', 'I\'m not sure what you said. Can you repeat please');
+    },
+    'AMAZON.StopIntent': function () {
+        console.log('Stop Intent');
+        if (this.attributes['microphone_open']) {
+            this.emit('SearchIntent', 'stop');
+        } else {
             this.emit(':tell', 'Stopped');
-        }      
+        }
     },
-    'AMAZON.HelpIntent' : function () {
-        console.log('Help Intent')
-        var message = 'What can you do';
-        this.emit('SearchIntent', message);
+    'AMAZON.HelpIntent': function () {
+        console.log('Help Intent');
+        this.emit('SearchIntent', 'What can you do');
     },
-    'AMAZON.CancelIntent' : function () {
-        console.log('Cancel Intent')
-        var message = 'cancel';
-        if (this.attributes['microphone_open'] == true){
-            this.emit('SearchIntent', message);
+    'AMAZON.CancelIntent': function () {
+        console.log('Cancel Intent');
+        if (this.attributes['microphone_open']) {
+            this.emit('SearchIntent', 'cancel');
         } else {
             this.emit(':tell', 'Cancelled');
         }
     },
-    'AMAZON.NoIntent' : function () {
-        console.log('No Intent')
-        var message = 'no';
-        if (this.attributes['microphone_open'] == true){
-            this.emit('SearchIntent', message);
+    'AMAZON.NoIntent': function () {
+        console.log('No Intent');
+        if (this.attributes['microphone_open']) {
+            this.emit('SearchIntent', 'no');
         }
     },
-    'AMAZON.YesIntent' : function () {
-        console.log('Yes Intent')
-        var message = 'yes';
-        if (this.attributes['microphone_open'] == true){
-            this.emit('SearchIntent', message);
+    'AMAZON.YesIntent': function () {
+        console.log('Yes Intent');
+        if (this.attributes['microphone_open']) {
+            this.emit('SearchIntent', 'yes');
         }
     },
-        
-    
-    'SessionEndedRequest': function () {
+    SessionEndedRequest: function () {
         console.log('Session ended request');
-        console.log(`Session has ended with reason ${this.event.request.reason}`)
-
+        console.log(`Session has ended with reason ${this.event.request.reason}`);
         // Google Assistant will keep the conversation thread open even if we don't give a response to an ask.
         // We need to close the conversation if an ask response is not given (which will end up here)
-        // The easiset way to do this is to just send a goodbye command and this will close the conversation for us
+        // The easiest way to do this is to just send a goodbye command and this will close the conversation for us
         // (this is against Amazons guides but we're not submitting this!)
-        var message = 'goodbye';
-        if (this.attributes['microphone_open'] == true){
-            this.emit('SearchIntent', message);
+        if (this.attributes['microphone_open']) {
+            this.emit('SearchIntent', 'goodbye');
         }
-        
-    }
+    },
 };
 
-
-exports.handler = function(event, context, callback){
-    var alexa = Alexa.handler(event, context);
-    locale = event.request.locale
+exports.handler = function (event, context, callback) {
+    const alexa = Alexa.handler(event, context);
+    clientState.locale = event.request.locale;
     alexa.registerHandlers(handlers);
-    //Create DynamoDB Table
     alexa.dynamoDBTableName = 'AlexaAssistantSkillSettings';
     alexa.execute();
 };
-
-
-
-
