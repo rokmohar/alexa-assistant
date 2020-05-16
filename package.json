@@ -1,25 +1,29 @@
 {
   "name": "alexa-assistant",
   "version": "2.0.0",
-  "description": "An unofficial coogle skill for Alexa",
+  "description": "An unofficial Google skill for Alexa",
   "main": "index.js",
   "dependencies": {
+    "@grpc/grpc-js": "^1.0.3",
+    "@grpc/proto-loader": "^0.5.4",
     "alexa-sdk": "^1.0.25",
-    "bindings": "^1.5.0",
-    "every-moment": "^0.0.1",
-    "googleapis": "^19.0.0",
-    "grpc": "^1.24.2",
+    "aws-sdk": "^2.678.0",
+    "google-proto-files": "^2.0.0",
+    "googleapis": "^51.0.0",
     "lame": "^1.2.4",
     "pcm-volume": "^1.0.0",
     "request": "^2.88.2",
-    "resolve": "^1.17.0",
     "stream": "^0.0.2",
-    "wait-one-moment": "^0.0.2",
     "xml-escape": "^1.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/node": "^14.0.1",
+    "aws-sdk": "^2.678.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "npx prettier --write index.js"
   },
   "repository": {
     "type": "git",
