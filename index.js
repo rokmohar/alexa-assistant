@@ -41,7 +41,10 @@ const clientState = {
     registered: false,
     initialized: false,
     oauth2Client: undefined,
+    deviceLocation: undefined,
 };
+
+const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'];
 
 function getSecretParams() {
     const s3Params = {
@@ -75,6 +78,7 @@ function getSecretParams() {
             clientState.registered = !!s3Config.registered;
             clientState.initialized = true;
             clientState.oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+            clientState.deviceLocation = s3Config.device_location;
 
             return resolve();
         });
@@ -209,7 +213,10 @@ async function registerProject(scope$) {
 
                     console.log('Got positive Instance response');
 
-                    const s3Body = { ...clientState.s3Config, registered: true };
+                    const s3Body = {
+                        ...clientState.s3Config,
+                        registered: true,
+                    };
                     const s3Params = {
                         Bucket: S3_BUCKET,
                         Key: 'client_secret.json',
@@ -245,7 +252,7 @@ function executeAssist(token, audioState, scope$) {
 
     console.log('Locale is: ' + clientState.locale);
 
-    if (['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'].includes(clientState.locale)) {
+    if (SUPPORTED_LOCALES.includes(clientState.locale)) {
         overrideLocale = clientState.locale;
     }
 
@@ -259,7 +266,7 @@ function executeAssist(token, audioState, scope$) {
     // This will stop the skill from timing out
     setTimeout(function () {
         if (!audioPresent) {
-            scope$.emit(':tell', 'I wasn\'t able to talk to Google - please try again');
+            scope$.emit(':tell', "I wasn't able to talk to Google - please try again");
         }
     }, 9000);
 
@@ -284,7 +291,7 @@ function executeAssist(token, audioState, scope$) {
         } else {
             // Save setting and exit
             console.log('Emitting blank sound');
-            scope$.emit(':tell', 'I didn\'t get an audio response from the Google Assistant');
+            scope$.emit(':tell', "I didn't get an audio response from the Google Assistant");
         }
     });
 
@@ -302,6 +309,7 @@ function executeAssist(token, audioState, scope$) {
             },
             dialog_state_in: {
                 language_code: overrideLocale,
+                device_location: clientState.deviceLocation,
                 is_new_conversation: true,
             },
             device_config: {
@@ -537,14 +545,18 @@ function executeEncode(audioState, scope$) {
     }
 
     // When encoding of MP3 has finished we upload the result to S3
-    encoder.on('finish', function () {
-        // Close the MP3 file
-        setTimeout(function () {
-            console.error('Encoding done!');
-            console.error('Streaming mp3 file to s3');
-            writemp3.end();
-        });
-    }, 1000);
+    encoder.on(
+        'finish',
+        function () {
+            // Close the MP3 file
+            setTimeout(function () {
+                console.error('Encoding done!');
+                console.error('Streaming mp3 file to s3');
+                writemp3.end();
+            });
+        },
+        1000
+    );
 
     // Pipe output of PCM file reader to the gain process
     readpcm.pipe(vol);
@@ -561,10 +573,7 @@ const handlers = {
         const scope$ = this;
 
         if (!scope$.event.context.System.user.accessToken) {
-            scope$.emit(
-                ':tellWithLinkAccountCard',
-                'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.'
-            );
+            scope$.emit(':tellWithLinkAccountCard', 'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.');
         } else {
             try {
                 await getSecretParams();
@@ -591,7 +600,7 @@ const handlers = {
             microphoneOpen: true,
             alexaUtteranceText: '',
             googleResponseText: '',
-        }
+        };
 
         // Have we received an direct utterance from another intent?
         if (overrideText) {
@@ -610,10 +619,7 @@ const handlers = {
         // Check whether we have a valid authentication token
         if (!accessToken) {
             // We haven't so create an account link card
-            scope$.emit(
-                ':tellWithLinkAccountCard',
-                'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.'
-            );
+            scope$.emit(':tellWithLinkAccountCard', 'You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.');
         } else {
             try {
                 await getSecretParams();
@@ -638,7 +644,7 @@ const handlers = {
     },
     Unhandled: function () {
         console.log('Unhandled event');
-        this.emit(':ask', 'I\'m not sure what you said. Can you repeat please');
+        this.emit(':ask', "I'm not sure what you said. Can you repeat please");
     },
     'AMAZON.StopIntent': function () {
         console.log('Stop Intent');
