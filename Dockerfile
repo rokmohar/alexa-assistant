@@ -1,10 +1,10 @@
-FROM lambci/lambda:build-nodejs10.x
+FROM lambci/lambda:build-nodejs12.x
 
 ENV AWS_DEFAULT_REGION us-east-1
 ENV AWS_LAMBDA_FUNCTION_NAME alexa-assistant-skill-function
 ENV AWS_LAMBDA_FUNCTION_TIMEOUT 600
 
-ARG NODE_TARGET=10.20.1
+ARG NODE_TARGET=12.22.1
 
 COPY . .
 RUN ls

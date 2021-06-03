@@ -10,7 +10,7 @@ const Volume = require('pcm-volume');
 
 const fs = require('fs');
 const grpc = require('@grpc/grpc-js');
-const lame = require('lame');
+const lame = require('@suldashi/lame');
 const request = require('request');
 const xmlescape = require('xml-escape');
 const protoLoader = require('@grpc/proto-loader');
