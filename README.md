@@ -26,8 +26,9 @@ Then you can run the command following command instead:
 
 - `docker run --rm --env-file .env mylambda`
 
-Complete documentation for AWS Lambda Docker images can be found here:
-https://hub.docker.com/r/lambci/lambda/
+You can copy ZIP archive file from the Docker image to your host machine with the command:
+
+`docker run --rm --entrypoint cat mylambda ./lambda.zip > ./lambda.zip`
 
 # New Installation via CloudFormation 
 
@@ -35,10 +36,10 @@ This is the easiest method as it creates the lambda function automatically for y
 
 If you have not installed the skill before then follow the instructions here:
 
-[Installation Instructions](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/fresh_install.md)
+[Installation Instructions](https://github.com/rokmohar/alexa-assistant-instructions/blob/master/fresh_install.md)
 
 # IT DOESN'T WORK / PROBLEM SOLVING
 
-**BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](https://github.com/tartanguru/alexa-assistant-instructions/blob/master/common_problems.md)**
+**BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](https://github.com/rokmohar/alexa-assistant-instructions/blob/master/common_problems.md)**
 
 I get asked the same questions many times a day and most of them due are missing steps in the instructions
