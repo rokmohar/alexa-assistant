@@ -1,25 +1,26 @@
 'use strict';
 
-const { google } = require('googleapis');
+const { OAuth2Client } = require('google-auth-library');
 const { getProtoPath } = require('google-proto-files');
 
-const Alexa = require('alexa-sdk');
-const AWS = require('aws-sdk');
+const Alexa = require('ask-sdk-v1adapter');
+const { S3, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const Stream = require('stream');
 const Volume = require('pcm-volume');
 
 const fs = require('fs');
 const grpc = require('@grpc/grpc-js');
 const lame = require('@suldashi/lame');
-const request = require('request');
-const xmlescape = require('xml-escape');
+const axios = require('axios');
+const xmlEscape = require('xml-escape');
 const protoLoader = require('@grpc/proto-loader');
 
 // Load AWS credentials
-const s3 = new AWS.S3();
+const s3 = new S3({});
 
 // Get Google Credentials from Environment Variables - these are set in the Lambda function configuration
-
 const S3_BUCKET = process.env.S3_BUCKET;
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
@@ -46,6 +47,16 @@ const clientState = {
 
 const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'];
 
+async function streamToString(stream) {
+    const chunks = [];
+
+    for await (const chunk of stream) {
+        chunks.push(Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks).toString("utf-8");
+}
+
 function getSecretParams() {
     const s3Params = {
         Bucket: S3_BUCKET,
@@ -55,15 +66,25 @@ function getSecretParams() {
     console.log('Getting JSON');
 
     return new Promise((resolve, reject) => {
-        s3.getObject(s3Params, function (err, data) {
+        s3.getObject(s3Params, async function (err, data) {
             if (err) {
+                console.error('Could not load the client secret file: ' + err)
                 return reject(new Error('I could not load the client secret file from S3.'));
             }
 
             console.log('Current ConfigJSON: ' + JSON.stringify(clientState.s3Config));
-            const s3Config = JSON.parse(Buffer.from(data.Body).toString('utf8'));
 
-            if (!s3Config.hasOwnProperty('web')) {
+            let s3Config;
+
+            try {
+                s3Config = JSON.parse(await streamToString(data.Body));
+            } catch (err) {
+                console.error('S3 body decode error: ' + err);
+                return reject(new Error('Decoding of S3 response body failed.'));
+            }
+
+            if (!s3Config || !s3Config.hasOwnProperty('web')) {
+                console.error('Client secret file is not configured.');
                 return reject(new Error('The client secret file was not configured for a web based client.'));
             }
 
@@ -77,7 +98,7 @@ function getSecretParams() {
             clientState.projectId = s3Config.web.project_id;
             clientState.registered = !!s3Config.registered;
             clientState.initialized = true;
-            clientState.oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+            clientState.oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
             clientState.deviceLocation = s3Config.device_location;
 
             return resolve();
@@ -102,7 +123,7 @@ async function registerProject(scope$) {
         }
     }
 
-    // This isn't massively efficient code but it only needs to run once!
+    // This isn't massively efficient code, but it only needs to run once!
     const ACCESS_TOKEN = scope$.event.context.System.user.accessToken;
 
     console.log('Access Token: ' + ACCESS_TOKEN);
@@ -129,26 +150,22 @@ async function registerProject(scope$) {
             device_type: 'action.devices.types.LIGHT',
             traits: ['action.devices.traits.OnOff'],
         };
-        const postOptions = {
+        axios({
             url: registrationModelURL,
             method: 'POST',
             headers: {
-                Authorization: bearer,
+                'Authorization': bearer,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(deviceModel),
-        };
-        request(postOptions, function (error, response, body) {
-            if (error) {
-                callback(error, null);
-            } else if (response) {
-                const bodyJSON = JSON.parse(body);
-
+            data: deviceModel,
+            responseType: 'json',
+        })
+            .then(function ( bodyJSON) {
                 if (bodyJSON.error) {
-                    console.log('error code received');
+                    console.error('error code received');
 
                     if (bodyJSON.error.code === 409) {
-                        console.log('Model already exists');
+                        console.error('Model already exists');
                         callback(null, bodyJSON);
                     } else {
                         callback(bodyJSON, null);
@@ -156,8 +173,10 @@ async function registerProject(scope$) {
                 } else {
                     callback(null, bodyJSON);
                 }
-            }
-        });
+            })
+            .catch(function (error) {
+                callback(error, null);
+            });
     };
     // Registering instance
     const registerInstance = function (callback) {
@@ -167,47 +186,43 @@ async function registerProject(scope$) {
             nickname: 'Alexa Assistant v1',
             clientType: 'SDK_SERVICE',
         };
-        const postOptions = {
+        axios({
             url: registrationInstanceURL,
             method: 'POST',
             headers: {
-                Authorization: bearer,
+                'Authorization': bearer,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(instanceModel),
-        };
-        request(postOptions, function (error, response, body) {
-            if (error) {
-                callback(error, null);
-            } else if (response) {
-                const bodyJSON = JSON.parse(body);
+            data: instanceModel,
+            responseType: 'json',
+        }).then(function (bodyJSON) {
+            if (bodyJSON.error) {
+                console.error('error code received');
 
-                if (bodyJSON.error) {
-                    console.log('error code received');
-
-                    if (bodyJSON.error.code === 409) {
-                        console.log('Instance already exists');
-                        callback(null, bodyJSON);
-                    } else {
-                        callback(bodyJSON, null);
-                    }
-                } else {
+                if (bodyJSON.error.code === 409) {
+                    console.error('Instance already exists');
                     callback(null, bodyJSON);
+                } else {
+                    callback(bodyJSON, null);
                 }
+            } else {
+                callback(null, bodyJSON);
             }
+        }).catch(function (error) {
+            callback(error, null);
         });
     };
     return new Promise((resolve, reject) => {
-        // lets register the model and instance - we only need to do this once
+        // let's register the model and instance - we only need to do this once
         registerModel(function (err, result) {
             if (err) {
-                console.log('Got Model register error', err);
+                console.error('Got Model register error', err);
                 return reject(new Error('There was an error registering the Model with the Google API.'));
             } else if (result) {
                 console.log('Got positive model response' + JSON.stringify(result));
                 registerInstance(function (err, result) {
                     if (err) {
-                        console.log('Error:', err);
+                        console.error('Error:', err);
                         return reject(new Error('There was an error registering the Instance with the Google API.'));
                     }
 
@@ -224,15 +239,18 @@ async function registerProject(scope$) {
                         ContentType: 'application/json',
                     };
 
-                    s3.upload(s3Params, function (err) {
-                        if (err) {
-                            return reject(new Error('There was an error uploading to S3.'));
-                        }
+                    const upload = new Upload({
+                        client: s3,
+                        params: s3Params,
+                    });
 
+                    upload.done().then(() => {
                         clientState.s3Config = s3Body;
                         scope$.attributes['microphone_open'] = false;
-
                         return resolve();
+                    }).catch((err) => {
+                        console.error('Error with S3 upload: ' + err);
+                        return reject(new Error('There was an error uploading to S3.'));
                     });
                 });
             }
@@ -334,7 +352,7 @@ function executeAssist(token, audioState, scope$) {
     const conversation = assistant.Assist();
 
     conversation.on('error', function (err) {
-        console.log('***There was a Google error***' + err);
+        console.error('***There was a Google error***' + err);
         scope$.emit(':tell', 'The Google API returned an error.');
         // Clear conversation state
         scope$.attributes['CONVERSATION_STATE'] = undefined;
@@ -356,7 +374,7 @@ function executeAssist(token, audioState, scope$) {
             console.log('Dialog state out received');
 
             if (response.dialog_state_out.supplemental_display_text) {
-                audioState.googleResponseText += xmlescape(JSON.stringify(response.dialog_state_out.supplemental_display_text));
+                audioState.googleResponseText += xmlEscape(JSON.stringify(response.dialog_state_out.supplemental_display_text));
                 console.log('Supplemental text is: ' + audioState.googleResponseText);
             }
 
@@ -411,7 +429,7 @@ function executeAssist(token, audioState, scope$) {
 }
 
 // This function takes the response from the API and re-encodes using LAME
-// There is lots of reading and writing from temp files which isn't ideal
+// There is lots of reading and writing from temp files which isn't ideal,
 // but I couldn't get piping to/from LAME work reliably in Lambda
 function executeEncode(audioState, scope$) {
     console.log('Starting Transcode');
@@ -432,7 +450,7 @@ function executeEncode(audioState, scope$) {
         // Create read stream from MP3 file
         const readmp3 = fs.createReadStream('/tmp/response.mp3');
         // Pipe to S3 upload function
-        readmp3.pipe(uploadFromStream(s3));
+        readmp3.pipe(uploadFromStream());
     });
 
     // Create LAME encoder instance
@@ -447,100 +465,104 @@ function executeEncode(audioState, scope$) {
         mode: lame.JOINTSTEREO, // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
     });
 
-    // The output from the google assistant is much lower than Alexa so we need to apply a gain
+    // The output from the Google Assistant is much lower than Alexa, so we need to apply a gain
     const vol = new Volume();
 
-    // Set volume gain on google output to be +75%
+    // Set volume gain on Google output to be +75%
     // Any more than this then we risk major clipping
     vol.setVolume(1.75);
 
     // Create function to upload MP3 file to S3
-    function uploadFromStream(s3) {
+    function uploadFromStream() {
         const pass = new Stream.PassThrough();
         const filename = scope$.event.session.user.userId;
-        const params = { Bucket: S3_BUCKET, Key: filename, Body: pass };
+        const s3Params = { Bucket: S3_BUCKET, Key: filename, Body: pass };
 
-        s3.upload(params, function (err, data) {
-            if (err) {
-                console.log('S3 upload error: ' + err);
-                scope$.emit(':tell', 'There was an error uploading to S3. ');
-            } else {
-                // Upload has been successful - we can know issue an alexa response based upon microphone state
-                let signedURL;
-                // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
-                const signedParams = {
-                    Bucket: S3_BUCKET,
-                    Key: filename,
-                    Expires: 10,
-                    ResponseContentType: 'audio/mpeg',
+        const upload = new Upload({
+            client: s3,
+            params: s3Params,
+        });
+
+        upload.done().then(() => {
+            // Upload has been successful - we can now issue an alexa response based upon microphone state
+            let signedURL;
+
+            // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
+            const signedParams = {
+                Bucket: S3_BUCKET,
+                Key: filename,
+                Expires: 10,
+                ResponseContentType: 'audio/mpeg',
+            };
+
+            getSignedUrl(s3, new GetObjectCommand(signedParams)).then(function (url) {
+                // escape out any illegal XML characters;
+                url = xmlEscape(url);
+                signedURL = url;
+
+                // if response text is blank just add a speaker icon to response
+                if (!audioState.googleResponseText) {
+                    audioState.googleResponseText = '"🔊"';
+                }
+
+                // remove any REPEAT AFTER ME form alexa utterance
+                const cleanUtterance = audioState.alexaUtteranceText.replace('REPEAT AFTER ME ', '');
+                let cardContent = 'Request:<br/><i>' + cleanUtterance + '</i><br/><br/>Supplemental Response:<br/>' + audioState.googleResponseText;
+
+                // replace carriage returns with breaks
+                cardContent = cardContent.replace(/\\n/g, '<br/>');
+
+                // deal with any \&quot;
+                cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
+
+                console.log(cardContent);
+
+                const cardTitle = 'Google Assistant for Alexa';
+
+                // Let remove any (playing sfx)
+                cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
+
+                const speechOutput = '<audio src="' + signedURL + '"/>';
+                const template = {
+                    type: 'BodyTemplate1',
+                    token: 'bt1',
+                    backButton: 'HIDDEN',
+                    title: cardTitle,
+                    textContent: {
+                        primaryText: {
+                            text: cardContent,
+                            type: 'RichText',
+                        },
+                    },
                 };
 
-                s3.getSignedUrl('getObject', signedParams, function (err, url) {
-                    if (url) {
-                        // escape out any illegal XML characters;
-                        url = xmlescape(url);
-                        signedURL = url;
+                scope$.response.speak(speechOutput);
 
-                        // if response text is blank just add a speaker icon to response
-                        if (!audioState.googleResponseText) {
-                            audioState.googleResponseText = '"🔊"';
-                        }
+                if (scope$.event.context.System.device.supportedInterfaces.Display) {
+                    scope$.response.renderTemplate(template);
+                }
 
-                        // remove any REPEAT AFTER ME form alexa utterance
-                        const cleanUtterance = audioState.alexaUtteranceText.replace('REPEAT AFTER ME ', '');
-                        let cardContent = 'Request:<br/><i>' + cleanUtterance + '</i><br/><br/>Supplemental Response:<br/>' + audioState.googleResponseText;
-
-                        // replace carriage returns with breaks
-                        cardContent = cardContent.replace(/\\n/g, '<br/>');
-
-                        // deal with any \&quot;
-                        cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
-
-                        console.log(cardContent);
-
-                        const cardTitle = 'Google Assistant for Alexa';
-
-                        // Let remove any (playing sfx)
-                        cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
-
-                        const speechOutput = '<audio src="' + signedURL + '"/>';
-                        const template = {
-                            type: 'BodyTemplate1',
-                            token: 'bt1',
-                            backButton: 'HIDDEN',
-                            title: cardTitle,
-                            textContent: {
-                                primaryText: {
-                                    text: cardContent,
-                                    type: 'RichText',
-                                },
-                            },
-                        };
-
-                        scope$.response.speak(speechOutput);
-
-                        if (scope$.event.context.System.device.supportedInterfaces.Display) {
-                            scope$.response.renderTemplate(template);
-                        }
-
-                        // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
-                        // We also keep the microphone on the launch intent 'Hello' request as for some reason the API closes the microphone
-                        if (audioState.microphoneOpen || audioState.alexaUtteranceText === 'Hello') {
-                            console.log('Microphone is open so keeping session open');
-                            scope$.response.listen(' ');
-                            scope$.emit(':responseReady');
-                        } else {
-                            // Otherwise we create an Alexa 'Tell' command which will close the session
-                            console.log('Microphone is closed so closing session');
-                            scope$.response.shouldEndSession(true);
-                            scope$.emit(':responseReady');
-                        }
-                    } else {
-                        scope$.emit(':tell', 'There was an error creating the signed URL.');
-                    }
-                });
-            }
+                // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
+                // We also keep the microphone on the launch intent 'Hello' request as for some reason the API closes the microphone
+                if (audioState.microphoneOpen || audioState.alexaUtteranceText === 'Hello') {
+                    console.log('Microphone is open so keeping session open');
+                    scope$.response.listen(' ');
+                    scope$.emit(':responseReady');
+                } else {
+                    // Otherwise we create an Alexa 'Tell' command which will close the session
+                    console.log('Microphone is closed so closing session');
+                    scope$.response.shouldEndSession(true);
+                    scope$.emit(':responseReady');
+                }
+            }).catch((err) => {
+                console.error('Signed URL error: ' + err);
+                scope$.emit(':tell', 'There was an error creating the signed URL.');
+            });
+        }).catch((err) => {
+            console.error('S3 upload error: ' + err);
+            scope$.emit(':tell', 'There was an error uploading to S3. ');
         });
+
         return pass;
     }
 
@@ -550,8 +572,8 @@ function executeEncode(audioState, scope$) {
         function () {
             // Close the MP3 file
             setTimeout(function () {
-                console.error('Encoding done!');
-                console.error('Streaming mp3 file to s3');
+                console.log('Encoding done!');
+                console.log('Streaming mp3 file to s3');
                 writemp3.end();
             });
         },
@@ -602,7 +624,7 @@ const handlers = {
             googleResponseText: '',
         };
 
-        // Have we received an direct utterance from another intent?
+        // Have we received a direct utterance from another intent?
         if (overrideText) {
             audioState.alexaUtteranceText = overrideText;
             console.log('Utterance received from another intent: ' + overrideText);
@@ -684,7 +706,7 @@ const handlers = {
         // Google Assistant will keep the conversation thread open even if we don't give a response to an ask.
         // We need to close the conversation if an ask response is not given (which will end up here)
         // The easiest way to do this is to just send a goodbye command and this will close the conversation for us
-        // (this is against Amazons guides but we're not submitting this!)
+        // (this is against Amazons guides, but we're not submitting this!)
         if (this.attributes['microphone_open']) {
             this.emit('SearchIntent', 'goodbye');
         }
