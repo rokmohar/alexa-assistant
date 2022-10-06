@@ -23,6 +23,6 @@
 node_modules/
 **/node_modules/*
 
-# Lock files
-package-lock.json
-yarn.lock
+# dist
+lambda.zip
+

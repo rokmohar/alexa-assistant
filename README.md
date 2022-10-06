@@ -36,10 +36,10 @@ This is the easiest method as it creates the lambda function automatically for y
 
 If you have not installed the skill before then follow the instructions here:
 
-[Installation Instructions](https://github.com/rokmohar/alexa-assistant-instructions/blob/master/fresh_install.md)
+[Installation Instructions](https://github.com/rokmohar/alexa-assistant-instructions/blob/main/fresh_install.md)
 
 # IT DOESN'T WORK / PROBLEM SOLVING
 
-**BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](https://github.com/rokmohar/alexa-assistant-instructions/blob/master/common_problems.md)**
+**BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](https://github.com/rokmohar/alexa-assistant-instructions/blob/main/common_problems.md)**
 
 I get asked the same questions many times a day and most of them due are missing steps in the instructions
