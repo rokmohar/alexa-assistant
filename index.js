@@ -5,9 +5,7 @@ const { getProtoPath } = require('google-proto-files');
 
 const Alexa = require('ask-sdk-core');
 const Adapter = require('ask-sdk-dynamodb-persistence-adapter');
-const { S3, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { Upload } = require('@aws-sdk/lib-storage');
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { S3 } = require('aws-sdk');
 const Stream = require('stream');
 const Volume = require('pcm-volume');
 
@@ -48,16 +46,6 @@ const clientState = {
 
 const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'];
 
-async function streamToString(stream) {
-    const chunks = [];
-
-    for await (const chunk of stream) {
-        chunks.push(Buffer.from(chunk));
-    }
-
-    return Buffer.concat(chunks).toString("utf-8");
-}
-
 function getSecretParams() {
     const s3Params = {
         Bucket: S3_BUCKET,
@@ -70,7 +58,7 @@ function getSecretParams() {
         s3.getObject(s3Params, async function (err, data) {
             if (err) {
                 console.error('Could not load the client secret file:', err)
-                return reject(new Error('I could not load the client secret file from S3.'));
+                return reject(new Error('I could not load the client secret file from S3'));
             }
 
             console.log('Current ConfigJSON:', clientState.s3Config);
@@ -78,15 +66,15 @@ function getSecretParams() {
             let s3Config;
 
             try {
-                s3Config = JSON.parse(await streamToString(data.Body));
+                s3Config = JSON.parse(Buffer.from(data.Body).toString('utf8'));
             } catch (err) {
                 console.error('S3 body decode error:', err);
-                return reject(new Error('Decoding of S3 response body failed.'));
+                return reject(new Error('Decoding of S3 response body failed'));
             }
 
             if (!s3Config || !s3Config.hasOwnProperty('web')) {
-                console.error('Client secret file is not configured.');
-                return reject(new Error('The client secret file was not configured for a web based client.'));
+                console.error('Client secret file is not configured');
+                return reject(new Error('The client secret file was not configured for a web based client'));
             }
 
             console.log('S3 Config is loaded:', s3Config);
@@ -108,10 +96,10 @@ function getSecretParams() {
 }
 
 async function registerProject(handlerInput) {
-    console.log('Project registration started.');
+    console.log('Project registration started');
 
     if (clientState.registered) {
-        console.warn('Project is already registered.');
+        console.warn('Project is already registered');
         return;
     }
 
@@ -218,13 +206,13 @@ async function registerProject(handlerInput) {
         registerModel(function (err, result) {
             if (err) {
                 console.error('Got Model register error', err);
-                return reject(new Error('There was an error registering the Model with the Google API.'));
+                return reject(new Error('There was an error registering the Model with the Google API'));
             } else if (result) {
                 console.log('Got positive model response', result);
                 registerInstance(function (err, result) {
                     if (err) {
                         console.error('Error:', err);
-                        return reject(new Error('There was an error registering the Instance with the Google API.'));
+                        return reject(new Error('There was an error registering the Instance with the Google API'));
                     }
 
                     console.log('Got positive Instance response');
@@ -240,19 +228,18 @@ async function registerProject(handlerInput) {
                         ContentType: 'application/json',
                     };
 
-                    const upload = new Upload({
-                        client: s3,
-                        params: s3Params,
-                    });
-                    const attributes = handlerInput.attributesManager.getRequestAttributes();
+                    s3.upload(s3Params, {}, function (err, data) {
+                        if (err) {
+                            console.error('Error with S3 upload:', err);
+                            return reject(new Error('There was an error uploading to S3'));
+                        }
 
-                    upload.done().then(() => {
+                        const attributes = handlerInput.attributesManager.getRequestAttributes();
+
                         clientState.s3Config = s3Body;
                         attributes['microphone_open'] = false;
+
                         return resolve();
-                    }).catch((err) => {
-                        console.error('Error with S3 upload:', err);
-                        return reject(new Error('There was an error uploading to S3.'));
                     });
                 });
             }
@@ -288,7 +275,8 @@ async function executeAssist(token, audioState, handlerInput) {
         setTimeout(function () {
             if (!audioPresent) {
                 handlerInput.responseBuilder.speak('I wasn\'t able to talk to Google - please try again');
-                return reject(new Error('Google Assistant request timed out.'));
+                console.error('Google Assistant request timed out');
+                return reject(new Error('Google Assistant request timed out'));
             }
         }, 9000);
 
@@ -313,9 +301,9 @@ async function executeAssist(token, audioState, handlerInput) {
                 return resolve();
             } else {
                 // Save setting and exit
-                console.log('Emitting blank sound');
                 handlerInput.responseBuilder.speak('I didn\'t get an audio response from the Google Assistant');
-                return reject(new Error('No audio response from the Google Assistant.'));
+                console.log('Emitting blank sound');
+                return reject(new Error('No audio response from the Google Assistant'));
             }
         });
 
@@ -359,14 +347,13 @@ async function executeAssist(token, audioState, handlerInput) {
         const conversation = assistant.Assist();
 
         conversation.on('error', function(err) {
-            console.error('***There was a Google error***', err);
-
             // Clear conversation state
             attributes['CONVERSATION_STATE'] = undefined;
 
             handlerInput.responseBuilder.speak('The Google API returned an error.');
 
-            return reject(new Error('Google Assistant returned error.'))
+            console.error('***There was a Google error***', err);
+            return reject(new Error('Google Assistant returned error'))
         });
 
         conversation.on('end', function() {
@@ -467,11 +454,19 @@ async function executeEncode(audioState, handlerInput) {
             const readmp3 = fs.createReadStream('/tmp/response.mp3');
 
             try {
+                const uploadResponse = await uploadFromStream();
+
                 // Pipe to S3 upload function
-                readmp3.pipe(await uploadFromStream());
+                readmp3.pipe(uploadResponse.streamPass);
+
+                await uploadResponse.uploadPromise;
             } catch (err) {
-                return reject(new Error('Error with upload from stream.'));
+                console.error('Error with upload from stream:', err);
+                handlerInput.responseBuilder.speak('There was an error uploading to S3');
+                return reject(new Error('Error with upload from stream'));
             }
+
+            console.log('Upload from stream complete');
 
             return resolve();
         });
@@ -497,18 +492,13 @@ async function executeEncode(audioState, handlerInput) {
 
         // Create function to upload MP3 file to S3
         async function uploadFromStream() {
+            const streamPass = new Stream.PassThrough();
+            const filename = handlerInput.requestEnvelope.session.user.userId;
+            const s3Params = { Bucket: S3_BUCKET, Key: filename, Body: streamPass };
+
             console.log('Upload from stream');
 
-            const pass = new Stream.PassThrough();
-            const filename = handlerInput.requestEnvelope.session.user.userId;
-            const s3Params = { Bucket: S3_BUCKET, Key: filename, Body: pass };
-
-            const upload = new Upload({
-                client: s3,
-                params: s3Params,
-            });
-
-            return upload.done().then(() => {
+            const uploadPromise = s3.upload(s3Params).promise().then(() => {
                 console.log('Upload done');
 
                 // Upload has been successful - we can now issue an alexa response based upon microphone state
@@ -522,7 +512,7 @@ async function executeEncode(audioState, handlerInput) {
                     ResponseContentType: 'audio/mpeg',
                 };
 
-                return getSignedUrl(s3, new GetObjectCommand(signedParams)).then(function(url) {
+                return s3.getSignedUrlPromise('getObject', signedParams).then(function(url) {
                     console.log('Got signed URL');
 
                     // escape out any illegal XML characters;
@@ -551,7 +541,7 @@ async function executeEncode(audioState, handlerInput) {
                     // Let remove any (playing sfx)
                     cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
 
-                    console.log('Add audio speak to response.');
+                    console.log('Add audio speak to response');
                     handlerInput.responseBuilder.speak('<audio src="' + signedURL + '"/>');
 
                     if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)['Alexa.Presentation.APL']) {
@@ -587,33 +577,26 @@ async function executeEncode(audioState, handlerInput) {
                     // We also keep the microphone on the launch intent 'Hello' request as for some reason the API closes the microphone
                     if (audioState.microphoneOpen || audioState.alexaUtteranceText === 'Hello') {
                         console.log('Microphone is open so keeping session open');
+                        handlerInput.responseBuilder.reprompt(' ');
                     } else {
                         // Otherwise we create an Alexa 'Tell' command which will close the session
                         console.log('Microphone is closed so closing session');
                         handlerInput.responseBuilder.withShouldEndSession(true);
                     }
-
-                    return pass;
-                }).catch((err) => {
-                    console.error('Signed URL error:', err);
-                    handlerInput.responseBuilder.speak('There was an error creating the signed URL.');
-                    throw err;
                 });
-            }).catch((err) => {
-                console.error('S3 upload error:', err);
-                handlerInput.responseBuilder.speak('There was an error uploading to S3.');
-                throw err;
             });
+
+            return { uploadPromise: uploadPromise, streamPass: streamPass };
         }
 
         // When encoding of MP3 has finished we upload the result to S3
         encoder.on('finish', function() {
-            // Close the MP3 file
             setTimeout(function() {
+                // Close the MP3 file
                 console.log('Encoding done!');
                 console.log('Streaming mp3 file to s3');
                 writemp3.end();
-            }, 1000);
+            });
         });
 
         // Pipe output of PCM file reader to the gain process
