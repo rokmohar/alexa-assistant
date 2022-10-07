@@ -551,7 +551,7 @@ async function executeEncode(audioState, handlerInput) {
                             document: {
                                 type: 'APL',
                                 version: '2022.1',
-                                description: 'A hello world APL document.',
+                                description: 'Google Assistant for Alexa APL document.',
                                 theme: 'dark',
                                 mainTemplate: {
                                     parameters: [
@@ -746,11 +746,10 @@ const SearchIntentHandler = {
             await executeAssist(accessToken, audioState, handlerInput);
         } catch (err) {
             console.log('Execute assist returned error:', err);
+            handlerInput.responseBuilder.withShouldEndSession(true);
         }
 
-        return handlerInput.responseBuilder
-            .withShouldEndSession(true)
-            .getResponse();
+        return handlerInput.responseBuilder.getResponse();
     },
 };
 
