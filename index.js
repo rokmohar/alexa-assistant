@@ -44,13 +44,6 @@ const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP']
 async function registerProject(handlerInput) {
     console.log('Project registration started');
 
-    const attributes = handlerInput.attributesManager.getRequestAttributes();
-
-    if (attributes['registered']) {
-        console.warn('Project is already registered');
-        return;
-    }
-
     // This isn't massively efficient code, but it only needs to run once!
     const accessToken = handlerInput.requestEnvelope.context.System.user.accessToken;
 
@@ -129,26 +122,73 @@ async function registerProject(handlerInput) {
             }
         });
     };
+    // Load attributes
+    const loadAttributes = function (callback) {
+        return handlerInput.attributesManager
+            .getPersistentAttributes()
+            .then((attributes) => {
+                callback(null, attributes);
+            })
+            .catch((err) => {
+                callback(err, null);
+            });
+    };
+    // Save attributes
+    const saveAttributes = function (callback) {
+        return handlerInput.attributesManager
+            .savePersistentAttributes()
+            .then(() => {
+                callback(null);
+            })
+            .catch((err) => {
+                callback(err);
+            });
+    };
     return new Promise((resolve, reject) => {
-        // let's register the model and instance - we only need to do this once
-        registerModel(function (err, result) {
+        loadAttributes(function (err, dbAttributes) {
             if (err) {
-                console.error('Got Model register error', err);
-                return reject(new Error('There was an error registering the Model with the Google API'));
-            } else if (result) {
-                console.log('Got positive model response', result);
-                registerInstance(function (err, result) {
+                console.error('Get attributes error', err);
+                return reject(new Error('There was an error when loading the attributes'));
+            } else {
+                if (dbAttributes['registered']) {
+                    console.warn('Project is already registered');
+                    return;
+                }
+
+                console.log('Got positive attributes response', dbAttributes);
+
+                // let's register the model and instance - we only need to do this once
+                registerModel(function (err, model) {
                     if (err) {
-                        console.error('Error:', err);
-                        return reject(new Error('There was an error registering the Instance with the Google API'));
+                        console.error('Got Model register error', err);
+                        return reject(new Error('There was an error registering the Model with the Google API'));
+                    } else if (model) {
+                        console.log('Got positive model response', model);
+
+                        registerInstance(function (err, instance) {
+                            if (err) {
+                                console.error('Error:', err);
+                                return reject(new Error('There was an error registering the Instance with the Google API'));
+                            }
+
+                            console.log('Got positive Instance response');
+
+                            const attributes = handlerInput.attributesManager.getRequestAttributes();
+                            attributes['microphone_open'] = false;
+
+                            // Mark as registered
+                            dbAttributes['registered'] = true;
+
+                            saveAttributes(function (err) {
+                                if (err) {
+                                    console.error('Save attributes error', err);
+                                    return reject(new Error('There was an error when saving the attributes'));
+                                } else {
+                                    resolve();
+                                }
+                            });
+                        });
                     }
-
-                    console.log('Got positive Instance response');
-
-                    attributes['microphone_open'] = false;
-                    attributes['registered'] = true;
-
-                    return resolve();
                 });
             }
         });
@@ -214,6 +254,7 @@ async function executeAssist(accessToken, audioState, handlerInput) {
         // Create Audio Configuration before we send any commands
         // We are using linear PCM as the input and output type so encoding value is 1
         console.log('Creating Audio config');
+        console.log('Device location:', handlerInput.requestEnvelope.context.Geolocation?.coordinate);
 
         const assistRequest = {
             config: {
@@ -749,5 +790,4 @@ exports.handler = Alexa.SkillBuilders.custom()
         partitionKeyName: 'userId',
         createTable: true,
     }))
-    .withSkillId(process.env.SKILL_ID)
     .lambda();
