@@ -150,12 +150,12 @@ async function registerProject(handlerInput) {
                 console.error('Get attributes error', err);
                 return reject(new Error('There was an error when loading the attributes'));
             } else {
+                console.log('Got positive attributes response', dbAttributes);
+
                 if (dbAttributes['registered']) {
                     console.warn('Project is already registered');
-                    return;
+                    return resolve();
                 }
-
-                console.log('Got positive attributes response', dbAttributes);
 
                 // let's register the model and instance - we only need to do this once
                 registerModel(function (err, model) {
@@ -200,6 +200,16 @@ function createGrpcGoogleCredentials() {
 }
 
 async function executeAssist(accessToken, audioState, handlerInput) {
+    try {
+        await registerProject(handlerInput);
+    } catch (err) {
+        console.error('Client setup failed:', err);
+        return handlerInput.responseBuilder
+            .speak('There was a problem setting up the project.')
+            .withShouldEndSession(true)
+            .getResponse();
+    }
+
     return new Promise((resolve, reject) => {
         const locale = Alexa.getLocale(handlerInput.requestEnvelope);
         const overrideLocale = SUPPORTED_LOCALES.includes(locale) ? locale : 'en-US';
@@ -254,7 +264,6 @@ async function executeAssist(accessToken, audioState, handlerInput) {
         // Create Audio Configuration before we send any commands
         // We are using linear PCM as the input and output type so encoding value is 1
         console.log('Creating Audio config');
-        console.log('Device location:', handlerInput.requestEnvelope.context.Geolocation?.coordinate);
 
         const assistRequest = {
             config: {
@@ -641,16 +650,6 @@ const SearchIntentHandler = {
             return handlerInput.responseBuilder
                 .withLinkAccountCard()
                 .speak('You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.')
-                .withShouldEndSession(true)
-                .getResponse();
-        }
-
-        try {
-            await registerProject(handlerInput);
-        } catch (err) {
-            console.error('Client setup failed:', err);
-            return handlerInput.responseBuilder
-                .speak('There was a problem setting up the project.')
                 .withShouldEndSession(true)
                 .getResponse();
         }
