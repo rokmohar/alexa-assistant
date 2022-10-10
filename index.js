@@ -746,7 +746,8 @@ exports.handler = Alexa.SkillBuilders.custom()
     .withApiClient(new Alexa.DefaultApiClient())
     .withPersistenceAdapter(new DynamoDbPersistenceAdapter({
         tableName: 'AlexaAssistantSkillSettings',
-        partitionKeyName: 'userId'
+        partitionKeyName: 'userId',
+        createTable: true,
     }))
     .withSkillId(process.env.SKILL_ID)
     .lambda();
