@@ -150,12 +150,12 @@ async function registerProject(handlerInput) {
                 console.error('Get attributes error', err);
                 return reject(new Error('There was an error when loading the attributes'));
             } else {
+                console.log('Got positive attributes response', dbAttributes);
+
                 if (dbAttributes['registered']) {
                     console.warn('Project is already registered');
-                    return;
+                    return resolve();
                 }
-
-                console.log('Got positive attributes response', dbAttributes);
 
                 // let's register the model and instance - we only need to do this once
                 registerModel(function (err, model) {
@@ -254,7 +254,6 @@ async function executeAssist(accessToken, audioState, handlerInput) {
         // Create Audio Configuration before we send any commands
         // We are using linear PCM as the input and output type so encoding value is 1
         console.log('Creating Audio config');
-        console.log('Device location:', handlerInput.requestEnvelope.context.Geolocation?.coordinate);
 
         const assistRequest = {
             config: {
