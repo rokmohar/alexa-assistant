@@ -4,7 +4,7 @@ const { OAuth2Client } = require('google-auth-library');
 const { getProtoPath } = require('google-proto-files');
 
 const Alexa = require('ask-sdk-core');
-const Adapter = require('ask-sdk-dynamodb-persistence-adapter');
+const { DynamoDbPersistenceAdapter } = require('ask-sdk-dynamodb-persistence-adapter');
 const { S3 } = require('aws-sdk');
 const Stream = require('stream');
 const Volume = require('pcm-volume');
@@ -16,12 +16,17 @@ const axios = require('axios');
 const xmlEscape = require('xml-escape');
 const protoLoader = require('@grpc/proto-loader');
 
-// Load AWS credentials
+// S3 client
 const s3 = new S3({});
+
+// OAuth client
+const oauth2Client = new OAuth2Client();
 
 // Get Google Credentials from Environment Variables - these are set in the Lambda function configuration
 const S3_BUCKET = process.env.S3_BUCKET;
 const API_ENDPOINT = process.env.API_ENDPOINT;
+const PROJECT_ID = process.env.PROJECT_ID;
+const DEVICE_LOCATION = process.env.DEVICE_LOCATION.split(',');
 
 const protoDefinition = protoLoader.loadSync('google/assistant/embedded/v1alpha2/embedded_assistant.proto', {
     includeDirs: [getProtoPath('..')],
@@ -34,103 +39,34 @@ const protoDefinition = protoLoader.loadSync('google/assistant/embedded/v1alpha2
 const protoDescriptor = grpc.loadPackageDefinition(protoDefinition);
 const assistantClient = protoDescriptor.google.assistant.embedded.v1alpha2.EmbeddedAssistant;
 
-const clientState = {
-    locale: undefined,
-    s3Config: undefined,
-    projectId: undefined,
-    registered: false,
-    initialized: false,
-    oauth2Client: undefined,
-    deviceLocation: undefined,
-};
-
 const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'];
-
-function getSecretParams() {
-    const s3Params = {
-        Bucket: S3_BUCKET,
-        Key: 'client_secret.json',
-    };
-
-    console.log('Getting JSON');
-
-    return new Promise((resolve, reject) => {
-        s3.getObject(s3Params, async function (err, data) {
-            if (err) {
-                console.error('Could not load the client secret file:', err)
-                return reject(new Error('I could not load the client secret file from S3'));
-            }
-
-            console.log('Current ConfigJSON:', clientState.s3Config);
-
-            let s3Config;
-
-            try {
-                s3Config = JSON.parse(Buffer.from(data.Body).toString('utf8'));
-            } catch (err) {
-                console.error('S3 body decode error:', err);
-                return reject(new Error('Decoding of S3 response body failed'));
-            }
-
-            if (!s3Config || !s3Config.hasOwnProperty('web')) {
-                console.error('Client secret file is not configured');
-                return reject(new Error('The client secret file was not configured for a web based client'));
-            }
-
-            console.log('S3 Config is loaded:', s3Config);
-
-            const clientId = s3Config.web.client_id;
-            const redirectUri = s3Config.web.redirect_uris[0];
-            const clientSecret = s3Config.web.client_secret;
-
-            clientState.s3Config = s3Config;
-            clientState.projectId = s3Config.web.project_id;
-            clientState.registered = !!s3Config.registered;
-            clientState.initialized = true;
-            clientState.oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
-            clientState.deviceLocation = s3Config.device_location;
-
-            return resolve();
-        });
-    });
-}
 
 async function registerProject(handlerInput) {
     console.log('Project registration started');
 
-    if (clientState.registered) {
+    const attributes = handlerInput.attributesManager.getRequestAttributes();
+
+    if (attributes['registered']) {
         console.warn('Project is already registered');
         return;
     }
 
-    if (!clientState.initialized) {
-        try {
-            await getSecretParams();
-        } catch (err) {
-            console.error('Loading of SecretParams failed:', err);
-            throw err;
-        }
-    }
-
     // This isn't massively efficient code, but it only needs to run once!
-    const ACCESS_TOKEN = handlerInput.requestEnvelope.context.System.user.accessToken;
+    const accessToken = handlerInput.requestEnvelope.context.System.user.accessToken;
 
-    console.log('Access Token: ' + ACCESS_TOKEN);
+    console.log('Access Token: ' + accessToken);
 
-    // Authenticate against Google OAUTH2
-    clientState.oauth2Client.setCredentials({ access_token: ACCESS_TOKEN });
-
-    const registrationModelURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + clientState.projectId + '/deviceModels/';
-    const registrationInstanceURL = 'https://embeddedassistant.googleapis.com/v1alpha2/projects/' + clientState.projectId + '/devices/';
+    const registrationModelURL = `https://${API_ENDPOINT}/v1alpha2/projects/${PROJECT_ID}/deviceModels/`;
+    const registrationInstanceURL = `https://${API_ENDPOINT}/v1alpha2/projects/${PROJECT_ID}/devices/`;
 
     // Create Stub
-    const bearer = 'Bearer ' + ACCESS_TOKEN;
+    const bearer = 'Bearer ' + accessToken;
 
     // Registering Model
     const registerModel = function (callback) {
         const deviceModel = {
-            project_id: clientState.projectId,
-            device_model_id: clientState.projectId,
+            project_id: PROJECT_ID,
+            device_model_id: PROJECT_ID,
             manifest: {
                 manufacturer: 'Assistant SDK developer',
                 product_name: 'Alexa Assistant v1',
@@ -149,29 +85,25 @@ async function registerProject(handlerInput) {
             data: deviceModel,
             responseType: 'json',
         })
-            .then(function ( bodyJSON) {
-                if (bodyJSON.error) {
-                    console.error('error code received');
-
-                    if (bodyJSON.error.code === 409) {
-                        console.error('Model already exists');
-                        callback(null, bodyJSON);
-                    } else {
-                        callback(bodyJSON, null);
-                    }
-                } else {
-                    callback(null, bodyJSON);
-                }
+            .then(function (bodyJSON) {
+                callback(null, bodyJSON);
             })
             .catch(function (error) {
-                callback(error, null);
+                console.error('error code received');
+
+                if (error.response.status === 409) {
+                    console.error('Model already exists');
+                    callback(null, error.response.data);
+                } else {
+                    callback(error, null);
+                }
             });
     };
     // Registering instance
     const registerInstance = function (callback) {
         const instanceModel = {
-            id: clientState.projectId,
-            model_id: clientState.projectId,
+            id: PROJECT_ID,
+            model_id: PROJECT_ID,
             nickname: 'Alexa Assistant v1',
             clientType: 'SDK_SERVICE',
         };
@@ -185,20 +117,16 @@ async function registerProject(handlerInput) {
             data: instanceModel,
             responseType: 'json',
         }).then(function (bodyJSON) {
-            if (bodyJSON.error) {
-                console.error('error code received');
-
-                if (bodyJSON.error.code === 409) {
-                    console.error('Instance already exists');
-                    callback(null, bodyJSON);
-                } else {
-                    callback(bodyJSON, null);
-                }
-            } else {
-                callback(null, bodyJSON);
-            }
+            callback(null, bodyJSON);
         }).catch(function (error) {
-            callback(error, null);
+            console.error('error code received');
+
+            if (error.response.status === 409) {
+                console.error('Instance already exists');
+                callback(null, error.response.data);
+            } else {
+                callback(error, null);
+            }
         });
     };
     return new Promise((resolve, reject) => {
@@ -217,30 +145,10 @@ async function registerProject(handlerInput) {
 
                     console.log('Got positive Instance response');
 
-                    const s3Body = {
-                        ...clientState.s3Config,
-                        registered: true,
-                    };
-                    const s3Params = {
-                        Bucket: S3_BUCKET,
-                        Key: 'client_secret.json',
-                        Body: JSON.stringify(s3Body),
-                        ContentType: 'application/json',
-                    };
+                    attributes['microphone_open'] = false;
+                    attributes['registered'] = true;
 
-                    s3.upload(s3Params, {}, function (err, data) {
-                        if (err) {
-                            console.error('Error with S3 upload:', err);
-                            return reject(new Error('There was an error uploading to S3'));
-                        }
-
-                        const attributes = handlerInput.attributesManager.getRequestAttributes();
-
-                        clientState.s3Config = s3Body;
-                        attributes['microphone_open'] = false;
-
-                        return resolve();
-                    });
+                    return resolve();
                 });
             }
         });
@@ -248,24 +156,20 @@ async function registerProject(handlerInput) {
 }
 
 function createGrpcGoogleCredentials() {
-    return grpc.credentials.combineChannelCredentials(grpc.credentials.createSsl(null), grpc.credentials.createFromGoogleCredential(clientState.oauth2Client));
+    return grpc.credentials.combineChannelCredentials(grpc.credentials.createSsl(null), grpc.credentials.createFromGoogleCredential(oauth2Client));
 }
 
-async function executeAssist(token, audioState, handlerInput) {
+async function executeAssist(accessToken, audioState, handlerInput) {
     return new Promise((resolve, reject) => {
+        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
+        const overrideLocale = SUPPORTED_LOCALES.includes(locale) ? locale : 'en-US';
+
         let audioLength = 0;
         let audioPresent = false;
-        let overrideLocale = 'en-US';
         let conversationState = Buffer.alloc(0);
 
-        console.log('Locale is: ' + clientState.locale);
-
-        if (SUPPORTED_LOCALES.includes(clientState.locale)) {
-            overrideLocale = clientState.locale;
-        }
-
         // Update access token
-        clientState.oauth2Client.setCredentials({ access_token: token });
+        oauth2Client.setCredentials({ access_token: accessToken });
 
         const grpcCredentials = createGrpcGoogleCredentials();
         const assistant = new assistantClient(API_ENDPOINT, grpcCredentials);
@@ -321,12 +225,17 @@ async function executeAssist(token, audioState, handlerInput) {
                 },
                 dialog_state_in: {
                     language_code: overrideLocale,
-                    device_location: clientState.deviceLocation,
+                    device_location: {
+                        coordinates: {
+                            latitude: DEVICE_LOCATION[0],
+                            longitude: DEVICE_LOCATION[1],
+                        }
+                    },
                     is_new_conversation: true,
                 },
                 device_config: {
-                    device_id: clientState.projectId,
-                    device_model_id: clientState.projectId,
+                    device_id: PROJECT_ID,
+                    device_model_id: PROJECT_ID,
                 },
             },
         };
@@ -625,31 +534,7 @@ const LaunchRequestHandler = {
                 .getResponse();
         }
 
-        try {
-            await getSecretParams();
-        } catch (err) {
-            console.error('Loading of SecretParams failed:', err);
-            return handlerInput.responseBuilder
-                .speak('There was a problem loading the settings from the S3 Bucket.')
-                .withShouldEndSession(true)
-                .getResponse();
-        }
-
-        if (!clientState.registered) {
-            try {
-                await registerProject(handlerInput);
-            } catch (err) {
-                console.error('Client setup failed:', err);
-                return handlerInput.responseBuilder
-                    .speak('There was a problem setting up the project.')
-                    .withShouldEndSession(true)
-                    .getResponse();
-            }
-
-            console.log('Registration Function Complete');
-        }
-
-        return handlerInput.responseBuilder.getResponse();
+        return handlerInput.responseBuilder.speak('Welcome to Alexa Assistant').getResponse();
     },
 };
 
@@ -720,25 +605,13 @@ const SearchIntentHandler = {
         }
 
         try {
-            await getSecretParams();
+            await registerProject(handlerInput);
         } catch (err) {
-            console.error('Loading of SecretParams failed:', err);
+            console.error('Client setup failed:', err);
             return handlerInput.responseBuilder
-                .speak('There was a problem loading the settings from the S3 Bucket.')
+                .speak('There was a problem setting up the project.')
                 .withShouldEndSession(true)
                 .getResponse();
-        }
-
-        if (!clientState.registered) {
-            try {
-                await registerProject(handlerInput);
-            } catch (err) {
-                console.error('Client setup failed:', err);
-                return handlerInput.responseBuilder
-                    .speak('There was a problem setting up the project.')
-                    .withShouldEndSession(true)
-                    .getResponse();
-            }
         }
 
         try {
@@ -858,31 +731,22 @@ const UnhandledHandler = {
     },
 };
 
-const requestHandlers = [
-    LaunchRequestHandler,
-    SessionEndedRequestHandler,
-    SearchIntentHandler,
-    StopIntentHandler,
-    HelpIntentHandler,
-    CancelIntentHandler,
-    YesIntentHandler,
-    NoIntentHandler,
-    UnhandledHandler,
-];
-
-exports.handler = async function (event, context, callback) {
-    clientState.locale = event.request.locale;
-
-    const skillBuilder = Alexa.SkillBuilders.custom();
-
-    skillBuilder.addRequestHandlers(...requestHandlers);
-    skillBuilder.withPersistenceAdapter(new Adapter.DynamoDbPersistenceAdapter({
+exports.handler = Alexa.SkillBuilders.custom()
+    .addRequestHandlers(
+        LaunchRequestHandler,
+        SessionEndedRequestHandler,
+        SearchIntentHandler,
+        StopIntentHandler,
+        HelpIntentHandler,
+        CancelIntentHandler,
+        YesIntentHandler,
+        NoIntentHandler,
+        UnhandledHandler
+    )
+    .withApiClient(new Alexa.DefaultApiClient())
+    .withPersistenceAdapter(new DynamoDbPersistenceAdapter({
         tableName: 'AlexaAssistantSkillSettings',
+        partitionKeyName: 'userId'
     }))
-
-    const response = await skillBuilder.create().invoke(event, context);
-
-    console.log('response is', response);
-
-    return response;
-};
+    .withSkillId(process.env.SKILL_ID)
+    .lambda();
