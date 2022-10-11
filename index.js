@@ -209,7 +209,7 @@ exports.handler = async function (event, context) {
         NoIntentHandler,
         UnhandledHandler
     );
-    skillBuilder.withApiClient(new Alexa.DefaultApiClient()); // issue?
+    skillBuilder.withApiClient(new Alexa.DefaultApiClient());
     skillBuilder.withPersistenceAdapter(new DynamoDbPersistenceAdapter({
         tableName: 'AlexaAssistantSkillSettings',
         partitionKeyName: 'userId',
