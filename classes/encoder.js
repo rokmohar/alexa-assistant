@@ -20,14 +20,14 @@ class Encoder {
      * but I couldn't get piping to/from LAME work reliably in Lambda
      */
     async executeEncode(audioState) {
-        console.log('Starting Transcode');
+        console.log('[Encoder.executeEncode] Starting Transcode');
 
         return new Promise((resolve, reject) => {
             // Read the linear PCM response from file and create stream
             const readPcm = fs.createReadStream('/tmp/response.pcm');
 
             readPcm.on('end', () => {
-                console.log('pcm stream read complete');
+                console.log('[Encoder.executeEncode] PCM stream read complete');
             });
 
             // Create file to which MP3 will be written
@@ -35,7 +35,7 @@ class Encoder {
 
             // Log when MP3 file is written
             writeMp3.on('finish', async () => {
-                console.log('mp3 has been written');
+                console.log('[Encoder.executeEncode] MP3 has been written');
 
                 // Create read stream from MP3 file
                 const readMp3 = fs.createReadStream('/tmp/response.mp3');
@@ -43,17 +43,19 @@ class Encoder {
                 try {
                     const uploadResponse = await this.bucket.uploadFromStream(audioState);
 
+                    console.log('[Encoder.executeEncode] Uploaded from stream');
+
                     // Pipe to S3 upload function
                     readMp3.pipe(uploadResponse.streamPass);
 
                     await uploadResponse.uploadPromise;
                 } catch (err) {
-                    console.error('Error with upload from stream:', err);
+                    console.error('[Encoder.executeEncode] Error with upload from stream', err);
                     this.responseBuilder.speak('There was an error uploading to S3');
                     return reject(new Error('Error with upload from stream'));
                 }
 
-                console.log('Upload from stream complete');
+                console.log('[Encoder.executeEncode] Upload from stream complete');
 
                 return resolve();
             });
@@ -81,8 +83,8 @@ class Encoder {
             encoder.on('finish', () => {
                 setTimeout(() => {
                     // Close the MP3 file
-                    console.log('Encoding done!');
-                    console.log('Streaming mp3 file to s3');
+                    console.log('[Encoder.executeEncode] Encoding done!');
+                    console.log('[Encoder.executeEncode] Streaming mp3 file to s3');
                     writeMp3.end();
                 });
             });

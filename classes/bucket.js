@@ -21,10 +21,10 @@ class Bucket {
         const filename = this.requestEnvelope.session.user.userId;
         const s3Params = { Bucket: S3_BUCKET, Key: filename, Body: streamPass };
 
-        console.log('Upload from stream');
+        console.log('[Bucket.uploadFromStream] Upload from stream started');
 
         const uploadPromise = this.s3Client.upload(s3Params).promise().then(() => {
-            console.log('Upload done');
+            console.log('[Bucket.uploadFromStream] Upload done');
 
             // Upload has been successful - we can now issue an alexa response based upon microphone state
             let signedURL;
@@ -38,7 +38,7 @@ class Bucket {
             };
 
             return this.s3Client.getSignedUrlPromise('getObject', signedParams).then((url) => {
-                console.log('Got signed URL');
+                console.log('[Bucket.uploadFromStream] Got signed URL');
 
                 // escape out any illegal XML characters;
                 url = xmlEscape(url);
@@ -59,14 +59,14 @@ class Bucket {
                 // deal with any \&quot;
                 cardContent = cardContent.replace(/\\&quot;/g, '&quot;');
 
-                console.log('Card content:', cardContent);
+                console.log('[Bucket.uploadFromStream] Card content', cardContent);
 
                 const cardTitle = 'Google Assistant for Alexa';
 
                 // Let remove any (playing sfx)
                 cardContent = cardContent.replace(/(\(playing sfx\))/g, '🔊');
 
-                console.log('Add audio speak to response');
+                console.log('[Bucket.uploadFromStream] Add audio to response');
                 this.responseBuilder.speak('<audio src="' + signedURL + '"/>');
 
                 if (Alexa.getSupportedInterfaces(this.requestEnvelope)['Alexa.Presentation.APL']) {
@@ -101,11 +101,11 @@ class Bucket {
                 // If API has requested Microphone to stay open then will create an Alexa 'Ask' response
                 // We also keep the microphone on the launch intent 'Hello' request as for some reason the API closes the microphone
                 if (audioState.microphoneOpen || audioState.alexaUtteranceText === 'Hello') {
-                    console.log('Microphone is open so keeping session open');
+                    console.log('[Bucket.uploadFromStream] Microphone is open so keeping session open');
                     this.responseBuilder.reprompt(' ');
                 } else {
                     // Otherwise we create an Alexa 'Tell' command which will close the session
-                    console.log('Microphone is closed so closing session');
+                    console.log('[Bucket.uploadFromStream] Microphone is closed so closing session');
                     this.responseBuilder.withShouldEndSession(true);
                 }
             });

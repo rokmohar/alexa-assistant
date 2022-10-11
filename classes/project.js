@@ -29,6 +29,9 @@ class Project {
             device_type: 'action.devices.types.LIGHT',
             traits: ['action.devices.traits.OnOff'],
         };
+
+        console.log('[Project.registerModel] Starting register model');
+
         axios({
             url: registrationModelURL,
             method: 'POST',
@@ -39,12 +42,13 @@ class Project {
             data: deviceModel,
             responseType: 'json',
         }).then((bodyJSON) => {
+            console.log('[Project.registerModel] Register model complete', bodyJSON);
             callback(null, bodyJSON.data);
         }).catch((error) => {
-            console.error('error code received');
+            console.error('[Project.registerModel] Register model error', error);
 
             if (error.response.status === 409) {
-                console.error('Model already exists');
+                console.error('[Project.registerModel] Model already exists');
                 callback(null, error.response.data);
             } else {
                 callback(error, null);
@@ -61,6 +65,9 @@ class Project {
             nickname: 'Alexa Assistant v1',
             clientType: 'SDK_SERVICE',
         };
+
+        console.log('[Project.registerInstance] Starting register instance');
+
         axios({
             url: registrationInstanceURL,
             method: 'POST',
@@ -71,12 +78,13 @@ class Project {
             data: instanceModel,
             responseType: 'json',
         }).then((bodyJSON) => {
+            console.log('[Project.registerInstance] Register instance complete', bodyJSON);
             callback(null, bodyJSON.data);
         }).catch((error) => {
-            console.error('error code received');
+            console.error('[Project.registerInstance] Register instance error', error);
 
             if (error.response.status === 409) {
-                console.error('Instance already exists');
+                console.error('[Project.registerInstance] Instance already exists');
                 callback(null, error.response.data);
             } else {
                 callback(error, null);
@@ -85,36 +93,36 @@ class Project {
     }
 
     async registerProject() {
-        console.log('Project registration started');
+        console.log('[Project.registerProject] Project registration started');
 
         return new Promise((resolve, reject) => {
             this.storage.loadAttributes((err, dbAttributes) => {
                 if (err) {
-                    console.error('Get attributes error', err);
+                    console.error('[Project.registerProject] Get attributes error', err);
                     return reject(new Error('There was an error when loading the attributes'));
                 } else {
                     console.log('Got positive attributes response', dbAttributes);
 
                     if (dbAttributes['registered']) {
-                        console.warn('Project is already registered');
+                        console.warn('[Project.registerProject] Project is already registered');
                         return resolve();
                     }
 
                     // let's register the model and instance - we only need to do this once
                     this.registerModel((err, model) => {
                         if (err) {
-                            console.error('Got Model register error', err);
+                            console.error('[Project.registerProject] Got register model error', err);
                             return reject(new Error('There was an error registering the Model with the Google API'));
                         } else if (model) {
-                            console.log('Got positive model response', model);
+                            console.log('[Project.registerProject] Got positive model response', model);
 
                             this.registerInstance((err) => {
                                 if (err) {
-                                    console.error('Error:', err);
+                                    console.error('[Project.registerProject] Got register instance error', err);
                                     return reject(new Error('There was an error registering the Instance with the Google API'));
                                 }
 
-                                console.log('Got positive Instance response');
+                                console.log('[Project.registerProject] Got positive Instance response');
 
                                 const attributes = this.attributesManager.getRequestAttributes();
                                 attributes['microphone_open'] = false;
@@ -124,9 +132,10 @@ class Project {
 
                                 this.storage.saveAttributes((err) => {
                                     if (err) {
-                                        console.error('Save attributes error', err);
+                                        console.error('[Project.registerProject] Got save attributes error', err);
                                         return reject(new Error('There was an error when saving the attributes'));
                                     } else {
+                                        console.log('[Project.registerProject] Save attributes complete');
                                         return resolve();
                                     }
                                 });
