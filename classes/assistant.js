@@ -63,16 +63,13 @@ class Assistant {
         try {
             await this.project.registerProject();
         } catch (err) {
-            console.error('Client setup failed:', err);
+            console.error('[Assistant.executeAssist] Client setup failed', err);
             return this.responseBuilder
                 .speak('There was a problem setting up the project.')
                 .withShouldEndSession(true);
         }
 
         return new Promise((resolve, reject) => {
-            const locale = Alexa.getLocale(this.requestEnvelope);
-            const overrideLocale = SUPPORTED_LOCALES.includes(locale) ? locale : 'en-US';
-
             let audioLength = 0;
             let audioPresent = false;
             let conversationState = Buffer.alloc(0);
@@ -88,41 +85,44 @@ class Assistant {
             setTimeout(() => {
                 if (!audioPresent) {
                     this.responseBuilder.speak('I wasn\'t able to talk to Google - please try again');
-                    console.error('Google Assistant request timed out');
+                    console.error('[Assistant.executeAssist] Google Assistant request timed out');
                     return reject(new Error('Google Assistant request timed out'));
                 }
             }, 10000);
 
             // create file into which we will stream pcm response from Google
             // Closing the stream into this file will trigger encoding into MP3
-            console.log('Creating temp response file');
+            console.log('[Assistant.executeAssist] Creating temp response file');
 
             let responseFile = fs.createWriteStream('/tmp/response.pcm', { flags: 'w' });
 
             responseFile.on('finish', async () => {
-                console.log('temp response file has been written');
+                console.log('[Assistant.executeAssist] Temporary response file has been written');
 
                 const stats = fs.statSync('/tmp/response.pcm');
                 const fileSizeInBytes = stats.size;
 
-                console.log('files size is ' + fileSizeInBytes);
+                console.log('[Assistant.executeAssist] File size (bytes) is: ' + fileSizeInBytes);
 
                 // Check whether response file has any content. If it doesn't then we have a response with no audio
                 if (fileSizeInBytes > 0) {
-                    // encode MP3
+                    console.log('[Assistant.executeAssist] Starting execute encode');
                     await this.encoder.executeEncode(audioState);
+                    console.log('[Assistant.executeAssist] Executed encode complete');
                     return resolve();
                 } else {
-                    // Save setting and exit
+                    console.log('[Assistant.executeAssist] Emitting blank sound');
                     this.responseBuilder.speak('I didn\'t get an audio response from the Google Assistant');
-                    console.log('Emitting blank sound');
                     return reject(new Error('No audio response from the Google Assistant'));
                 }
             });
 
             // Create Audio Configuration before we send any commands
             // We are using linear PCM as the input and output type so encoding value is 1
-            console.log('Creating Audio config');
+            console.log('[Assistant.executeAssist] Creating Audio config');
+
+            const locale = Alexa.getLocale(this.requestEnvelope);
+            const overrideLocale = SUPPORTED_LOCALES.includes(locale) ? locale : 'en-US';
 
             const assistRequest = {
                 config: {
@@ -151,68 +151,68 @@ class Assistant {
             const attributes = this.attributesManager.getRequestAttributes();
 
             if (attributes['CONVERSATION_STATE']) {
-                console.log('Prior ConverseResponse detected');
+                console.log('[Assistant.executeAssist] Prior ConverseResponse detected');
                 conversationState = Buffer.from(attributes['CONVERSATION_STATE']);
                 assistRequest.config.dialog_state_in.conversation_state = conversationState;
                 assistRequest.config.dialog_state_in.is_new_conversation = false;
             } else {
-                console.log('No prior ConverseResponse');
+                console.log('[Assistant.executeAssist] No prior ConverseResponse');
             }
 
-            console.log('Current ConversationState is ', conversationState);
-            console.log('AssistRequest is ', assistRequest);
+            console.log('[Assistant.executeAssist] Current ConversationState is', conversationState);
+            console.log('[Assistant.executeAssist] AssistRequest is', assistRequest);
 
             const conversation = assistant.Assist();
 
             conversation.on('error', (err) => {
+                console.error('[Assistant.executeAssist] Got conversation error', err);
+                this.responseBuilder.speak('The Google API returned an error.');
+
                 // Clear conversation state
                 attributes['CONVERSATION_STATE'] = undefined;
 
-                this.responseBuilder.speak('The Google API returned an error.');
-
-                console.error('***There was a Google error***', err);
                 return reject(new Error('Google Assistant returned error'))
             });
 
             conversation.on('end', () => {
-                console.log('End of response from GRPC stub');
-
-                // Close response file which will then trigger encode
-                responseFile.end();
+                console.log('[Assistant.executeAssist] End of response from GRPC stub');
 
                 // Clear conversation state
                 attributes['CONVERSATION_STATE'] = undefined;
+
+                // Close response file which will then trigger encode
+                responseFile.end();
             });
 
             conversation.on('data', (response) => {
-                console.log('AssistResponse is:', response);
+                console.log('[Assistant.executeAssist] AssistResponse is', response);
 
                 // Check there is actually a value in result
                 if (response.dialog_state_out) {
-                    console.log('Dialog state out received');
+                    console.log('[Assistant.executeAssist] Dialog state out received');
 
                     if (response.dialog_state_out.supplemental_display_text) {
+                        console.log('[Assistant.executeAssist] Supplemental text is: ' + audioState.googleResponseText);
                         audioState.googleResponseText += xmlEscape(JSON.stringify(response.dialog_state_out.supplemental_display_text));
-                        console.log('Supplemental text is: ' + audioState.googleResponseText);
                     }
 
                     if (response.dialog_state_out.microphone_mode) {
                         if (response.dialog_state_out.microphone_mode === 'CLOSE_MICROPHONE') {
+                            console.log('[Assistant.executeAssist] Closing microphone');
                             audioState.microphoneOpen = false;
                             attributes['microphone_open'] = false;
-                            console.log('closing microphone');
                         } else if (response.dialog_state_out.microphone_mode === 'DIALOG_FOLLOW_ON') {
+                            console.log('[Assistant.executeAssist] Keeping microphone open');
                             audioState.microphoneOpen = true;
                             attributes['microphone_open'] = true;
-                            console.log('keeping microphone open');
                         }
                     }
 
                     if (response.dialog_state_out.conversation_state) {
                         if (response.dialog_state_out.conversation_state.length > 0) {
-                            console.log('Conversation state changed');
+                            console.log('[Assistant.executeAssist] Conversation state changed');
                             conversationState = response.dialog_state_out.conversation_state;
-                            console.log('Conversation state var is: ' + conversationState);
+                            console.log('[Assistant.executeAssist] Conversation state var is: ' + conversationState);
                             attributes['CONVERSATION_STATE'] = conversationState.toString();
                         }
                     }
@@ -220,7 +220,6 @@ class Assistant {
 
                 // Deal with audio data from API
                 if (response.audio_out) {
-                    //console.log('audio received')
                     const audio_chunk = response.audio_out.audio_data;
 
                     if (audio_chunk instanceof Buffer) {
@@ -236,7 +235,7 @@ class Assistant {
                             responseFile.write(audio_chunk);
                         } else {
                             // we won't write any more timestamps
-                            console.log('Ignoring audio data as it is longer than 90 seconds');
+                            console.log('[Assistant.executeAssist] Ignoring audio data as it is longer than 90 seconds');
                         }
                     }
                 }
