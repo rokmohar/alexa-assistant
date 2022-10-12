@@ -1,4 +1,5 @@
-const Stream = require('stream');
+const fs = require('fs');
+const { PassThrough } = require('stream');
 const xmlEscape = require('xml-escape');
 const Alexa = require('ask-sdk-core');
 const { S3 } = require('aws-sdk');
@@ -15,15 +16,24 @@ class Bucket {
         this.responseBuilder = responseBuilder;
         this.s3Client = new S3({});
     }
-    // Create function to upload MP3 file to S3
-    async uploadFromStream(audioState) {
-        const streamPass = new Stream.PassThrough();
-        const filename = this.requestEnvelope.session.user.userId;
-        const s3Params = { Bucket: S3_BUCKET, Key: filename, Body: streamPass };
 
+    // Create function to upload MP3 file to S3
+    uploadFromStream(audioState, streamFile) {
         console.log('[Bucket.uploadFromStream] Upload from stream started');
 
-        const uploadPromise = this.s3Client.upload(s3Params).promise().then(() => {
+        // Create a stream
+        const stream = new PassThrough();
+
+        // Create read stream from given file
+        const readMp3 = fs.createReadStream(streamFile);
+
+        // Pipe to stream
+        readMp3.pipe(stream);
+
+        const keyName = this.requestEnvelope.session.user.userId;
+        const s3Params = { Bucket: S3_BUCKET, Key: keyName, Body: stream };
+
+        return this.s3Client.upload(s3Params).promise().then(() => {
             console.log('[Bucket.uploadFromStream] Upload done');
 
             // Upload has been successful - we can now issue an alexa response based upon microphone state
@@ -32,7 +42,7 @@ class Bucket {
             // create a signed URL to the MP3 that expires after 5 seconds - this should be plenty of time to allow alexa to load and cache mp3
             const signedParams = {
                 Bucket: S3_BUCKET,
-                Key: filename,
+                Key: keyName,
                 Expires: 10,
                 ResponseContentType: 'audio/mpeg',
             };
@@ -110,8 +120,6 @@ class Bucket {
                 }
             });
         });
-
-        return { uploadPromise: uploadPromise, streamPass: streamPass };
     }
 }
 

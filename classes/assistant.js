@@ -60,13 +60,21 @@ class Assistant {
                 .withShouldEndSession(true);
         }
 
-        try {
-            await this.project.registerProject();
-        } catch (err) {
-            console.error('[Assistant.executeAssist] Client setup failed', err);
-            return this.responseBuilder
-                .speak('There was a problem setting up the project.')
-                .withShouldEndSession(true);
+        // Update access token
+        this.oauth2Client.setCredentials({ access_token: accessToken });
+
+        const sessionAttrs = this.attributesManager.getSessionAttributes();
+
+        if (!sessionAttrs['registered']) {
+            try {
+                await this.project.registerProject();
+                sessionAttrs['registered'] = true;
+            } catch (err) {
+                console.error('[Assistant.executeAssist] Client setup failed', err);
+                return this.responseBuilder
+                    .speak('There was a problem setting up the project.')
+                    .withShouldEndSession(true);
+            }
         }
 
         return new Promise((resolve, reject) => {
@@ -74,21 +82,18 @@ class Assistant {
             let audioPresent = false;
             let conversationState = Buffer.alloc(0);
 
-            // Update access token
-            this.oauth2Client.setCredentials({ access_token: accessToken });
-
             const grpcCredentials = this.createGrpcGoogleCredentials();
             const assistant = new assistantClient(API_ENDPOINT, grpcCredentials);
 
             // create a timed event in case something causes the skill to stall
             // This will stop the skill from timing out
-            setTimeout(() => {
+            const skillTimeout = setTimeout(() => {
                 if (!audioPresent) {
                     this.responseBuilder.speak('I wasn\'t able to talk to Google - please try again');
                     console.error('[Assistant.executeAssist] Google Assistant request timed out');
                     return reject(new Error('Google Assistant request timed out'));
                 }
-            }, 10000);
+            }, 9000);
 
             // create file into which we will stream pcm response from Google
             // Closing the stream into this file will trigger encoding into MP3
@@ -98,6 +103,7 @@ class Assistant {
 
             responseFile.on('finish', async () => {
                 console.log('[Assistant.executeAssist] Temporary response file has been written');
+                clearTimeout(skillTimeout);
 
                 const stats = fs.statSync('/tmp/response.pcm');
                 const fileSizeInBytes = stats.size;
