@@ -101,7 +101,7 @@ class Project {
                     console.error('[Project.registerProject] Get attributes error', err);
                     return reject(new Error('There was an error when loading the attributes'));
                 } else {
-                    console.log('Got positive attributes response', dbAttributes);
+                    console.log('[Project.registerProject] Got positive attributes response', dbAttributes);
 
                     if (dbAttributes['registered']) {
                         console.warn('[Project.registerProject] Project is already registered');

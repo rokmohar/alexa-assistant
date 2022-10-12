@@ -14,9 +14,9 @@ class Storage {
                 console.log('[Storage.loadAttributes] Load attributes complete');
                 callback(null, attributes);
             })
-            .catch((err) => {
-                console.log('[Storage.loadAttributes] Got error with load attributes', err);
-                callback(err, null);
+            .catch((error) => {
+                console.log('[Storage.loadAttributes] Got error with load attributes', error);
+                callback(error, null);
             });
     }
 
@@ -29,9 +29,9 @@ class Storage {
                 console.log('[Storage.saveAttributes] Save attributes complete');
                 callback(null);
             })
-            .catch((err) => {
-                console.log('[Storage.saveAttributes] Got error with save attributes', err);
-                callback(err);
+            .catch((error) => {
+                console.log('[Storage.saveAttributes] Got error with save attributes', error);
+                callback(error);
             });
     }
 }

@@ -23,41 +23,41 @@ class Encoder {
         console.log('[Encoder.executeEncode] Starting Transcode');
 
         return new Promise((resolve, reject) => {
+            const pcmFilepath = '/tmp/response.pcm';
+            const mp3Filepath = pcmFilepath.replace(/\.pcm$/, '.mp3');
+
             // Read the linear PCM response from file and create stream
-            const readPcm = fs.createReadStream('/tmp/response.pcm');
+            const readPcm = fs.createReadStream(pcmFilepath);
 
             readPcm.on('end', () => {
                 console.log('[Encoder.executeEncode] PCM stream read complete');
             });
 
-            // Create file to which MP3 will be written
-            const writeMp3 = fs.createWriteStream('/tmp/response.mp3');
+            readPcm.on('error', (error) => {
+                console.error('[Encoder.executeEncode] Failed to read PCM stream', error);
+                reject(new Error('Failed to read PCM stream.'));
+            });
 
-            // Log when MP3 file is written
+            // Create file to which MP3 will be written
+            const writeMp3 = fs.createWriteStream(mp3Filepath);
+
             writeMp3.on('finish', async () => {
                 console.log('[Encoder.executeEncode] MP3 has been written');
 
-                // Create read stream from MP3 file
-                const readMp3 = fs.createReadStream('/tmp/response.mp3');
-
                 try {
-                    const uploadResponse = await this.bucket.uploadFromStream(audioState);
-
-                    console.log('[Encoder.executeEncode] Uploaded from stream');
-
-                    // Pipe to S3 upload function
-                    readMp3.pipe(uploadResponse.streamPass);
-
-                    await uploadResponse.uploadPromise;
+                    await this.bucket.uploadFromStream(audioState, mp3Filepath);
                 } catch (err) {
                     console.error('[Encoder.executeEncode] Error with upload from stream', err);
                     this.responseBuilder.speak('There was an error uploading to S3');
                     return reject(new Error('Error with upload from stream'));
                 }
 
-                console.log('[Encoder.executeEncode] Upload from stream complete');
-
                 return resolve();
+            });
+
+            writeMp3.on('error', (error) => {
+                console.error('[Encoder.executeEncode] Failed to write mp3 file', error);
+                return reject(new Error('Failed to write MP3 file.'));
             });
 
             // Create LAME encoder instance
@@ -72,6 +72,15 @@ class Encoder {
                 mode: lame.JOINTSTEREO, // STEREO (default), JOINTSTEREO, DUALCHANNEL or MONO
             });
 
+            encoder.on('finish', () => {
+                console.log('[Encoder.executeEncode] Encoding done!');
+            });
+
+            encoder.on('error', (error) => {
+                console.error('[Encoder.executeEncode] Failed to encode mp3 file', error);
+                return reject(new Error('Failed to encode MP3 file.'));
+            });
+
             // The output from the Google Assistant is much lower than Alexa, so we need to apply a gain
             const volume = new Volume();
 
@@ -79,20 +88,10 @@ class Encoder {
             // Any more than this then we risk major clipping
             volume.setVolume(1.75);
 
-            // When encoding of MP3 has finished we upload the result to S3
-            encoder.on('finish', () => {
-                setTimeout(() => {
-                    // Close the MP3 file
-                    console.log('[Encoder.executeEncode] Encoding done!');
-                    console.log('[Encoder.executeEncode] Streaming mp3 file to s3');
-                    writeMp3.end();
-                });
-            });
-
             // Pipe output of PCM file reader to the gain process
             readPcm.pipe(volume);
 
-            // pipe the pcm output of the gain process to the LAME encoder
+            // Pipe the PCM output of the gain process to the LAME encoder
             volume.pipe(encoder);
 
             // Pipe output of LAME encoder into MP3 file writer
