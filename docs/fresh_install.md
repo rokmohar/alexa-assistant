@@ -269,7 +269,7 @@ You may have to wait for then to authroise your card and then wait for an automa
 6. Under "Choose a template" select "Specify an Amazon S3 template URL" and paste the following into the box
 
     ```
-    https://s3-eu-west-1.amazonaws.com/googleassistantskillcloudformationbucket/cloudformation.json
+    https://googleassistantskillcloudformation.s3.eu-central-1.amazonaws.com/cloudformation.json
     ```
 ![alt text](screenshots/select_s3_template.jpg)
 

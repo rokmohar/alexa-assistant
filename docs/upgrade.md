@@ -64,7 +64,7 @@ If you can't see your skill the go to drop down "Location" menu at the top right
 6. Under "Choose a template" select "Specify an Amazon S3 template URL" and paste the following into the box
 
     ```
-    https://s3-eu-west-1.amazonaws.com/googleassistantskillcloudformationbucket/cloudformation.json
+    https://googleassistantskillcloudformation.s3.eu-central-1.amazonaws.com/cloudformation.json
     ```
 ![alt text](screenshots/select_s3_template.jpg)
 
