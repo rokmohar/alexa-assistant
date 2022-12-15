@@ -1,5 +1,5 @@
 const fs = require('fs');
-const lame = require('@suldashi/lame');
+const lame = require('@flat/lame');
 const Volume = require('pcm-volume');
 const Bucket = require('./bucket');
 
