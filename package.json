@@ -1,25 +1,25 @@
 {
   "name": "alexa-assistant",
-  "version": "2.2.0",
+  "version": "1.6.0",
   "description": "An unofficial Google skill for Alexa",
   "main": "index.js",
   "dependencies": {
-    "@grpc/grpc-js": "^1.8.0",
-    "@grpc/proto-loader": "^0.7.4",
-    "@flat/lame": "^1.2.6",
-    "ask-sdk-core": "^2.12.1",
-    "ask-sdk-dynamodb-persistence-adapter": "^2.12.1",
-    "ask-sdk-model": "^1.39.0",
-    "aws-sdk": "^2.1275.0",
-    "axios": "^1.2.1",
-    "google-auth-library": "^8.7.0",
-    "google-proto-files": "^3.0.2",
+    "@grpc/grpc-js": "^1.12.5",
+    "@grpc/proto-loader": "^0.7.13",
+    "@flat/lame": "^1.2.8",
+    "ask-sdk-core": "^2.14.0",
+    "ask-sdk-dynamodb-persistence-adapter": "^2.14.0",
+    "ask-sdk-model": "^1.86.0",
+    "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.9",
+    "google-auth-library": "^9.15.0",
+    "google-proto-files": "^4.2.0",
     "pcm-volume": "^1.0.0",
-    "stream": "^0.0.2",
+    "stream": "^0.0.3",
     "xml-escape": "^1.1.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.15"
+    "@types/node": "^22.10.2"
   },
   "scripts": {
     "prettier": "npx prettier --write index.js"
