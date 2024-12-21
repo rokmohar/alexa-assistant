@@ -1,5 +1,5 @@
 {
-  "name": "alexa-assistant",
+  "name": "@rokmohar/alexa-assistant",
   "version": "1.6.0",
   "description": "An unofficial Google skill for Alexa",
   "main": "index.js",
