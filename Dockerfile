@@ -1,20 +1,16 @@
-FROM lambci/lambda:build-nodejs12.x
-
-ENV AWS_DEFAULT_REGION us-east-1
-ENV AWS_LAMBDA_FUNCTION_NAME alexa-assistant-skill-function
-ENV AWS_LAMBDA_FUNCTION_TIMEOUT 600
-
-ARG NODE_TARGET=22.12.0
+FROM node:22
 
 COPY . .
-RUN ls
 
-RUN npm install -g n
-RUN n ${NODE_TARGET}
+RUN apt update && apt install zip
 
-RUN rm -rf .git .idea node_modules
-RUN npm install --only=prod
-RUN npm rebuild --target=${NODE_TARGET} --target_arch=x64 --target_platform=linux --target_libc=glibc
-RUN zip -9yr lambda.zip .
+RUN export NODE_VERSION=$(node -p "process.versions.modules")
 
-CMD aws lambda update-function-code --function-name ${AWS_LAMBDA_FUNCTION_NAME} --cli-connect-timeout 0 --zip-file fileb://lambda.zip
+RUN npm ci
+RUN npm rebuild --target=${NODE_VERSION} --target_arch=x64 --target_platform=linux --target_libc=glibc
+RUN npm run build
+
+RUN cp package.json dist
+
+RUN cd dist ; zip -9yr lambda.zip .
+RUN mv dist/lambda.zip .

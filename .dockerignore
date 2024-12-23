@@ -1,6 +1,8 @@
 *
-!classes
+!.babelrc
 !speechAssets
-!index.js
+!src
 !package.json
 !package-lock.json
+!tsconfig.json
+!webpack.config.js
