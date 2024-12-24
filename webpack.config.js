@@ -4,9 +4,8 @@ module.exports = {
   target: "node",
   mode: "production",
   entry: "./src/index.ts",
-  //devtool: 'source-map',
   resolve: {
-    extensions: [".json", ".js", ".ts", "...", ".node"],
+    extensions: [".json", ".js", ".ts"],
   },
   optimization: {
     minimize: false
@@ -22,16 +21,14 @@ module.exports = {
     rules: [
       {
         test: /\.(ts|js)$/,
+        parser: { amd: false },
         exclude: /node_modules/,
         loader: "babel-loader",
       },
       {
-        test: /\.node$/,
-        loader: "node-loader",
-      },
-      {
         test: /\.(m?js|node|gyp)$/,
-        loader: '@vercel/webpack-asset-relocator-loader',
+        parser: { amd: false },
+        loader: "@vercel/webpack-asset-relocator-loader",
       }
     ],
   },

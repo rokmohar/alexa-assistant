@@ -1,6 +1,5 @@
 *
 !.babelrc
-!speechAssets
 !src
 !package.json
 !package-lock.json
