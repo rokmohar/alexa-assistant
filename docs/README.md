@@ -31,10 +31,6 @@ If you have not installed the skill before then follow the instructions here:-
 
 [Installation Instructions](fresh_install.md)
 
-Otherwise watch Paul Hibberts excellent installation video here:-
-
-ADD LINK WHEN DONE
-
 # CREDITS
 
 Paul Hibbert for producing the installation video.
