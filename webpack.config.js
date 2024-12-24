@@ -10,9 +10,6 @@ module.exports = {
   optimization: {
     minimize: false
   },
-  node: {
-    __dirname: false,
-  },
   output: {
     path: path.join(__dirname, "dist"),
     filename: "index.js"
@@ -26,7 +23,7 @@ module.exports = {
         loader: "babel-loader",
       },
       {
-        test: /\.(m?js|node|gyp)$/,
+        test: /\.(m?js|node)$/,
         parser: { amd: false },
         loader: "@vercel/webpack-asset-relocator-loader",
       }

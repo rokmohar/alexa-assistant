@@ -11,7 +11,7 @@ page and upload them to the AWS Lambda function from the AWS console.
 
 Run the following commands:
 
-- `docker build -t mylambda .`
+`docker build -t mylambda .`
 
 You can copy ZIP archive file from the Docker image to your host machine with the command:
 
