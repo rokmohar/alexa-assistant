@@ -1,0 +1,131 @@
+service: alexa-assistant
+
+frameworkVersion: '4'
+
+build:
+  esbuild: false
+  
+provider:
+  name: aws
+  runtime: nodejs22.x
+  architecture: x86_64
+  region: us-east-1
+  stage: prod
+  environment:
+    GOOGLE_API_ENDPOINT: ${self:custom.googleApiEndpoint}
+    GOOGLE_PROJECT_ID: ${self:custom.googleProjectId}
+    DEVICE_LOCATION: ${self:custom.deviceLocation}
+    S3_BUCKET: ${self:resources.Resources.S3Bucket.Properties.BucketName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+        - Effect: Allow
+          Action: s3:*
+          Resource: 
+            - Fn::Join:
+                - ""
+                - - Fn::GetAtt: [S3Bucket, Arn]
+                  - "*"
+        - Effect: Allow
+          Action: dynamodb:*
+          Resource:
+            - Fn::Join:
+                - ""
+                - - Fn::GetAtt: [DynamoDBtable, Arn]
+                  - "*"
+
+plugins:
+  - serverless-alexa-skills
+  - serverless-offline
+  - serverless-webpack
+
+custom:
+  serviceId: ${self:service}-${self:provider.stage}-${sls:instanceId}
+  googleApiEndpoint: ${env:GOOGLE_API_ENDPOINT, 'embeddedassistant.googleapis.com'}
+  googleProjectId: ${env:GOOGLE_PROJECT_ID, ''}
+  deviceLocation: ${env:DEVICE_LOCATION, ''}
+  webpack:
+    webpackConfig: webpack.config.js
+    includeModules: true
+    packager: 'npm'
+    packagerOptions:
+      scripts:
+        - npm rebuild
+  alexa:
+    skills:
+      - id: ${self:custom.serviceId}
+        manifest:
+          publishingInformation:
+            locales:
+              en-US:
+                name: Google Assistant for Alexa
+                summary: An unofficial Google skill for Alexa
+                description: Use Google Assistant through your Alexa device
+                examplePhrases:
+                  - "Alexa, ask google who is the queen of england"
+                  - "Alexa, ask google what's the weather like"
+                keywords:
+                  - google
+                  - assistant
+                  - search
+          apis:
+            custom:
+              endpoint:
+                uri: ${self:functions.alexa.handler}
+              intents:
+                - name: SearchIntent
+                  samples:
+                    - "{search}"
+                  slots:
+                    - name: search
+                      type: SEARCH
+                - name: AMAZON.HelpIntent
+                  samples: []
+                - name: AMAZON.StopIntent
+                  samples: []
+                - name: AMAZON.CancelIntent
+                  samples: []
+
+functions:
+  alexa:
+    handler: src/index.handler
+    memorySize: 1344
+    timeout: 10
+    events:
+      - alexaSkill:
+          appId: ${self:custom.serviceId}
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.serviceId}
+        VersioningConfiguration:
+          Status: Enabled
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldVersions
+              Status: Enabled
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+    
+    DynamoDBtable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AlexaAssistantSkillSettings
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5

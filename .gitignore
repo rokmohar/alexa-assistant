@@ -27,6 +27,9 @@ tsconfig.tsbuildinfo
 node_modules/
 **/node_modules/*
 
+# serverless
+.serverless
+
 # dist
 dist
 lambda.zip

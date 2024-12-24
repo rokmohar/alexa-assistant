@@ -5,8 +5,8 @@ import { DeviceModel } from '../models/DeviceModel';
 import { InstanceModel } from '../models/InstanceModel';
 import Storage from './storage';
 
-const PROJECT_ID = process.env.PROJECT_ID ?? '';
-const API_ENDPOINT = process.env.API_ENDPOINT ?? '';
+const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT ?? '';
+const GOOGLE_PROJECT_ID = process.env.GOOGLE_PROJECT_ID ?? '';
 
 class Project {
   private requestEnvelope: RequestEnvelope;
@@ -20,11 +20,11 @@ class Project {
   }
 
   registerModel<T>(callback: (err: Error | null, data: T | null) => void): void {
-    const registrationModelURL = `https://${API_ENDPOINT}/v1alpha2/projects/${PROJECT_ID}/deviceModels/`;
+    const registrationModelURL = `https://${GOOGLE_API_ENDPOINT}/v1alpha2/projects/${GOOGLE_PROJECT_ID}/deviceModels/`;
     const bearer = `Bearer ${this.requestEnvelope.context.System.user.accessToken}`;
     const deviceModel: DeviceModel = {
-      project_id: PROJECT_ID,
-      device_model_id: PROJECT_ID,
+      project_id: GOOGLE_PROJECT_ID,
+      device_model_id: GOOGLE_PROJECT_ID,
       manifest: {
         manufacturer: 'Assistant SDK developer',
         product_name: 'Alexa Assistant v1',
@@ -63,11 +63,11 @@ class Project {
   }
 
   registerInstance<T>(callback: (err: Error | null, data: T | null) => void): void {
-    const registrationInstanceURL = `https://${API_ENDPOINT}/v1alpha2/projects/${PROJECT_ID}/devices/`;
+    const registrationInstanceURL = `https://${GOOGLE_API_ENDPOINT}/v1alpha2/projects/${GOOGLE_PROJECT_ID}/devices/`;
     const bearer = `Bearer ${this.requestEnvelope.context.System.user.accessToken}`;
     const instanceModel: InstanceModel = {
-      id: PROJECT_ID,
-      model_id: PROJECT_ID,
+      id: GOOGLE_PROJECT_ID,
+      model_id: GOOGLE_PROJECT_ID,
       nickname: 'Alexa Assistant v1',
       clientType: 'SDK_SERVICE',
     };

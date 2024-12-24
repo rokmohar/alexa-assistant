@@ -11,8 +11,8 @@ import Encoder from './encoder';
 import Project from './project';
 import { AssistRequest } from '../models/AssistRequest';
 
-const API_ENDPOINT = process.env.API_ENDPOINT ?? '';
-const PROJECT_ID = process.env.PROJECT_ID ?? '';
+const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT ?? '';
+const GOOGLE_PROJECT_ID = process.env.GOOGLE_PROJECT_ID ?? '';
 const DEVICE_LOCATION = (process.env.DEVICE_LOCATION ?? '').split(',');
 
 const protoDefinition = loadSync('google/assistant/embedded/v1alpha2/embedded_assistant.proto', {
@@ -85,7 +85,7 @@ class Assistant {
       let conversationState: Buffer = Buffer.alloc(0);
 
       const grpcCredentials = this.createGrpcGoogleCredentials();
-      const assistant = new assistantClient(API_ENDPOINT, grpcCredentials);
+      const assistant = new assistantClient(GOOGLE_API_ENDPOINT, grpcCredentials);
 
       const skillTimeout = setTimeout(() => {
         if (!audioPresent) {
@@ -140,8 +140,8 @@ class Assistant {
             is_new_conversation: true,
           },
           device_config: {
-            device_id: PROJECT_ID,
-            device_model_id: PROJECT_ID,
+            device_id: GOOGLE_PROJECT_ID,
+            device_model_id: GOOGLE_PROJECT_ID,
           },
         },
       };

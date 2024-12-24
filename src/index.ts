@@ -1,7 +1,7 @@
 import { DynamoDbPersistenceAdapter } from 'ask-sdk-dynamodb-persistence-adapter';
 import { DefaultApiClient, getIntentName, getRequestType, HandlerInput, SkillBuilders } from 'ask-sdk-core';
 import { Response, SessionEndedRequest, IntentRequest, ResponseEnvelope } from 'ask-sdk-model';
-import Assistant from './classes/assistant';
+import Assistant from './services/assistant';
 import { AudioState } from './models/AudioState';
 
 const LaunchRequestHandler = {

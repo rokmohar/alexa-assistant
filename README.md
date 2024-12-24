@@ -7,39 +7,34 @@ Implementation of the Google Assistant API for Alexa
 You can download the ZIP file from the [Releases](https://github.com/rokmohar/alexa-assistant/releases)
 page and upload them to the AWS Lambda function from the AWS console.
 
-# Build and Deploy
+# Installation
+
+## Recommended: Serverless Framework Installation
+
+The recommended way to install the skill is using the Serverless Framework. This provides the most up-to-date and maintainable deployment method.
+
+Follow the instructions here:
+
+[Serverless Installation Instructions](docs/serverless_install.md)
+
+## Legacy: CloudFormation Installation (Deprecated)
+
+> **Note:** This installation method is deprecated. Please use the Serverless Framework installation method instead.
+
+If you have not installed the skill before then follow the instructions here:
+
+[CloudFormation Installation Instructions](docs/fresh_install.md)
+
+## Build from Docker
 
 Run the following commands:
 
-- `docker build -t mylambda .`
-
-- `docker run --rm -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" mylambda`
-
-You must set values of `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` variables in the command.
-You can get the access key ID and secret access key in IAM section of the AWS console.
-Make sure that your IAM user has role AWSLambdaFullAccess.
-
-You can override the AWS Lambda function name by adding `-e AWS_LAMBDA_FUNCTION_NAME=""` to the docker run command.
-
-You can copy `.env.example` to `.env` and add the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` there.
-Then you can run the command following command instead:
-
-- `docker run --rm --env-file .env mylambda`
+`docker build -t mylambda .`
 
 You can copy ZIP archive file from the Docker image to your host machine with the command:
 
 `docker run --rm --entrypoint cat mylambda ./lambda.zip > ./lambda.zip`
 
-# New Installation via CloudFormation
-
-This is the easiest method as it creates the lambda function automatically for you.
-
-If you have not installed the skill before then follow the instructions here:
-
-[Installation Instructions](docs/fresh_install.md)
-
 # IT DOESN'T WORK / PROBLEM SOLVING
 
 **BEFORE RAISING A QUESTION PLEASE CHECK THE PROBLEM SOLVING PAGE [HERE](docs/common_problems.md)**
-
-I get asked the same questions many times a day and most of them due are missing steps in the instructions
