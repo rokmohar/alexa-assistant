@@ -17,7 +17,7 @@
     "ask-sdk-dynamodb-persistence-adapter": "^2.14.0",
     "ask-sdk-model": "^1.86.0",
     "axios": "^1.7.9",
-    "google-auth-library": "^9.15.0",
+    "google-auth-library": "^9.15.1",
     "google-proto-files": "^4.2.0",
     "pcm-volume": "^1.0.0",
     "xml-escape": "^1.1.0"
