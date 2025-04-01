@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@flat/lame": "^1.2.8",
-    "@grpc/grpc-js": "^1.12.6",
+    "@grpc/grpc-js": "^1.13.2",
     "@grpc/proto-loader": "^0.7.13",
     "ask-sdk-core": "^2.14.0",
     "ask-sdk-dynamodb-persistence-adapter": "^2.14.0",
