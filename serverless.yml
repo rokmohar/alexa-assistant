@@ -1,0 +1,87 @@
+service: alexa-assistant-test
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: prod
+  environment:
+    API_ENDPOINT: ${self:custom.apiEndpoint}
+    DEVICE_LOCATION: ${self:custom.deviceLocation}
+    PROJECT_ID: ${self:custom.projectId}
+    S3_BUCKET: ${self:custom.s3Bucket}
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-alexa-skills
+  - serverless-dotenv-plugin
+
+custom:
+  apiEndpoint: ${env:API_ENDPOINT, 'embeddedassistant.googleapis.com'}
+  deviceLocation: ${env:DEVICE_LOCATION, ''}
+  projectId: ${env:PROJECT_ID, ''}
+  s3Bucket: ${env:S3_BUCKET, ''}
+  webpack:
+    webpackConfig: webpack.config.js
+    includeModules: true
+    packager: 'yarn'
+  alexa:
+    skills:
+      - id: ${self:service}
+        manifest:
+          publishingInformation:
+            locales:
+              en-US:
+                name: Google Assistant for Alexa
+                summary: An unofficial Google skill for Alexa
+                description: Use Google Assistant through your Alexa device
+                examplePhrases:
+                  - "Alexa, ask google who is the queen of england"
+                  - "Alexa, ask google what's the weather like"
+                keywords:
+                  - google
+                  - assistant
+                  - search
+          apis:
+            custom:
+              endpoint:
+                uri: ${self:service}-lambda
+              intents:
+                - name: SearchIntent
+                  samples:
+                    - "{search}"
+                  slots:
+                    - name: search
+                      type: SEARCH
+                - name: AMAZON.HelpIntent
+                  samples: []
+                - name: AMAZON.StopIntent
+                  samples: []
+                - name: AMAZON.CancelIntent
+                  samples: []
+
+functions:
+  alexa:
+    handler: src/index.handler
+    events:
+      - alexaSkill:
+          appId: ${self:service}
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET}
+        VersioningConfiguration:
+          Status: Enabled
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldVersions
+              Status: Enabled
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+
