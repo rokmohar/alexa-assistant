@@ -7,9 +7,6 @@ module.exports = {
   entry: "./src/index.ts",
   resolve: {
     extensions: [".json", ".js", ".ts"],
-    alias: {
-      punycode: 'tr46'
-    }
   },
   optimization: {
     minimize: false,
@@ -27,15 +24,9 @@ module.exports = {
         loader: "babel-loader",
       },
       {
-        test: /\.(m?js)$/,
+        test: /\.(m?js|node)$/,
         parser: { amd: false },
-        use: {
-          loader: "@vercel/webpack-asset-relocator-loader",
-          options: {
-            outputAssetBase: "native_modules",
-            production: true,
-          },
-        },
+        loader: "@vercel/webpack-asset-relocator-loader",
       },
     ],
   },
@@ -43,15 +34,14 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: "package.json", to: "package.json" },
-        { 
-          from: "node_modules/**/*.node",
-          to: "[path][name][ext]",
-        }
+        //{
+        //  from: "node_modules/**/*.node",
+        //  to: "[path][name][ext]",
+        //}
       ],
     }),
   ],
   externals: {
-    "bindings": "commonjs bindings",
-    "tr46": "commonjs tr46"
+    //"bindings": "commonjs bindings",
   }
 };

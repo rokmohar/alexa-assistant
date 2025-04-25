@@ -1,4 +1,4 @@
-export interface InstanceModel {
+export interface IInstanceModel {
   id: string;
   model_id: string;
   nickname: string;

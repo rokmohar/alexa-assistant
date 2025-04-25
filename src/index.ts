@@ -1,15 +1,18 @@
 import { DynamoDbPersistenceAdapter } from 'ask-sdk-dynamodb-persistence-adapter';
 import { DefaultApiClient, getIntentName, getRequestType, HandlerInput, SkillBuilders } from 'ask-sdk-core';
 import { Response, SessionEndedRequest, IntentRequest, ResponseEnvelope } from 'ask-sdk-model';
-import Assistant from './services/assistant';
-import { AudioState } from './models/AudioState';
+import { ServiceFactory } from './factories/ServiceFactory';
+import { IAudioState } from './interfaces/IAudioState';
+import { Logger } from './services/Logger';
+
+const logger = Logger.getInstance();
 
 const LaunchRequestHandler = {
   canHandle: (handlerInput: HandlerInput): boolean => {
     return getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
   },
   handle: async (handlerInput: HandlerInput): Promise<Response> => {
-    console.log('Launch Request');
+    logger.info('Launch Request');
 
     if (!handlerInput.requestEnvelope.context.System.user.accessToken) {
       return handlerInput.responseBuilder
@@ -28,11 +31,11 @@ const SessionEndedRequestHandler = {
     return getRequestType(handlerInput.requestEnvelope) === 'SessionEndedRequest';
   },
   handle: async (handlerInput: HandlerInput): Promise<Response> => {
-    console.log('Session ended Request');
-    console.log(`Session has ended with reason ${(handlerInput.requestEnvelope.request as SessionEndedRequest).reason}`);
+    logger.info('Session ended Request');
+    logger.info(`Session has ended with reason ${(handlerInput.requestEnvelope.request as SessionEndedRequest).reason}`);
 
     if ((handlerInput.requestEnvelope.request as SessionEndedRequest).error) {
-      console.log(`Session error`, (handlerInput.requestEnvelope.request as SessionEndedRequest).error);
+      logger.error(`Session error`, { error: (handlerInput.requestEnvelope.request as SessionEndedRequest).error });
     }
 
     const attributes = handlerInput.attributesManager.getRequestAttributes();
@@ -50,9 +53,9 @@ const SearchIntentHandler = {
     return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' && getIntentName(handlerInput.requestEnvelope) === 'SearchIntent';
   },
   handle: async (handlerInput: HandlerInput, overrideText?: string): Promise<Response> => {
-    console.log('Search Intent');
+    logger.info('Search Intent');
 
-    const audioState: AudioState = {
+    const audioState: IAudioState = {
       microphoneOpen: true,
       alexaUtteranceText: '',
       googleResponseText: '',
@@ -60,21 +63,22 @@ const SearchIntentHandler = {
 
     if (overrideText) {
       audioState.alexaUtteranceText = overrideText;
-      console.log('Utterance received from another intent: ' + overrideText);
+      logger.info('Utterance received from another intent: ' + overrideText);
     } else {
       const slots = (handlerInput.requestEnvelope.request as IntentRequest).intent.slots;
       audioState.alexaUtteranceText = slots?.search?.value ?? '';
     }
 
-    console.log('Input text to be processed is "' + audioState.alexaUtteranceText + '"');
-    console.log('Starting Search Intent');
+    logger.info('Input text to be processed is "' + audioState.alexaUtteranceText + '"');
+    logger.info('Starting Search Intent');
 
-    const assistant = new Assistant(handlerInput.requestEnvelope, handlerInput.attributesManager, handlerInput.responseBuilder);
+    const { requestEnvelope, attributesManager, responseBuilder } = handlerInput;
+    const assistant = ServiceFactory.getInstance().createAssistant({ requestEnvelope, attributesManager, responseBuilder });
 
     try {
       await assistant.executeAssist(audioState);
     } catch (err) {
-      console.log('Execute assist returned error:', err);
+      logger.error('Execute assist returned error:', { error: err });
       handlerInput.responseBuilder.withShouldEndSession(true);
     }
 
@@ -87,7 +91,7 @@ const StopIntentHandler = {
     return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' && getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent';
   },
   handle: async (handlerInput: HandlerInput): Promise<Response> => {
-    console.log('Stop Intent');
+    logger.info('Stop Intent');
 
     const attributes = handlerInput.attributesManager.getRequestAttributes();
 
@@ -106,7 +110,7 @@ const UnhandledHandler = {
     return true;
   },
   handle: (handlerInput: HandlerInput): Response => {
-    console.log('Unhandled event');
+    logger.info('Unhandled event');
     return handlerInput.responseBuilder.reprompt("I'm not sure what you said. Can you repeat please?").getResponse();
   },
 };
@@ -132,7 +136,7 @@ exports.handler = async function (event: any, context: any): Promise<ResponseEnv
 
   const response = await skillBuilder.create().invoke(event, context);
 
-  console.log('Response is:', response);
+  logger.info('Response is:', { response });
 
   return response;
 };

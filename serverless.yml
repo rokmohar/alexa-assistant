@@ -12,10 +12,10 @@ provider:
   region: us-east-1
   stage: prod
   environment:
+    DEVICE_LOCATION: ${self:custom.deviceLocation}
     GOOGLE_API_ENDPOINT: ${self:custom.googleApiEndpoint}
     GOOGLE_PROJECT_ID: ${self:custom.googleProjectId}
-    DEVICE_LOCATION: ${self:custom.deviceLocation}
-    S3_BUCKET: ${self:resources.Resources.S3Bucket.Properties.BucketName}
+    S3_BUCKET: ${self:custom.s3Bucket}
   iam:
     role:
       statements:
@@ -46,20 +46,18 @@ plugins:
   - serverless-webpack
 
 custom:
-  serviceId: ${self:service}-${self:provider.stage}-${sls:instanceId}
+  alexaSkillId: ${env:ALEXA_SKILL_ID, ''}
+  deviceLocation: ${env:DEVICE_LOCATION, ''}
   googleApiEndpoint: ${env:GOOGLE_API_ENDPOINT, 'embeddedassistant.googleapis.com'}
   googleProjectId: ${env:GOOGLE_PROJECT_ID, ''}
-  deviceLocation: ${env:DEVICE_LOCATION, ''}
+  s3Bucket: ${env:S3_BUCKET, ''}
   webpack:
     webpackConfig: webpack.config.js
     includeModules: true
     packager: 'npm'
-    packagerOptions:
-      scripts:
-        - npm rebuild
   alexa:
     skills:
-      - id: ${self:custom.serviceId}
+      - id: ${self:custom.alexaSkillId}
         manifest:
           publishingInformation:
             locales:
@@ -99,14 +97,14 @@ functions:
     timeout: 10
     events:
       - alexaSkill:
-          appId: ${self:custom.serviceId}
+          appId: ${self:custom.alexaSkillId}
 
 resources:
   Resources:
     S3Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.serviceId}
+        BucketName: ${self:custom.s3Bucket}
         VersioningConfiguration:
           Status: Enabled
         LifecycleConfiguration:

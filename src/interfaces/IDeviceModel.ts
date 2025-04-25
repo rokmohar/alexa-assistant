@@ -1,4 +1,4 @@
-export interface DeviceModel {
+export interface IDeviceModel {
   project_id: string;
   device_model_id: string;
   manifest: {

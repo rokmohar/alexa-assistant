@@ -1,4 +1,4 @@
-export interface AudioState {
+export interface IAudioState {
   googleResponseText?: string;
   alexaUtteranceText: string;
   microphoneOpen: boolean;

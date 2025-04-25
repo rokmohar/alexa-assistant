@@ -1,19 +1,19 @@
 import { ChannelCredentials, credentials, loadPackageDefinition } from '@grpc/grpc-js';
-import { AttributesManager, getLocale, ResponseBuilder } from 'ask-sdk-core';
-import { RequestEnvelope } from 'ask-sdk-model';
+import { getLocale } from 'ask-sdk-core';
 import { createWriteStream, statSync } from 'fs';
 import { OAuth2Client } from 'google-auth-library';
 import { loadSync } from '@grpc/proto-loader';
 import { getProtoPath } from 'google-proto-files';
 import xmlEscape from 'xml-escape';
-import { AudioState } from '../models/AudioState';
-import Encoder from './encoder';
-import Project from './project';
-import { AssistRequest } from '../models/AssistRequest';
-
-const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT ?? '';
-const GOOGLE_PROJECT_ID = process.env.GOOGLE_PROJECT_ID ?? '';
-const DEVICE_LOCATION = (process.env.DEVICE_LOCATION ?? '').split(',');
+import { Logger } from './Logger';
+import { ErrorHandler } from '../errors/ErrorHandler';
+import { ExternalError, InternalError, TimeoutError } from '../errors/AppError';
+import { IAssistant, IAssistantDependencies, IAssistantConfig } from '../interfaces/IAssistant';
+import { IProject } from '../interfaces/IProject';
+import { IEncoder } from '../interfaces/IEncoder';
+import { ServiceFactory } from '../factories/ServiceFactory';
+import { IAudioState } from '../interfaces/IAudioState';
+import { IAssistRequest } from '../interfaces/IAssistRequest';
 
 const protoDefinition = loadSync('google/assistant/embedded/v1alpha2/embedded_assistant.proto', {
   includeDirs: [getProtoPath('..')],
@@ -26,36 +26,44 @@ const protoDefinition = loadSync('google/assistant/embedded/v1alpha2/embedded_as
 const protoDescriptor = loadPackageDefinition(protoDefinition);
 const assistantClient = (protoDescriptor.google as any).assistant.embedded.v1alpha2.EmbeddedAssistant;
 
-const SUPPORTED_LOCALES = ['en-GB', 'de-DE', 'en-AU', 'en-CA', 'en-IN', 'ja-JP'];
+class Assistant implements IAssistant {
+  private readonly requestEnvelope: IAssistantDependencies['requestEnvelope'];
+  private readonly attributesManager: IAssistantDependencies['attributesManager'];
+  private readonly responseBuilder: IAssistantDependencies['responseBuilder'];
+  private readonly oauth2Client: OAuth2Client;
+  private readonly logger: Logger;
+  private readonly errorHandler: ErrorHandler;
+  private readonly config: IAssistantConfig;
+  private readonly project: IProject;
+  private readonly encoder: IEncoder;
 
-class Assistant {
-  requestEnvelope: RequestEnvelope;
-  attributesManager: AttributesManager;
-  responseBuilder: ResponseBuilder;
-  oauth2Client: OAuth2Client;
-  encoder: Encoder;
-  project: Project;
-
-  constructor(requestEnvelope: RequestEnvelope, attributesManager: AttributesManager, responseBuilder: ResponseBuilder) {
-    this.requestEnvelope = requestEnvelope;
-    this.attributesManager = attributesManager;
-    this.responseBuilder = responseBuilder;
-
+  constructor(dependencies: IAssistantDependencies, config: IAssistantConfig) {
+    this.requestEnvelope = dependencies.requestEnvelope;
+    this.attributesManager = dependencies.attributesManager;
+    this.responseBuilder = dependencies.responseBuilder;
+    this.config = config;
     this.oauth2Client = new OAuth2Client();
-    this.encoder = new Encoder(requestEnvelope, responseBuilder);
-    this.project = new Project(requestEnvelope, attributesManager);
+    this.logger = Logger.getInstance();
+    this.errorHandler = ErrorHandler.getInstance();
+    this.project = ServiceFactory.getInstance().createProject({
+      requestEnvelope: this.requestEnvelope,
+      attributesManager: this.attributesManager,
+    });
+    this.encoder = ServiceFactory.getInstance().createEncoder({
+      requestEnvelope: this.requestEnvelope,
+      responseBuilder: this.responseBuilder,
+    });
   }
 
-  createGrpcGoogleCredentials(): ChannelCredentials {
+  private createGrpcGoogleCredentials(): ChannelCredentials {
     return credentials.combineChannelCredentials(credentials.createSsl(null), credentials.createFromGoogleCredential(this.oauth2Client));
   }
 
-  async executeAssist(audioState: AudioState): Promise<void> {
+  async executeAssist(audioState: IAudioState): Promise<void> {
     const accessToken = this.requestEnvelope.context.System.user.accessToken;
 
-    // Check whether we have a valid authentication token
     if (!accessToken) {
-      // We haven't so create an account link card
+      this.logger.warn('No access token provided', { userId: this.requestEnvelope.context.System.user.userId });
       this.responseBuilder
         .withLinkAccountCard()
         .speak('You must link your Google account to use this skill. Please use the link in the Alexa app to authorise your Google Account.')
@@ -63,17 +71,16 @@ class Assistant {
       return;
     }
 
-    // Update access token
     this.oauth2Client.setCredentials({ access_token: accessToken });
-
     const sessionAttrs = this.attributesManager.getSessionAttributes();
 
     if (!sessionAttrs['registered']) {
       try {
         await this.project.registerProject();
         sessionAttrs['registered'] = true;
-      } catch (err) {
-        console.error('[Assistant.executeAssist] Client setup failed', err);
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new InternalError('Unknown error during project registration');
+        this.errorHandler.handleError(error);
         this.responseBuilder.speak('There was a problem setting up the project.').withShouldEndSession(true);
         return;
       }
@@ -85,43 +92,45 @@ class Assistant {
       let conversationState: Buffer = Buffer.alloc(0);
 
       const grpcCredentials = this.createGrpcGoogleCredentials();
-      const assistant = new assistantClient(GOOGLE_API_ENDPOINT, grpcCredentials);
+      const assistant = new assistantClient(this.config.googleApiEndpoint, grpcCredentials);
 
       const skillTimeout = setTimeout(() => {
         if (!audioPresent) {
+          const error = new TimeoutError('Google Assistant request timed out');
+          this.errorHandler.handleError(error);
           this.responseBuilder.speak("I wasn't able to talk to Google - please try again");
-          console.error('[Assistant.executeAssist] Google Assistant request timed out');
-          return reject(new Error('Google Assistant request timed out'));
+          return reject(error);
         }
       }, 9000);
 
       let responseFile = createWriteStream('/tmp/response.pcm', { flags: 'w' });
 
       responseFile.on('finish', async () => {
-        console.log('[Assistant.executeAssist] Temporary response file has been written');
+        this.logger.info('Temporary response file has been written');
         clearTimeout(skillTimeout);
 
         const stats = statSync('/tmp/response.pcm');
         const fileSizeInBytes = stats.size;
 
-        console.log('[Assistant.executeAssist] File size (bytes) is: ' + fileSizeInBytes);
+        this.logger.debug('Response file size', { size: fileSizeInBytes });
 
         if (fileSizeInBytes > 0) {
-          console.log('[Assistant.executeAssist] Starting execute encode');
+          this.logger.info('Starting audio encoding');
           await this.encoder.executeEncode(audioState);
-          console.log('[Assistant.executeAssist] Executed encode complete');
+          this.logger.info('Audio encoding complete');
           return resolve();
         } else {
-          console.log('[Assistant.executeAssist] Emitting blank sound');
+          const error = new ExternalError('No audio response from the Google Assistant');
+          this.errorHandler.handleError(error);
           this.responseBuilder.speak("I didn't get an audio response from the Google Assistant");
-          return reject(new Error('No audio response from the Google Assistant'));
+          return reject(error);
         }
       });
 
       const locale = getLocale(this.requestEnvelope);
-      const overrideLocale = SUPPORTED_LOCALES.includes(locale) ? locale : 'en-US';
+      const overrideLocale = this.config.supportedLocales.includes(locale) ? locale : 'en-US';
 
-      const assistRequest: AssistRequest = {
+      const assistRequest: IAssistRequest = {
         config: {
           text_query: audioState.alexaUtteranceText,
           audio_out_config: {
@@ -133,15 +142,15 @@ class Assistant {
             language_code: overrideLocale,
             device_location: {
               coordinates: {
-                latitude: DEVICE_LOCATION[0],
-                longitude: DEVICE_LOCATION[1],
+                latitude: this.config.deviceLocation[0],
+                longitude: this.config.deviceLocation[1],
               },
             },
             is_new_conversation: true,
           },
           device_config: {
-            device_id: GOOGLE_PROJECT_ID,
-            device_model_id: GOOGLE_PROJECT_ID,
+            device_id: this.config.googleProjectId,
+            device_model_id: this.config.googleProjectId,
           },
         },
       };
@@ -149,49 +158,46 @@ class Assistant {
       const attributes = this.attributesManager.getRequestAttributes();
 
       if (attributes['CONVERSATION_STATE']) {
-        console.log('[Assistant.executeAssist] Prior ConverseResponse detected');
+        this.logger.debug('Prior conversation state detected');
         conversationState = Buffer.from(attributes['CONVERSATION_STATE']);
         assistRequest.config.dialog_state_in.conversation_state = conversationState;
         assistRequest.config.dialog_state_in.is_new_conversation = false;
       } else {
-        console.log('[Assistant.executeAssist] No prior ConverseResponse');
+        this.logger.debug('No prior conversation state');
       }
 
       const conversation = assistant.Assist();
 
       conversation.on('error', (err: Error) => {
-        console.error('[Assistant.executeAssist] Got conversation error', err);
+        const error = new ExternalError('Google Assistant returned error', { originalError: err });
+        this.errorHandler.handleError(error);
         this.responseBuilder.speak('The Google API returned an error.');
-
         attributes['CONVERSATION_STATE'] = undefined;
-
-        return reject(new Error('Google Assistant returned error'));
+        return reject(error);
       });
 
       conversation.on('end', () => {
-        console.log('[Assistant.executeAssist] End of response from GRPC stub');
-
+        this.logger.info('End of response from GRPC stub');
         attributes['CONVERSATION_STATE'] = undefined;
-
         responseFile.end();
       });
 
       conversation.on('data', (response: any) => {
-        console.log('[Assistant.executeAssist] AssistResponse is', response);
+        this.logger.debug('Received AssistResponse', { response });
 
         if (response.dialog_state_out) {
           if (response.dialog_state_out.supplemental_display_text) {
-            console.log('[Assistant.executeAssist] Supplemental text is: ' + audioState.googleResponseText);
+            this.logger.debug('Supplemental text received', { text: response.dialog_state_out.supplemental_display_text });
             audioState.googleResponseText += xmlEscape(JSON.stringify(response.dialog_state_out.supplemental_display_text));
           }
 
           if (response.dialog_state_out.microphone_mode) {
             if (response.dialog_state_out.microphone_mode === 'CLOSE_MICROPHONE') {
-              console.log('[Assistant.executeAssist] Closing microphone');
+              this.logger.debug('Closing microphone');
               audioState.microphoneOpen = false;
               attributes['microphone_open'] = false;
             } else if (response.dialog_state_out.microphone_mode === 'DIALOG_FOLLOW_ON') {
-              console.log('[Assistant.executeAssist] Keeping microphone open');
+              this.logger.debug('Keeping microphone open');
               audioState.microphoneOpen = true;
               attributes['microphone_open'] = true;
             }
@@ -199,9 +205,8 @@ class Assistant {
 
           if (response.dialog_state_out.conversation_state) {
             if (response.dialog_state_out.conversation_state.length > 0) {
-              console.log('[Assistant.executeAssist] Conversation state changed');
+              this.logger.debug('Conversation state updated');
               conversationState = response.dialog_state_out.conversation_state;
-              console.log('[Assistant.executeAssist] Conversation state var is: ' + conversationState);
               attributes['CONVERSATION_STATE'] = conversationState.toString();
             }
           }
@@ -220,7 +225,7 @@ class Assistant {
             if (audioLength <= (90 * 16 * 16000) / 8) {
               responseFile.write(audio_chunk);
             } else {
-              console.log('[Assistant.executeAssist] Ignoring audio data as it is longer than 90 seconds');
+              this.logger.warn('Audio data too long, ignoring', { length: audioLength });
             }
           }
         }

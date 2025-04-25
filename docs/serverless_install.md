@@ -157,23 +157,7 @@ Now that you have your Google Client ID and Secret, go back to the Alexa Develop
      - `google.com`
      - `googleapis.com`
 
-### 4. Configure Lambda Trigger
-
-1. Go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda)
-2. Find your deployed function (it should be named something like `alexa-assistant-prod-alexa`)
-3. Click on "Add trigger"
-4. Select "Alexa Skills Kit" as the trigger
-5. Enter your Alexa Skill ID (you can find this in the Alexa Developer Console)
-6. Click "Add" to create the trigger
-
-### 5. Configure Alexa Skill Endpoint
-
-1. Go back to the [Alexa Developer Console](https://developer.amazon.com/alexa)
-2. In the skill builder, go to "Endpoint" configuration
-3. Select "AWS Lambda ARN" as the service endpoint type
-4. Paste the Lambda ARN from your deployment output into the "Default Region" field
-
-### 6. Clone and Install Dependencies
+### 4. Clone and Install Dependencies
 
 First, clone the repository:
 ```bash
@@ -190,7 +174,7 @@ Finally, install the project dependencies:
 npm install
 ```
 
-### 7. Configure Environment Variables
+### 5. Configure Environment Variables
 
 Copy the example environment file and adjust the values:
 
@@ -201,22 +185,42 @@ cp .env.example .env
 Then edit the `.env` file with your configuration:
 
 ```bash
-API_ENDPOINT=embeddedassistant.googleapis.com
+ALEXA_SKILL_ID=your_alexa_skill_id
 DEVICE_LOCATION=your_device_location
-PROJECT_ID=your_google_cloud_project_id
+GOOGLE_API_ENDPOINT=embeddedassistant.googleapis.com
+GOOGLE_PROJECT_ID=your_google_cloud_project_id
+S3_BUCKET=your_bucket_name
 ```
 
 Note: Replace the placeholder values with your actual configuration:
-- `DEVICE_LOCATION`: Your device's location: lat, long
-- `PROJECT_ID`: Your Google Cloud Project ID
+- `ALEXA_SKILL_ID`: Your Alexa Skill ID
+- `GOOGLE_PROJECT_ID`: Your Google Cloud Project ID
+- `DEVICE_LOCATION`: Your device's default location: latitude,longitude
+- `S3_BUCKET`: Your desired bucket name
 
-### 8. Deploy to AWS
+### 6. Deploy to AWS
 
 Deploy to production in `us-east-1` region:
 
 ```bash
 npm run deploy:prod -- --region us-east-1
 ```
+
+### 7. Configure Lambda Trigger
+
+1. Go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda)
+2. Find your deployed function
+3. Click on "Add trigger"
+4. Select "Alexa Skills Kit" as the trigger
+5. Enter your Alexa Skill ID (you can find this in the Alexa Developer Console)
+6. Click "Add" to create the trigger
+
+### 8. Configure Alexa Skill Endpoint
+
+1. Go back to the [Alexa Developer Console](https://developer.amazon.com/alexa)
+2. In the skill builder, go to "Endpoint" configuration
+3. Select "AWS Lambda ARN" as the service endpoint type
+4. Paste the Lambda ARN from your deployment output into the "Default Region" field
 
 ### 9. Test Your Skill
 
