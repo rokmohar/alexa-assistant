@@ -28,6 +28,10 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
            "invocationName": "google assistant",
            "intents": [
              {
+               "name": "AMAZON.NavigateHomeIntent",
+               "samples": []
+             },
+             {
                "name": "AMAZON.NavigateSettingsIntent",
                "samples": []
              },
@@ -98,6 +102,47 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
                "samples": [
                  "{search}"
                ]
+             },
+             {
+               "name": "SetLocationIntent",
+               "slots": [
+                 {
+                   "name": "address",
+                   "type": "AMAZON.SearchQuery"
+                 }
+               ],
+               "samples": [
+                 "set my location to {address}",
+                 "set location to {address}",
+                 "my location is {address}",
+                 "change my location to {address}",
+                 "update my location to {address}",
+                 "I live in {address}",
+                 "I am in {address}"
+               ]
+             },
+             {
+               "name": "GetLocationIntent",
+               "slots": [],
+               "samples": [
+                 "what is my location",
+                 "where am I",
+                 "get my location",
+                 "what location do you have",
+                 "what's my current location",
+                 "where do you think I am"
+               ]
+             },
+             {
+               "name": "ClearLocationIntent",
+               "slots": [],
+               "samples": [
+                 "clear my location",
+                 "delete my location",
+                 "remove my location",
+                 "forget my location",
+                 "reset my location"
+               ]
              }
            ],
            "types": [
@@ -122,6 +167,16 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
      }
      ```
    - Click "Save Model" and then "Build Model"
+
+#### Optional: Configure Location Permissions
+
+If you want the skill to automatically detect your location (as a fallback when you haven't set one manually):
+
+1. Go to "Permissions" in the left menu under "Build"
+2. Enable **Device Address** (Full Address or Country & Postal Code) to use your Alexa device's configured address
+3. Enable **Location Services** to access real-time GPS from mobile Alexa devices
+
+Note: These permissions are optional and can be configured at any time.
 
 ### 2. Configure Google Assistant API
 

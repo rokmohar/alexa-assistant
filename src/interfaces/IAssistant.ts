@@ -1,20 +1,22 @@
 import { AttributesManager, ResponseBuilder } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
-import { AudioState } from '../models/AudioState';
+import { IAudioState } from './IAudioState';
+import { ILocation } from './ILocation';
 
 export interface IAssistant {
-  executeAssist(audioState: AudioState): Promise<void>;
+  executeAssist(audioState: IAudioState): Promise<void>;
 }
 
 export interface IAssistantDependencies {
   requestEnvelope: RequestEnvelope;
   attributesManager: AttributesManager;
   responseBuilder: ResponseBuilder;
+  locationService: ILocation;
 }
 
 export interface IAssistantConfig {
   googleApiEndpoint: string;
   googleProjectId: string;
-  deviceLocation: string[];
   supportedLocales: string[];
+  audioTimeout: number;
 }

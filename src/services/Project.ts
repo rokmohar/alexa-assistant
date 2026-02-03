@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { AttributesManager } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import { IProject, IProjectConfig, IProjectDependencies } from '../interfaces/IProject';
@@ -9,6 +9,9 @@ import { ExternalError, InternalError } from '../errors/AppError';
 import { ServiceFactory } from '../factories/ServiceFactory';
 import { IDeviceModel } from '../interfaces/IDeviceModel';
 import { IInstanceModel } from '../interfaces/IInstanceModel';
+
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 1000;
 
 class Project implements IProject {
   private readonly requestEnvelope: RequestEnvelope;
@@ -29,7 +32,36 @@ class Project implements IProject {
     this.errorHandler = ErrorHandler.getInstance();
   }
 
-  registerModel<T>(callback: (err: Error | null, data: T | null) => void): void {
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async withRetry<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        // Don't retry on 4xx errors (except 429 rate limiting)
+        if (error instanceof AxiosError && error.response?.status && error.response.status >= 400 && error.response.status < 500 && error.response.status !== 429) {
+          throw error;
+        }
+
+        if (attempt < MAX_RETRIES) {
+          const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+          this.logger.warn(`${operationName} failed, retrying in ${delayMs}ms`, { attempt, maxRetries: MAX_RETRIES, error: lastError.message });
+          await this.sleep(delayMs);
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  async registerModel<T>(): Promise<T> {
     const registrationModelURL = `https://${this.config.googleApiEndpoint}/v1alpha2/projects/${this.config.googleProjectId}/deviceModels/`;
     const bearer = `Bearer ${this.requestEnvelope.context.System.user.accessToken}`;
     const deviceModel: IDeviceModel = {
@@ -40,41 +72,42 @@ class Project implements IProject {
         product_name: 'Alexa Assistant v1',
         device_description: 'Alexa Assistant Skill v1',
       },
-      device_type: 'action.devices.types.LIGHT',
+      device_type: this.config.deviceType,
       traits: ['action.devices.traits.OnOff'],
     };
 
     this.logger.info('Starting register model');
 
-    axios({
-      url: registrationModelURL,
-      method: 'POST',
-      headers: {
-        Authorization: bearer,
-        'Content-Type': 'application/json',
-      },
-      data: deviceModel,
-      responseType: 'json',
-    })
-      .then((response) => {
-        this.logger.info('Register model complete', { data: response.data });
-        callback(null, response.data);
-      })
-      .catch((error) => {
-        this.logger.error('Register model error', { error });
+    return this.withRetry(async () => {
+      try {
+        const response = await axios({
+          url: registrationModelURL,
+          method: 'POST',
+          headers: {
+            Authorization: bearer,
+            'Content-Type': 'application/json',
+          },
+          data: deviceModel,
+          responseType: 'json',
+        });
 
-        if (error.response?.status === 409) {
+        this.logger.info('Register model complete', { data: response.data });
+        return response.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
           this.logger.warn('Model already exists');
-          callback(null, error.response.data);
-        } else {
-          const externalError = new ExternalError('Failed to register model with Google API', { originalError: error });
-          this.errorHandler.handleError(externalError);
-          callback(externalError, null);
+          return error.response.data;
         }
-      });
+
+        this.logger.error('Register model error', { error });
+        const externalError = new ExternalError('Failed to register model with Google API', { originalError: error });
+        this.errorHandler.handleError(externalError);
+        throw externalError;
+      }
+    }, 'registerModel');
   }
 
-  registerInstance<T>(callback: (err: Error | null, data: T | null) => void): void {
+  async registerInstance<T>(): Promise<T> {
     const registrationInstanceURL = `https://${this.config.googleApiEndpoint}/v1alpha2/projects/${this.config.googleProjectId}/devices/`;
     const bearer = `Bearer ${this.requestEnvelope.context.System.user.accessToken}`;
     const instanceModel: IInstanceModel = {
@@ -86,93 +119,75 @@ class Project implements IProject {
 
     this.logger.info('Starting register instance');
 
-    axios({
-      url: registrationInstanceURL,
-      method: 'POST',
-      headers: {
-        Authorization: bearer,
-        'Content-Type': 'application/json',
-      },
-      data: instanceModel,
-      responseType: 'json',
-    })
-      .then((response) => {
-        this.logger.info('Register instance complete', { data: response.data });
-        callback(null, response.data);
-      })
-      .catch((error) => {
-        this.logger.error('Register instance error', { error });
+    return this.withRetry(async () => {
+      try {
+        const response = await axios({
+          url: registrationInstanceURL,
+          method: 'POST',
+          headers: {
+            Authorization: bearer,
+            'Content-Type': 'application/json',
+          },
+          data: instanceModel,
+          responseType: 'json',
+        });
 
-        if (error.response?.status === 409) {
+        this.logger.info('Register instance complete', { data: response.data });
+        return response.data;
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
           this.logger.warn('Instance already exists');
-          callback(null, error.response.data);
-        } else {
-          const externalError = new ExternalError('Failed to register instance with Google API', { originalError: error });
-          this.errorHandler.handleError(externalError);
-          callback(externalError, null);
+          return error.response.data;
         }
-      });
+
+        this.logger.error('Register instance error', { error });
+        const externalError = new ExternalError('Failed to register instance with Google API', { originalError: error });
+        this.errorHandler.handleError(externalError);
+        throw externalError;
+      }
+    }, 'registerInstance');
   }
 
   async registerProject(): Promise<void> {
     this.logger.info('Project registration started');
 
-    return new Promise<void>((resolve, reject) => {
-      this.storage.loadAttributes((err, dbAttributes) => {
-        if (err) {
-          this.logger.error('Get attributes error', { error: err });
-          const internalError = new InternalError('Failed to load attributes', { originalError: err });
-          this.errorHandler.handleError(internalError);
-          return reject(internalError);
-        }
+    let dbAttributes: Record<string, unknown>;
 
-        if (dbAttributes) {
-          this.logger.info('Got positive attributes response', { attributes: dbAttributes });
+    try {
+      dbAttributes = await this.storage.loadAttributes();
+    } catch (err) {
+      this.logger.error('Get attributes error', { error: err });
+      const internalError = new InternalError('Failed to load attributes', { originalError: err });
+      this.errorHandler.handleError(internalError);
+      throw internalError;
+    }
 
-          if (dbAttributes['registered']) {
-            this.logger.warn('Project is already registered');
-            return resolve();
-          }
+    this.logger.info('Got positive attributes response', { attributes: dbAttributes });
 
-          this.registerModel((err, model) => {
-            if (err) {
-              this.logger.error('Got register model error', { error: err });
-              return reject(err);
-            }
+    if (dbAttributes['registered']) {
+      this.logger.warn('Project is already registered');
+      return;
+    }
 
-            if (model) {
-              this.logger.info('Got positive model response', { model });
+    const model = await this.registerModel();
+    this.logger.info('Got positive model response', { model });
 
-              this.registerInstance((err) => {
-                if (err) {
-                  this.logger.error('Got register instance error', { error: err });
-                  return reject(err);
-                }
+    await this.registerInstance();
+    this.logger.info('Got positive instance response');
 
-                this.logger.info('Got positive Instance response');
+    const attributes = this.attributesManager.getRequestAttributes();
+    attributes['microphone_open'] = false;
+    dbAttributes['registered'] = true;
 
-                const attributes = this.attributesManager.getRequestAttributes();
-                attributes['microphone_open'] = false;
-
-                dbAttributes['registered'] = true;
-
-                this.storage.saveAttributes((err) => {
-                  if (err) {
-                    this.logger.error('Got save attributes error', { error: err });
-                    const internalError = new InternalError('Failed to save attributes', { originalError: err });
-                    this.errorHandler.handleError(internalError);
-                    return reject(internalError);
-                  }
-
-                  this.logger.info('Save attributes complete');
-                  return resolve();
-                });
-              });
-            }
-          });
-        }
-      });
-    });
+    try {
+      await this.storage.saveAttributes();
+      this.logger.info('Save attributes complete');
+    } catch (err) {
+      this.logger.error('Got save attributes error', { error: err });
+      const internalError = new InternalError('Failed to save attributes', { originalError: err });
+      this.errorHandler.handleError(internalError);
+      throw internalError;
+    }
   }
 }
 

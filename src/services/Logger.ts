@@ -18,7 +18,7 @@ export interface LogEntry {
 
 export class Logger {
   private static instance: Logger;
-  private currentLogLevel: LogLevel;
+
   private readonly logLevels: Record<LogLevel, number> = {
     [LogLevel.ERROR]: 0,
     [LogLevel.WARN]: 1,
@@ -26,6 +26,8 @@ export class Logger {
     [LogLevel.DEBUG]: 3,
     [LogLevel.TRACE]: 4,
   };
+
+  private currentLogLevel: LogLevel;
 
   private constructor() {
     this.currentLogLevel = this.getLogLevelFromEnv();

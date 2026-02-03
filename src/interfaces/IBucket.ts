@@ -1,6 +1,6 @@
 import { RequestEnvelope } from 'ask-sdk-model';
 import { ResponseBuilder } from 'ask-sdk-core';
-import { AudioState } from '../models/AudioState';
+import { IAudioState } from './IAudioState';
 
 export interface IBucketDependencies {
   requestEnvelope: RequestEnvelope;
@@ -8,9 +8,10 @@ export interface IBucketDependencies {
 }
 
 export interface IBucket {
-  uploadFromStream(audioState: AudioState, streamFile: string): Promise<void>;
+  uploadFromStream(audioState: IAudioState, streamFile: string): Promise<void>;
 }
 
 export interface IBucketConfig {
   s3Bucket: string;
+  s3Expires: number;
 }

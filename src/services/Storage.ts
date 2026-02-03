@@ -15,33 +15,32 @@ class Storage implements IStorage {
     this.errorHandler = ErrorHandler.getInstance();
   }
 
-  async loadAttributes(callback: (error: Error | null, attributes: Record<string, any> | null) => void): Promise<void> {
+  async loadAttributes(): Promise<Record<string, unknown>> {
     this.logger.info('Started load attributes');
 
     try {
       const attributes = await this.attributesManager.getPersistentAttributes();
       this.logger.info('Load attributes complete');
-      callback(null, attributes);
+      return attributes;
     } catch (error) {
       this.logger.error('Got error with load attributes', { error });
       const internalError = new InternalError('Failed to load attributes', { originalError: error });
       this.errorHandler.handleError(internalError);
-      callback(internalError, null);
+      throw internalError;
     }
   }
 
-  async saveAttributes(callback: (error: Error | null) => void): Promise<void> {
+  async saveAttributes(): Promise<void> {
     this.logger.info('Started save attributes');
 
     try {
       await this.attributesManager.savePersistentAttributes();
       this.logger.info('Save attributes complete');
-      callback(null);
     } catch (error) {
       this.logger.error('Got error with save attributes', { error });
       const internalError = new InternalError('Failed to save attributes', { originalError: error });
       this.errorHandler.handleError(internalError);
-      callback(internalError);
+      throw internalError;
     }
   }
 }
