@@ -5,6 +5,6 @@ export interface IStorageDependencies {
 }
 
 export interface IStorage {
-  loadAttributes(callback: (error: Error | null, attributes: Record<string, any> | null) => void): Promise<void>;
-  saveAttributes(callback: (error: Error | null) => void): Promise<void>;
+  loadAttributes(): Promise<Record<string, unknown>>;
+  saveAttributes(): Promise<void>;
 }

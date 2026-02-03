@@ -1,6 +1,8 @@
 import { ChannelCredentials, credentials, loadPackageDefinition } from '@grpc/grpc-js';
 import { getLocale } from 'ask-sdk-core';
-import { createWriteStream, statSync } from 'fs';
+import { createWriteStream } from 'fs';
+import { stat } from 'fs/promises';
+import { randomUUID } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { loadSync } from '@grpc/proto-loader';
 import { getProtoPath } from 'google-proto-files';
@@ -11,12 +13,13 @@ import { ExternalError, InternalError, TimeoutError } from '../errors/AppError';
 import { IAssistant, IAssistantDependencies, IAssistantConfig } from '../interfaces/IAssistant';
 import { IProject } from '../interfaces/IProject';
 import { IEncoder } from '../interfaces/IEncoder';
+import { ILocation } from '../interfaces/ILocation';
 import { ServiceFactory } from '../factories/ServiceFactory';
 import { IAudioState } from '../interfaces/IAudioState';
 import { IAssistRequest } from '../interfaces/IAssistRequest';
 
 const protoDefinition = loadSync('google/assistant/embedded/v1alpha2/embedded_assistant.proto', {
-  includeDirs: [getProtoPath('..')],
+  includeDirs: [__dirname, getProtoPath('..')],
   enums: String,
   longs: String,
   defaults: true,
@@ -30,6 +33,7 @@ class Assistant implements IAssistant {
   private readonly requestEnvelope: IAssistantDependencies['requestEnvelope'];
   private readonly attributesManager: IAssistantDependencies['attributesManager'];
   private readonly responseBuilder: IAssistantDependencies['responseBuilder'];
+  private readonly locationService: ILocation;
   private readonly oauth2Client: OAuth2Client;
   private readonly logger: Logger;
   private readonly errorHandler: ErrorHandler;
@@ -41,6 +45,7 @@ class Assistant implements IAssistant {
     this.requestEnvelope = dependencies.requestEnvelope;
     this.attributesManager = dependencies.attributesManager;
     this.responseBuilder = dependencies.responseBuilder;
+    this.locationService = dependencies.locationService;
     this.config = config;
     this.oauth2Client = new OAuth2Client();
     this.logger = Logger.getInstance();
@@ -78,13 +83,19 @@ class Assistant implements IAssistant {
       try {
         await this.project.registerProject();
         sessionAttrs['registered'] = true;
-      } catch (err: unknown) {
+      } catch (err) {
         const error = err instanceof Error ? err : new InternalError('Unknown error during project registration');
         this.errorHandler.handleError(error);
         this.responseBuilder.speak('There was a problem setting up the project.').withShouldEndSession(true);
         return;
       }
     }
+
+    const locationResult = await this.locationService.getLocation();
+
+    // Generate unique filename to prevent conflicts in Lambda container reuse
+    const requestId = randomUUID();
+    const pcmFilePath = `/tmp/response-${requestId}.pcm`;
 
     return new Promise((resolve, reject) => {
       let audioLength = 0;
@@ -101,21 +112,22 @@ class Assistant implements IAssistant {
           this.responseBuilder.speak("I wasn't able to talk to Google - please try again");
           return reject(error);
         }
-      }, 9000);
+      }, this.config.audioTimeout);
 
-      let responseFile = createWriteStream('/tmp/response.pcm', { flags: 'w' });
+      const responseFile = createWriteStream(pcmFilePath, { flags: 'w' });
 
       responseFile.on('finish', async () => {
-        this.logger.info('Temporary response file has been written');
+        this.logger.info('Temporary response file has been written', { path: pcmFilePath });
         clearTimeout(skillTimeout);
 
-        const stats = statSync('/tmp/response.pcm');
+        const stats = await stat(pcmFilePath);
         const fileSizeInBytes = stats.size;
 
         this.logger.debug('Response file size', { size: fileSizeInBytes });
 
         if (fileSizeInBytes > 0) {
           this.logger.info('Starting audio encoding');
+          audioState.pcmFilePath = pcmFilePath;
           await this.encoder.executeEncode(audioState);
           this.logger.info('Audio encoding complete');
           return resolve();
@@ -130,6 +142,16 @@ class Assistant implements IAssistant {
       const locale = getLocale(this.requestEnvelope);
       const overrideLocale = this.config.supportedLocales.includes(locale) ? locale : 'en-US';
 
+      if (locationResult) {
+        this.logger.info('Location resolved', {
+          source: locationResult.source,
+          latitude: locationResult.coordinates.latitude,
+          longitude: locationResult.coordinates.longitude,
+        });
+      } else {
+        this.logger.warn('No location available - some location-based features may not work');
+      }
+
       const assistRequest: IAssistRequest = {
         config: {
           text_query: audioState.alexaUtteranceText,
@@ -140,12 +162,14 @@ class Assistant implements IAssistant {
           },
           dialog_state_in: {
             language_code: overrideLocale,
-            device_location: {
-              coordinates: {
-                latitude: this.config.deviceLocation[0],
-                longitude: this.config.deviceLocation[1],
+            ...(locationResult && {
+              device_location: {
+                coordinates: {
+                  latitude: locationResult.coordinates.latitude,
+                  longitude: locationResult.coordinates.longitude,
+                },
               },
-            },
+            }),
             is_new_conversation: true,
           },
           device_config: {

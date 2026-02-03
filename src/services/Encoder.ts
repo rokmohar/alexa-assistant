@@ -8,7 +8,6 @@ import { ErrorHandler } from '../errors/ErrorHandler';
 import { ExternalError, InternalError } from '../errors/AppError';
 import { ServiceFactory } from '../factories/ServiceFactory';
 import { IAudioState } from '../interfaces/IAudioState';
-import { Volume } from '../utils/Volume';
 import { Mp3Encoder } from '@breezystack/lamejs';
 
 class Encoder implements IEncoder {
@@ -37,10 +36,10 @@ class Encoder implements IEncoder {
   async executeEncode(audioState: IAudioState): Promise<void> {
     this.logger.info('Starting Transcode');
 
-    return new Promise<void>((resolve, reject) => {
-      const pcmFilepath = '/tmp/response.pcm';
-      const mp3Filepath = pcmFilepath.replace(/\.pcm$/, '.mp3');
+    const pcmFilepath = audioState.pcmFilePath ?? '/tmp/response.pcm';
+    const mp3Filepath = pcmFilepath.replace(/\.pcm$/, '.mp3');
 
+    return new Promise<void>((resolve, reject) => {
       const readPcm = createReadStream(pcmFilepath);
 
       readPcm.on('end', () => {
@@ -78,12 +77,8 @@ class Encoder implements IEncoder {
         reject(internalError);
       });
 
-      // Create MP3 encoder with appropriate settings
       const mp3encoder = new Mp3Encoder(1, 16000, 48);
-      const volume = new Volume();
-      volume.setVolume(1.75);
-
-      let buffer: Buffer[] = [];
+      const buffer: Buffer[] = [];
 
       readPcm.on('data', (chunk: Buffer | string) => {
         if (Buffer.isBuffer(chunk)) {
@@ -94,22 +89,23 @@ class Encoder implements IEncoder {
       readPcm.on('end', () => {
         const pcmData = Buffer.concat(buffer);
         const samples = new Int16Array(pcmData.buffer);
-
-        // Process samples in chunks of 1152 (lamejs requirement)
         const chunkSize = 1152;
+
         for (let i = 0; i < samples.length; i += chunkSize) {
           const chunk = samples.slice(i, i + chunkSize);
           const mp3buf = mp3encoder.encodeBuffer(chunk);
+
           if (mp3buf.length > 0) {
             writeMp3.write(mp3buf);
           }
         }
 
-        // Write the end of the MP3 file
         const end = mp3encoder.flush();
+
         if (end.length > 0) {
           writeMp3.write(end);
         }
+
         writeMp3.end();
       });
     });

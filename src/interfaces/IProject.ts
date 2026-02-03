@@ -8,11 +8,12 @@ export interface IProjectDependencies {
 
 export interface IProject {
   registerProject(): Promise<void>;
-  registerModel<T>(callback: (err: Error | null, data: T | null) => void): void;
-  registerInstance<T>(callback: (err: Error | null, data: T | null) => void): void;
+  registerModel<T>(): Promise<T>;
+  registerInstance<T>(): Promise<T>;
 }
 
 export interface IProjectConfig {
   googleApiEndpoint: string;
   googleProjectId: string;
+  deviceType: string;
 }

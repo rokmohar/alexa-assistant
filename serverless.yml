@@ -7,12 +7,11 @@ build:
   
 provider:
   name: aws
-  runtime: nodejs22.x
+  runtime: nodejs24.x
   architecture: x86_64
   region: us-east-1
   stage: prod
   environment:
-    DEVICE_LOCATION: ${self:custom.deviceLocation}
     GOOGLE_API_ENDPOINT: ${self:custom.googleApiEndpoint}
     GOOGLE_PROJECT_ID: ${self:custom.googleProjectId}
     S3_BUCKET: ${self:custom.s3Bucket}
@@ -47,7 +46,6 @@ plugins:
 
 custom:
   alexaSkillId: ${env:ALEXA_SKILL_ID, ''}
-  deviceLocation: ${env:DEVICE_LOCATION, ''}
   googleApiEndpoint: ${env:GOOGLE_API_ENDPOINT, 'embeddedassistant.googleapis.com'}
   googleProjectId: ${env:GOOGLE_PROJECT_ID, ''}
   s3Bucket: ${env:S3_BUCKET, ''}
@@ -83,12 +81,39 @@ custom:
                   slots:
                     - name: search
                       type: SEARCH
+                - name: SetLocationIntent
+                  samples:
+                    - "set my location to {address}"
+                    - "save my location as {address}"
+                    - "my location is {address}"
+                    - "I live in {address}"
+                    - "change my location to {address}"
+                  slots:
+                    - name: address
+                      type: AMAZON.City
+                - name: GetLocationIntent
+                  samples:
+                    - "get my location"
+                    - "what is my location"
+                    - "where am I"
+                    - "tell me my location"
+                    - "what location are you using"
+                - name: ClearLocationIntent
+                  samples:
+                    - "clear my location"
+                    - "forget my location"
+                    - "delete my location"
+                    - "remove my location"
                 - name: AMAZON.HelpIntent
                   samples: []
                 - name: AMAZON.StopIntent
                   samples: []
                 - name: AMAZON.CancelIntent
                   samples: []
+          permissions:
+            - name: alexa::devices:all:geolocation:read
+            - name: read::alexa:device:all:address
+            - name: read::alexa:device:all:address:country_and_postal_code
 
 functions:
   alexa:

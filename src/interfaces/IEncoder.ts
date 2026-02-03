@@ -1,6 +1,6 @@
 import { RequestEnvelope } from 'ask-sdk-model';
 import { ResponseBuilder } from 'ask-sdk-core';
-import { AudioState } from '../models/AudioState';
+import { IAudioState } from './IAudioState';
 
 export interface IEncoderDependencies {
   requestEnvelope: RequestEnvelope;
@@ -8,5 +8,5 @@ export interface IEncoderDependencies {
 }
 
 export interface IEncoder {
-  executeEncode(audioState: AudioState): Promise<void>;
+  executeEncode(audioState: IAudioState): Promise<void>;
 }

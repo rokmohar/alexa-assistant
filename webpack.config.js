@@ -1,6 +1,8 @@
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+const requiredProtoFiles = ['google/api/annotations.proto', 'google/api/http.proto', 'google/assistant/embedded/v1alpha2/embedded_assistant.proto', 'google/type/latlng.proto'];
+
 module.exports = {
   target: "node",
   mode: "production",
@@ -23,25 +25,18 @@ module.exports = {
         exclude: /node_modules/,
         loader: "babel-loader",
       },
-      {
-        test: /\.(m?js|node)$/,
-        parser: { amd: false },
-        loader: "@vercel/webpack-asset-relocator-loader",
-      },
     ],
   },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
         { from: "package.json", to: "package.json" },
-        //{
-        //  from: "node_modules/**/*.node",
-        //  to: "[path][name][ext]",
-        //}
+        ...requiredProtoFiles.map((file) => ({
+          from: path.resolve(__dirname, "node_modules/google-proto-files", file),
+          to: file,
+        })),
       ],
     }),
   ],
-  externals: {
-    //"bindings": "commonjs bindings",
-  }
+  externals: {},
 };

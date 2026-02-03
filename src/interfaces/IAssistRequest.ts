@@ -1,13 +1,13 @@
 export interface IDeviceLocation {
   coordinates: {
-    latitude: string;
-    longitude: string;
+    latitude: number;
+    longitude: number;
   };
 }
 
 export interface IDialogStateIn {
   language_code: string;
-  device_location: IDeviceLocation;
+  device_location?: IDeviceLocation;
   is_new_conversation: boolean;
   conversation_state?: Buffer;
 }
