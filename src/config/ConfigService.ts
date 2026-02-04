@@ -1,37 +1,11 @@
 import { z } from 'zod';
 import { Logger } from '../services/Logger';
 import { InternalError } from '../errors/AppError';
-
-const ConfigSchema = z.object({
-  // Google API Configuration
-  GOOGLE_API_ENDPOINT: z.string().min(1, 'Google API endpoint is required'),
-  GOOGLE_PROJECT_ID: z.string().min(1, 'Google Project ID is required'),
-
-  // AWS Configuration
-  S3_BUCKET: z.string().min(1, 'S3 bucket is required'),
-  S3_EXPIRES: z.number().int().positive().default(10),
-  DYNAMODB_TABLE_NAME: z.string().default('AlexaAssistantSkillSettings'),
-
-  // Audio Configuration
-  AUDIO_TIMEOUT: z.number().int().positive().default(9000),
-
-  // Device Configuration
-  DEVICE_TYPE: z.string().default('action.devices.types.SPEAKER'),
-
-  // Locale Configuration (comma-separated list)
-  SUPPORTED_LOCALES: z
-    .string()
-    .default('en-US,en-GB,de-DE,en-AU,en-CA,en-IN,ja-JP')
-    .transform((val) => val.split(',')),
-
-  // Logging Configuration
-  LOG_LEVEL: z.enum(['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']).default('INFO'),
-});
-
-export type Config = z.infer<typeof ConfigSchema>;
+import { Config, ConfigSchema } from './Config';
 
 export class ConfigService {
   private static instance: ConfigService;
+
   private readonly config: Config;
   private readonly logger: Logger;
 
@@ -45,6 +19,14 @@ export class ConfigService {
       ConfigService.instance = new ConfigService();
     }
     return ConfigService.instance;
+  }
+
+  public get<T extends keyof Config>(key: T): Config[T] {
+    return this.config[key];
+  }
+
+  public getAll(): Config {
+    return { ...this.config };
   }
 
   private validateConfig(config: Record<string, unknown>): Config {
@@ -71,13 +53,5 @@ export class ConfigService {
       this.logger.error('Failed to load configuration', { error });
       throw new InternalError('Failed to load configuration', { originalError: error });
     }
-  }
-
-  public get<T extends keyof Config>(key: T): Config[T] {
-    return this.config[key];
-  }
-
-  public getAll(): Config {
-    return { ...this.config };
   }
 }

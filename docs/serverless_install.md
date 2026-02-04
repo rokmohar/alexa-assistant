@@ -241,7 +241,6 @@ Then edit the `.env` file with your configuration:
 
 ```bash
 ALEXA_SKILL_ID=your_alexa_skill_id
-DEVICE_LOCATION=your_device_location
 GOOGLE_API_ENDPOINT=embeddedassistant.googleapis.com
 GOOGLE_PROJECT_ID=your_google_cloud_project_id
 S3_BUCKET=your_bucket_name
@@ -250,7 +249,6 @@ S3_BUCKET=your_bucket_name
 Note: Replace the placeholder values with your actual configuration:
 - `ALEXA_SKILL_ID`: Your Alexa Skill ID
 - `GOOGLE_PROJECT_ID`: Your Google Cloud Project ID
-- `DEVICE_LOCATION`: Your device's default location: latitude,longitude
 - `S3_BUCKET`: Your desired bucket name
 
 ### 6. Deploy to AWS
