@@ -17,6 +17,5 @@ export interface IAssistantDependencies {
 export interface IAssistantConfig {
   googleApiEndpoint: string;
   googleProjectId: string;
-  supportedLocales: string[];
   audioTimeout: number;
 }

@@ -3,4 +3,5 @@ export interface IAudioState {
   alexaUtteranceText: string;
   microphoneOpen: boolean;
   pcmFilePath?: string;
+  effectiveLocale?: string;
 }
