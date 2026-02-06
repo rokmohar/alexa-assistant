@@ -101,7 +101,7 @@ class Bucket implements IBucket {
       audioState.googleResponseText = audioState.googleResponseText ?? '"🔊"';
 
       const cleanUtterance = audioState.alexaUtteranceText.replace('REPEAT AFTER ME ', '');
-      let cardContent = `Request:<br/><i>${cleanUtterance}</i><br/><br/>Supplemental Response:<br/>${audioState.googleResponseText}`;
+      let cardContent = `Request:<br/><i>${cleanUtterance}</i><br/>Language: ${audioState.effectiveLocale || 'unknown'}<br/><br/>Supplemental Response:<br/>${audioState.googleResponseText}`;
 
       cardContent = cardContent
         .replace(/\\n/g, '<br/>')

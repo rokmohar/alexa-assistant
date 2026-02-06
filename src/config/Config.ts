@@ -16,12 +16,6 @@ export const ConfigSchema = z.object({
   // Device Configuration
   DEVICE_TYPE: z.string().default('action.devices.types.SPEAKER'),
 
-  // Locale Configuration (comma-separated list)
-  SUPPORTED_LOCALES: z
-    .string()
-    .default('en-US,en-GB,de-DE,en-AU,en-CA,en-IN,ja-JP')
-    .transform((val) => val.split(',')),
-
   // Logging Configuration
   LOG_LEVEL: z.enum(['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']).default('INFO'),
 });

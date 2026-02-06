@@ -92,6 +92,8 @@ class Assistant implements IAssistant {
     }
 
     const locationResult = await this.locationService.getLocation();
+    const persistentAttributes = await this.attributesManager.getPersistentAttributes();
+    const userLanguage = persistentAttributes.userLanguage as string | undefined;
 
     // Generate unique filename to prevent conflicts in Lambda container reuse
     const requestId = randomUUID();
@@ -140,7 +142,14 @@ class Assistant implements IAssistant {
       });
 
       const locale = getLocale(this.requestEnvelope);
-      const overrideLocale = this.config.supportedLocales.includes(locale) ? locale : 'en-US';
+      const overrideLocale = userLanguage || locale;
+      audioState.effectiveLocale = overrideLocale;
+
+      this.logger.info('Language selection', {
+        deviceLocale: locale,
+        userPreference: userLanguage || 'none',
+        effectiveLocale: overrideLocale,
+      });
 
       if (locationResult) {
         this.logger.info('Location resolved', {

@@ -37,7 +37,6 @@ export class ServiceFactory {
     const config: IAssistantConfig = {
       googleApiEndpoint: this.config.get('GOOGLE_API_ENDPOINT'),
       googleProjectId: this.config.get('GOOGLE_PROJECT_ID'),
-      supportedLocales: this.config.get('SUPPORTED_LOCALES'),
       audioTimeout: this.config.get('AUDIO_TIMEOUT'),
     };
 

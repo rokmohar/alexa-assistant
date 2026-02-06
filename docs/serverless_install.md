@@ -28,51 +28,7 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
            "invocationName": "google assistant",
            "intents": [
              {
-               "name": "AMAZON.NavigateHomeIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.NavigateSettingsIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.MoreIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.PageDownIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.PageUpIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.ScrollRightIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.ScrollDownIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.ScrollLeftIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.ScrollUpIntent",
-               "samples": []
-             },
-             {
                "name": "AMAZON.HelpIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.NextIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.PreviousIntent",
                "samples": []
              },
              {
@@ -81,14 +37,6 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
              },
              {
                "name": "AMAZON.CancelIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.NoIntent",
-               "samples": []
-             },
-             {
-               "name": "AMAZON.YesIntent",
                "samples": []
              },
              {
@@ -108,29 +56,22 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
                "slots": [
                  {
                    "name": "address",
-                   "type": "AMAZON.SearchQuery"
+                   "type": "AMAZON.City"
                  }
                ],
                "samples": [
                  "set my location to {address}",
-                 "set location to {address}",
-                 "my location is {address}",
-                 "change my location to {address}",
-                 "update my location to {address}",
-                 "I live in {address}",
-                 "I am in {address}"
+                 "save my location as {address}",
+                 "change my location to {address}"
                ]
              },
              {
                "name": "GetLocationIntent",
                "slots": [],
                "samples": [
-                 "what is my location",
-                 "where am I",
-                 "get my location",
-                 "what location do you have",
-                 "what's my current location",
-                 "where do you think I am"
+                 "get my saved location",
+                 "what location is saved",
+                 "what location setting do I have"
                ]
              },
              {
@@ -138,10 +79,40 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
                "slots": [],
                "samples": [
                  "clear my location",
-                 "delete my location",
-                 "remove my location",
-                 "forget my location",
-                 "reset my location"
+                 "delete my saved location",
+                 "remove my location setting"
+               ]
+             },
+             {
+               "name": "SetLanguageIntent",
+               "slots": [
+                 {
+                   "name": "language",
+                   "type": "AMAZON.Language"
+                 }
+               ],
+               "samples": [
+                 "set my language to {language}",
+                 "change my language to {language}",
+                 "set language to {language}"
+               ]
+             },
+             {
+               "name": "GetLanguageIntent",
+               "slots": [],
+               "samples": [
+                 "get my language setting",
+                 "what language setting do I have",
+                 "what language is set"
+               ]
+             },
+             {
+               "name": "ClearLanguageIntent",
+               "slots": [],
+               "samples": [
+                 "clear my language",
+                 "reset my language",
+                 "remove my language setting"
                ]
              }
            ],
@@ -149,16 +120,107 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
              {
                "name": "SEARCH",
                "values": [
-                 {
-                   "name": {
-                     "value": "who is the queen"
-                   }
-                 },
-                 {
-                   "name": {
-                     "value": "why is the sky blue"
-                   }
-                 }
+                 { "name": { "value": "what time is it" } },
+                 { "name": { "value": "what is the weather" } },
+                 { "name": { "value": "who is the president of the united states" } },
+                 { "name": { "value": "how far is the moon" } },
+                 { "name": { "value": "tell me a joke" } },
+                 { "name": { "value": "what is the capital of france" } },
+                 { "name": { "value": "how do you say hello in spanish" } },
+                 { "name": { "value": "when was the eiffel tower built" } },
+                 { "name": { "value": "what is the population of japan" } },
+                 { "name": { "value": "how tall is mount everest" } },
+                 { "name": { "value": "who invented the telephone" } },
+                 { "name": { "value": "what is the speed of light" } },
+                 { "name": { "value": "play some music" } },
+                 { "name": { "value": "set a timer for five minutes" } },
+                 { "name": { "value": "what are the latest news" } },
+                 { "name": { "value": "how do I make pancakes" } },
+                 { "name": { "value": "where is the nearest gas station" } },
+                 { "name": { "value": "who won the world cup" } },
+                 { "name": { "value": "what is two plus two" } },
+                 { "name": { "value": "why is the sky blue" } },
+                 { "name": { "value": "what day is it today" } },
+                 { "name": { "value": "how old is the earth" } },
+                 { "name": { "value": "what is the meaning of life" } },
+                 { "name": { "value": "who wrote romeo and juliet" } },
+                 { "name": { "value": "how many miles in a kilometer" } },
+                 { "name": { "value": "what is the largest ocean" } },
+                 { "name": { "value": "when is christmas" } },
+                 { "name": { "value": "how do you spell necessary" } },
+                 { "name": { "value": "what is the boiling point of water" } },
+                 { "name": { "value": "who painted the mona lisa" } },
+                 { "name": { "value": "where is the great wall of china" } },
+                 { "name": { "value": "how many planets are in the solar system" } },
+                 { "name": { "value": "what is the longest river in the world" } },
+                 { "name": { "value": "who discovered gravity" } },
+                 { "name": { "value": "what language do they speak in brazil" } },
+                 { "name": { "value": "how far is the sun from earth" } },
+                 { "name": { "value": "what is the square root of 144" } },
+                 { "name": { "value": "when did world war two end" } },
+                 { "name": { "value": "how many ounces in a pound" } },
+                 { "name": { "value": "what is the tallest building in the world" } },
+                 { "name": { "value": "who is the richest person in the world" } },
+                 { "name": { "value": "what is the currency of japan" } },
+                 { "name": { "value": "how do you convert celsius to fahrenheit" } },
+                 { "name": { "value": "what are the symptoms of the flu" } },
+                 { "name": { "value": "who directed jurassic park" } },
+                 { "name": { "value": "what is the fastest animal on earth" } },
+                 { "name": { "value": "how many continents are there" } },
+                 { "name": { "value": "what is the chemical formula for water" } },
+                 { "name": { "value": "when was the internet invented" } },
+                 { "name": { "value": "where is the amazon rainforest" } },
+                 { "name": { "value": "how much does an elephant weigh" } },
+                 { "name": { "value": "what is the national anthem of germany" } },
+                 { "name": { "value": "who won the last super bowl" } },
+                 { "name": { "value": "how do you make scrambled eggs" } },
+                 { "name": { "value": "what is the distance from new york to london" } },
+                 { "name": { "value": "tell me a fun fact" } },
+                 { "name": { "value": "what movies are playing near me" } },
+                 { "name": { "value": "how do I fix a leaky faucet" } },
+                 { "name": { "value": "what is the stock price of apple" } },
+                 { "name": { "value": "who sings bohemian rhapsody" } },
+                 { "name": { "value": "what is the weather forecast for tomorrow" } },
+                 { "name": { "value": "how many calories in a banana" } },
+                 { "name": { "value": "what is the definition of empathy" } },
+                 { "name": { "value": "when is the next full moon" } },
+                 { "name": { "value": "where was pizza invented" } },
+                 { "name": { "value": "how long does it take to fly to tokyo" } },
+                 { "name": { "value": "what is the smallest country in the world" } },
+                 { "name": { "value": "who discovered america" } },
+                 { "name": { "value": "how do you say thank you in french" } },
+                 { "name": { "value": "what is the deepest ocean trench" } },
+                 { "name": { "value": "when was the first iphone released" } },
+                 { "name": { "value": "how many teaspoons in a tablespoon" } },
+                 { "name": { "value": "what is the most spoken language in the world" } },
+                 { "name": { "value": "who built the pyramids" } },
+                 { "name": { "value": "what is the freezing point of water in fahrenheit" } },
+                 { "name": { "value": "where do penguins live" } },
+                 { "name": { "value": "how old is the universe" } },
+                 { "name": { "value": "what is the largest desert in the world" } },
+                 { "name": { "value": "who invented the light bulb" } },
+                 { "name": { "value": "what are the seven wonders of the world" } },
+                 { "name": { "value": "how do you tie a tie" } },
+                 { "name": { "value": "what is the circumference of the earth" } },
+                 { "name": { "value": "when is daylight saving time" } },
+                 { "name": { "value": "remind me to buy groceries" } },
+                 { "name": { "value": "what is trending on twitter" } },
+                 { "name": { "value": "how do I get to the airport" } },
+                 { "name": { "value": "what is the recipe for chocolate cake" } },
+                 { "name": { "value": "who is the author of harry potter" } },
+                 { "name": { "value": "what is the ph of lemon juice" } },
+                 { "name": { "value": "how many bones are in the human body" } },
+                 { "name": { "value": "when was the declaration of independence signed" } },
+                 { "name": { "value": "where is mount kilimanjaro" } },
+                 { "name": { "value": "what is the speed of sound" } },
+                 { "name": { "value": "how do magnets work" } },
+                 { "name": { "value": "what is the biggest animal ever" } },
+                 { "name": { "value": "who invented the airplane" } },
+                 { "name": { "value": "what is fifteen percent of two hundred" } },
+                 { "name": { "value": "how many liters in a gallon" } },
+                 { "name": { "value": "what year did the titanic sink" } },
+                 { "name": { "value": "sing me a song" } },
+                 { "name": { "value": "good morning" } }
                ]
              }
            ]
@@ -167,6 +229,18 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
      }
      ```
    - Click "Save Model" and then "Build Model"
+
+#### Optional: Configure Language Preference
+
+You can set your preferred language for Google Assistant responses using voice commands:
+
+- **Set language**: "Alexa, ask google to set my language to German"
+- **Check language**: "Alexa, ask google what is my language"
+- **Clear language**: "Alexa, ask google to clear my language"
+
+Supported languages include: English, British English, German, Australian English, Canadian English, Canadian French, Indian English, Japanese, French, Spanish, Italian, Korean, and Portuguese. You can also use locale codes directly (e.g., "en-GB", "de-DE").
+
+If no language preference is set, the skill will use the default language from your Alexa device.
 
 #### Optional: Configure Location Permissions
 

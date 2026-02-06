@@ -235,6 +235,133 @@ const GetLocationIntentHandler = {
   },
 };
 
+const LOCALE_LANGUAGE_MAP: Record<string, string[]> = {
+  'en-US': ['English', 'American English'],
+  'en-GB': ['British English'],
+  'de-DE': ['German', 'Deutsch'],
+  'en-AU': ['Australian English'],
+  'en-CA': ['Canadian English'],
+  'fr-CA': ['Canadian French'],
+  'en-IN': ['Indian English'],
+  'ja-JP': ['Japanese'],
+  'fr-FR': ['French'],
+  'es-ES': ['Spanish'],
+  'it-IT': ['Italian'],
+  'ko-KR': ['Korean'],
+  'pt-BR': ['Portuguese'],
+};
+
+const LANGUAGE_LOCALE_MAP: Record<string, string> = Object.entries(LOCALE_LANGUAGE_MAP).reduce<Record<string, string>>((map, [locale, names]) => {
+  for (const name of names) {
+    map[name.toLowerCase()] = locale;
+  }
+  return map;
+}, {});
+
+const SetLanguageIntentHandler = {
+  canHandle: (handlerInput: HandlerInput): boolean => {
+    return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' && getIntentName(handlerInput.requestEnvelope) === 'SetLanguageIntent';
+  },
+  handle: async (handlerInput: HandlerInput): Promise<Response> => {
+    logger.info('Set Language Intent');
+
+    const { requestEnvelope, attributesManager, responseBuilder } = handlerInput;
+    const slots = (requestEnvelope.request as IntentRequest).intent.slots;
+    const languageInput = slots?.language?.value;
+
+    if (!languageInput) {
+      logger.info('No language provided');
+      return responseBuilder
+        .speak('Please tell me your preferred language. For example, say "set my language to German" or "set my language to French".')
+        .reprompt('What language would you like me to use?')
+        .getResponse();
+    }
+
+    logger.info('Language input received', { language: languageInput });
+
+    const normalizedInput = languageInput.toLowerCase().trim();
+    const localeCode = LANGUAGE_LOCALE_MAP[normalizedInput] || (normalizedInput.includes('-') ? normalizedInput : undefined);
+
+    if (!localeCode) {
+      const supportedLanguages = Object.values(LOCALE_LANGUAGE_MAP)
+        .map((names) => names[0])
+        .join(', ');
+      logger.warn('Unsupported language', { language: languageInput });
+      return responseBuilder
+        .speak(`Sorry, I don't recognize the language "${languageInput}". Supported languages include: ${supportedLanguages}.`)
+        .withShouldEndSession(true)
+        .getResponse();
+    }
+
+    const attributes = await attributesManager.getPersistentAttributes();
+    attributes.userLanguage = localeCode;
+    attributesManager.setPersistentAttributes(attributes);
+    await attributesManager.savePersistentAttributes();
+
+    logger.info('Language preference saved', { language: languageInput, locale: localeCode });
+
+    const languageName = LOCALE_LANGUAGE_MAP[localeCode]?.[0] || languageInput;
+
+    return responseBuilder.speak(`Your language has been set to ${languageName}. Google Assistant will respond in ${languageName}.`).withShouldEndSession(true).getResponse();
+  },
+};
+
+const GetLanguageIntentHandler = {
+  canHandle: (handlerInput: HandlerInput): boolean => {
+    return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' && getIntentName(handlerInput.requestEnvelope) === 'GetLanguageIntent';
+  },
+  handle: async (handlerInput: HandlerInput): Promise<Response> => {
+    logger.info('Get Language Intent');
+
+    const { attributesManager, responseBuilder } = handlerInput;
+
+    try {
+      const attributes = await attributesManager.getPersistentAttributes();
+      const userLanguage = attributes.userLanguage as string | undefined;
+
+      if (userLanguage) {
+        const languageName = LOCALE_LANGUAGE_MAP[userLanguage]?.[0] || userLanguage;
+        logger.info('Language preference retrieved', { locale: userLanguage, language: languageName });
+        return responseBuilder.speak(`Your language is currently set to ${languageName}.`).withShouldEndSession(true).getResponse();
+      } else {
+        logger.info('No language preference set');
+        return responseBuilder
+          .speak('You don\'t have a language preference set. I\'m using the default language from your Alexa device. You can say "set my language to" followed by a language name.')
+          .withShouldEndSession(true)
+          .getResponse();
+      }
+    } catch (error) {
+      logger.error('Failed to get language preference', { error });
+      return responseBuilder.speak('Sorry, I could not retrieve your language preference. Please try again later.').withShouldEndSession(true).getResponse();
+    }
+  },
+};
+
+const ClearLanguageIntentHandler = {
+  canHandle: (handlerInput: HandlerInput): boolean => {
+    return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' && getIntentName(handlerInput.requestEnvelope) === 'ClearLanguageIntent';
+  },
+  handle: async (handlerInput: HandlerInput): Promise<Response> => {
+    logger.info('Clear Language Intent');
+
+    const { attributesManager, responseBuilder } = handlerInput;
+
+    try {
+      const attributes = await attributesManager.getPersistentAttributes();
+      delete attributes.userLanguage;
+      attributesManager.setPersistentAttributes(attributes);
+      await attributesManager.savePersistentAttributes();
+
+      logger.info('Language preference cleared');
+
+      return responseBuilder.speak('Your language preference has been cleared. I will use the default language from your Alexa device.').withShouldEndSession(true).getResponse();
+    } catch (error) {
+      logger.error('Failed to clear language preference', { error });
+      return responseBuilder.speak('Sorry, I could not clear your language preference. Please try again later.').withShouldEndSession(true).getResponse();
+    }
+  },
+};
+
 const UnhandledHandler = {
   canHandle: (_handlerInput: HandlerInput): boolean => {
     return true;
@@ -256,6 +383,9 @@ exports.handler = async function (event: any, context: any): Promise<ResponseEnv
     SetLocationIntentHandler,
     GetLocationIntentHandler,
     ClearLocationIntentHandler,
+    SetLanguageIntentHandler,
+    GetLanguageIntentHandler,
+    ClearLanguageIntentHandler,
     // Add remaining handlers here
     UnhandledHandler
   );
