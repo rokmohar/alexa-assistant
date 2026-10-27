@@ -1,11 +1,7 @@
-# alexa-assistant-instructions
+# Documentation
 
-These are the instructions for installing the Alexa Assistant Skill found here:
+- **[Installation guide](serverless_install.md)**: create the Alexa skill, configure Google Cloud and account linking, and deploy to AWS.
+- **[Troubleshooting](common_problems.md)**: common errors, what they mean, and how to fix them.
+- **[Contributing](../CONTRIBUTING.md)**: development setup and how to submit changes.
 
-https://github.com/rokmohar/alexa-assistant
-
-# Installation
-
-Follow the installation instructions here:
-
-[Installation Instructions](serverless_install.md)
+For an overview of the project, see the [main README](../README.md).

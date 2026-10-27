@@ -1,87 +1,78 @@
-# Common issues
+# Troubleshooting
 
-Please check these common problem solving steps before raising an issue:-
+Check the logs first. Most problems show up there with a clear error:
 
-# Alexa says "Sorry, something went wrong" when I try and launch the skill
+```bash
+npm run logs
+```
 
-This is usually caused by your Skill being set-up in a different language to your Echo device. You need to have the skill in the SAME langauge as your device is set to.
+You can also open the `/aws/lambda/alexa-assistant-prod-alexa` log group in CloudWatch.
 
-The other cause of this issue is the Echo devcie being on a different user profile to the one used to set-up the skill
+- [Alexa says "There was a problem with the requested skill's response"](#alexa-says-there-was-a-problem-with-the-requested-skills-response)
+- [The skill keeps asking me to link my Google account](#the-skill-keeps-asking-me-to-link-my-google-account)
+- [Google Assistant says it needs my permission](#google-assistant-says-it-needs-my-permission)
+- [Error messages from the skill](#error-messages-from-the-skill)
+- [Answers use the wrong location or language](#answers-use-the-wrong-location-or-language)
+- [No card on Echo Show or other screen devices](#no-card-on-echo-show-or-other-screen-devices)
+- [Still stuck?](#still-stuck)
 
-# Google Assistant says  "I need your permission to help you"
+## Alexa says "There was a problem with the requested skill's response"
 
-You’ve missed turning on a blue slider at the step where you have to give the google assistant access to you google activities history. 
+Alexa may also say _"Sorry, something went wrong"_ or not find the skill at all. Common causes:
 
-Open the Activity Controls page https://myaccount.google.com/activitycontrols for the Google account that you want to use with the Assistant. Ensure the following toggle switches are enabled (blue):
+- **The skill's language doesn't match your device.** The skill must have the same locale as your Echo device, for example English (UK) vs English (US). Add the missing locale in the Alexa Developer Console, paste the interaction model JSON for it, and build again.
+- **The device is on a different Amazon account.** The skill only works on devices registered to the Amazon account that owns the developer account.
+- **Missing environment variables.** If the logs show `Invalid environment variables: ...`, fill in those values in `.env` and redeploy. See [step 5 of the installation guide](serverless_install.md#5-configure-environment-variables).
+- **Wrong endpoint.** Check that the skill's endpoint is the ARN of `alexa-assistant-prod-alexa` in the region you deployed to, and that you built the skill after saving it. See [step 7](serverless_install.md#7-connect-the-skill-to-lambda).
 
-    1. Web & App Activity - Make sure the box marked "Include Chrome browsing history and activity from websites and apps that use Google Services" is also checked 
-    2. Location History
-    3. Device Information
-    4. Voice & Audio Activity
+## The skill keeps asking me to link my Google account
 
-# The skill keeps asking me to link my Google Account
+1. Remove the skill's access to your Google account. Go to [Google account connections](https://myaccount.google.com/connections), select the app (it has the name you gave the OAuth consent screen), and remove access.
+2. In the Alexa app, go to **More → Skills & Games → Your Skills → Dev**, open the skill, and **disable** it.
+3. Enable the skill again, sign in to Google, and allow every requested permission.
 
-This seems to be an issue with the Google Amazon authentication. The fix for this is as follows:-
+If it still loops, check the setup:
 
-1. Unlink the deauthorise the app aby removing it from your google account by going here https://myaccount.google.com/permissions?pli=1 and select the app called "alexa-assistant".
-2. Click on the button labelled "Remove Access"
-3. Press "Yes" to confirm
+- Your Google account is a **test user** on the OAuth consent screen.
+- The Google OAuth client's **Authorized redirect URIs** contain all the Alexa Redirect URLs from the skill's Account Linking page.
+- The account linking scopes and URLs match [step 3 of the installation guide](serverless_install.md#3-configure-account-linking).
 
-![alt text](screenshots/app_remove.jpeg)
+## Google Assistant says it needs my permission
 
-4. Go to the Alexa web app and log in alexa.amazon.com
-5. Select "Skills" from the Home menu on the right hand side of the screen
+Google Assistant needs activity tracking turned on for your Google account:
 
-![alt text](screenshots/home_skills.jpg)
+1. Open [Activity controls](https://myaccount.google.com/activitycontrols) for the Google account you linked.
+2. Turn on **Web & App Activity**.
+3. Under it, tick **Include voice and audio activity** and **Include Chrome history and activity from sites, apps, and devices that use Google services**.
 
-6. Click on "Your Skills" at the top right
+## Error messages from the skill
 
-![alt text](screenshots/your_skills.jpg)
+| Alexa says                                                | What it means and how to fix it                                                                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "You must link your Google account to use this skill"     | Account linking isn't finished. Link the account in the Alexa app (see [above](#the-skill-keeps-asking-me-to-link-my-google-account)).                                                |
+| "There was a problem setting up the project"              | Registering the device with Google failed. Check that `GOOGLE_PROJECT_ID` is the Project ID (not its name or number) and that the Google Assistant API is enabled in that project. |
+| "The Google API returned an error"                        | Google rejected the request. The logs have the exact gRPC error. `UNAUTHENTICATED` or `PERMISSION_DENIED` usually means relinking the account (see above).                         |
+| "I wasn't able to talk to Google - please try again"      | Google didn't answer within 9 seconds. Usually temporary, so try again. If it keeps happening, deploy to a region closer to you.                                                    |
+| "I didn't get an audio response from the Google Assistant" | Google answered without audio. Try rephrasing the question.                                                                                                                          |
+| "There was an error uploading to S3"                      | The function couldn't upload the answer audio. Check that the `S3_BUCKET` bucket exists in the deployed stack, and look in the logs for the AWS error.                               |
 
-7. Click on "Dev Skills"
+## Answers use the wrong location or language
 
-![alt text](screenshots/dev_skills.jpg)
+**Location.** The skill uses the first location it finds, in this order:
 
-8. Click on the skill called "Google Assistant for Alexa"
+1. A location you saved by voice: _"Alexa, ask google to set my location to London"_.
+2. Your mobile device's GPS (needs the **Location Services** permission).
+3. Your Alexa device's address (needs the **Device Address** permission).
+4. The address in your Google profile (needs the People API and the `user.addresses.read` scope).
 
-![alt text](screenshots/assistant_skill.jpg)
+Ask _"Alexa, ask google what location is saved"_ to see which location it uses. The permissions are explained in [step 1 of the installation guide](serverless_install.md#optional-location-permissions).
 
-9. Click on "Disable Skill"
+**Language.** By default the skill uses your Alexa device's language. To change it, say _"Alexa, ask google to set my language to German"_. To go back to the default, say _"Alexa, ask google to reset my language"_.
 
-![alt text](screenshots/disable_skill.jpg)
+## No card on Echo Show or other screen devices
 
-10.  Now click on "Enable Skill"
+Turn on the **Alexa Presentation Language** interface for the skill, then build it again. See [Show answers on screen devices](serverless_install.md#optional-show-answers-on-screen-devices).
 
-![alt text](screenshots/enable_skill.jpg)
+## Still stuck?
 
-11. Select the Google account you want to use and then make sure you click "Allow" on the Google authorisation page. 
-
-![alt text](screenshots/authorise.jpeg)
-
-# When I run the skill on my Echo Show/Spot I get the error ""There was a Problem with Requested Skills Response"
-
-You have missed a step in the setup process. To resolve this:-
-
-1. Go to the Alexa developer console and login
-
-https://developer.amazon.com/edw/home.html
-
-2. Click on the yellow "Get Started" button under Alexa Skills Kit.
-
-![alt text](screenshots/getting_started.jpeg)
-
-3. Select the Google Assistant Skill that your previously created
-4. Go to the Skill Information tab and make sure "Render Template is set to Yes"
-
-![alt text](screenshots/render_template.jpg)
-
-5. Click "Save" and then click "Next".
-
-# When I run the skill I get the error "I could not load the client secret file from S3. Please make sure that you have uploaded it into the correct place on the S3 bucket"
-
-There are 3 likely causes:-
-
-1. You have not uploaded your client_secret.json to the S3 bucket. Doing so will fix this issue
-2. You have incorrectly renamed the file. Rename it correctly and re-upload to the S3 bucket. This will fix the issue
-3. You have renamed the file client_secret.json.json as file extensions are hidden on your system. Remove the extra .json and re-upload to the S3 bucket. This will fix the issue
-
+[Open a bug report](https://github.com/rokmohar/alexa-assistant/issues/new/choose). Include the relevant log lines, with tokens and IDs removed.

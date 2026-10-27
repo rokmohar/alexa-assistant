@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/rokmohar/alexa-assistant/blob/master/docs/common_problems.md
+    about: Check common problems and their fixes before opening an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/rokmohar/alexa-assistant/security/advisories/new
+    about: Please report security issues privately, not in a public issue.

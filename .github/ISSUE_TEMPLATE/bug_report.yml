@@ -1,0 +1,61 @@
+name: Bug report
+description: Something isn't working as expected.
+labels: [bug]
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you start
+      options:
+        - label: I checked the [Troubleshooting guide](https://github.com/rokmohar/alexa-assistant/blob/master/docs/common_problems.md).
+          required: true
+        - label: I searched [existing issues](https://github.com/rokmohar/alexa-assistant/issues?q=is%3Aissue) and didn't find a duplicate.
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you say to Alexa, what did you expect, and what happened instead?
+      placeholder: |
+        I said "Alexa, ask google what's the weather like".
+        Expected: Google's answer.
+        Actual: Alexa said "The Google API returned an error".
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output from `npm run logs` or CloudWatch. **Remove access tokens, user IDs and other secrets.**
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag or commit SHA.
+      placeholder: v2.1.4
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation method
+      options:
+        - Serverless (npm run deploy)
+        - Release ZIP uploaded to Lambda
+        - Docker-built ZIP
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and locale
+      placeholder: Echo Dot (5th gen), en-GB
