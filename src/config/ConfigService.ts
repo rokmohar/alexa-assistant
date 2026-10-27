@@ -37,7 +37,7 @@ export class ConfigService {
         const invalidVars = error.issues.map((err) => err.path.join('.'));
 
         if (invalidVars.length > 0) {
-          throw new Error(`Invalid environment variables: ${invalidVars.join(', ')}`);
+          throw new Error(`Invalid environment variables: ${invalidVars.join(', ')}`, { cause: error });
         }
       }
       throw error;

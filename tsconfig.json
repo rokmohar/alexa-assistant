@@ -4,11 +4,11 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "lib": [
-      "ES2020",
+      "ES2024",
       "DOM"
     ],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": false,
     "outDir": "./dist",
     "resolveJsonModule": true,
@@ -17,7 +17,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2020",
+    "target": "ES2024",
     "types": [
       "node"
     ]

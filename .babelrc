@@ -4,11 +4,11 @@
       "@babel/preset-env",
       {
         "targets": {
-          "node": "22"
+          "node": "24"
         }
       }
     ],
-    ["@babel/preset-typescript"]
+    ["@babel/preset-typescript", { "onlyRemoveTypeImports": false }]
   ]
 }
 

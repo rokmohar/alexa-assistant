@@ -1,9 +1,8 @@
-import { ChannelCredentials, credentials, loadPackageDefinition } from '@grpc/grpc-js';
+import { ChannelCredentials, credentials, loadPackageDefinition, Metadata } from '@grpc/grpc-js';
 import { getLocale } from 'ask-sdk-core';
 import { createWriteStream } from 'fs';
 import { stat } from 'fs/promises';
 import { randomUUID } from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
 import { loadSync } from '@grpc/proto-loader';
 import { getProtoPath } from 'google-proto-files';
 import xmlEscape from 'xml-escape';
@@ -34,7 +33,6 @@ class Assistant implements IAssistant {
   private readonly attributesManager: IAssistantDependencies['attributesManager'];
   private readonly responseBuilder: IAssistantDependencies['responseBuilder'];
   private readonly locationService: ILocation;
-  private readonly oauth2Client: OAuth2Client;
   private readonly logger: Logger;
   private readonly errorHandler: ErrorHandler;
   private readonly config: IAssistantConfig;
@@ -47,7 +45,6 @@ class Assistant implements IAssistant {
     this.responseBuilder = dependencies.responseBuilder;
     this.locationService = dependencies.locationService;
     this.config = config;
-    this.oauth2Client = new OAuth2Client();
     this.logger = Logger.getInstance();
     this.errorHandler = ErrorHandler.getInstance();
     this.project = ServiceFactory.getInstance().createProject({
@@ -60,8 +57,13 @@ class Assistant implements IAssistant {
     });
   }
 
-  private createGrpcGoogleCredentials(): ChannelCredentials {
-    return credentials.combineChannelCredentials(credentials.createSsl(null), credentials.createFromGoogleCredential(this.oauth2Client));
+  private createGrpcGoogleCredentials(accessToken: string): ChannelCredentials {
+    const callCredentials = credentials.createFromMetadataGenerator((_params, callback) => {
+      const metadata = new Metadata();
+      metadata.add('authorization', `Bearer ${accessToken}`);
+      callback(null, metadata);
+    });
+    return credentials.combineChannelCredentials(credentials.createSsl(null), callCredentials);
   }
 
   async executeAssist(audioState: IAudioState): Promise<void> {
@@ -76,7 +78,6 @@ class Assistant implements IAssistant {
       return;
     }
 
-    this.oauth2Client.setCredentials({ access_token: accessToken });
     const sessionAttrs = this.attributesManager.getSessionAttributes();
 
     if (!sessionAttrs['registered']) {
@@ -104,7 +105,7 @@ class Assistant implements IAssistant {
       let audioPresent = false;
       let conversationState: Buffer = Buffer.alloc(0);
 
-      const grpcCredentials = this.createGrpcGoogleCredentials();
+      const grpcCredentials = this.createGrpcGoogleCredentials(accessToken);
       const assistant = new assistantClient(this.config.googleApiEndpoint, grpcCredentials);
 
       const skillTimeout = setTimeout(() => {

@@ -4,7 +4,7 @@ This guide will help you set up and deploy the Alexa Assistant skill using the S
 
 ## Prerequisites
 
-1. Node.js 20.x or later
+1. Node.js 24.x or later
 2. AWS CLI configured with appropriate credentials
 3. Google Cloud Platform account with Google Assistant API enabled
 4. Alexa Developer account
